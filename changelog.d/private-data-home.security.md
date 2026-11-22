@@ -1,0 +1,1 @@
+- **A new `UA_HOME` is created mode 0700, including under umask 0002.** `unified-agent init` and opening the store no longer stop on a directory `mkdir` left group-writable. A directory that already exists is left as it was.

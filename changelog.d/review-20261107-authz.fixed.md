@@ -1,0 +1,7 @@
+- **`plan_review` no longer drops a note appended to its gate task during review.** The notes rewrite re-reads the task under the writer lock instead of writing back the snapshot it read earlier.
+- **`task_claim` bounds `timeout_seconds` to 1 second through 7 days.** A zero or negative lease was born expired, so any agent could take the task at once; a huge one raised `OverflowError`.
+- **An unsupported `UA_EMBED_MODEL` fails the embedding tests instead of skipping them.** A `ValueError` from model construction counts as "model unavailable" only with fastembed's all-sources-exhausted message.
+- **Backup retention no longer spends weekly slots on a second snapshot of a day already kept as daily.**
+- **Edge-of-calendar `expires_at`, `valid_from` and `as_of` values raise `ToolError` instead of `OverflowError`.**
+- **`task_list(notes_contain=...)` matches `%`, `_` and `\` literally.**
+- **Wiki `Health.md` stamps `updated_at` in UTC**, matching its `Z` suffix.

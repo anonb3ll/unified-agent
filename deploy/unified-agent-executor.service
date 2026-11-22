@@ -1,0 +1,38 @@
+# Active Executor Daemon (systemd user unit - Phase 4.2)
+#
+# Install:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/unified-agent-executor.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now unified-agent-executor
+#
+# Logs:  journalctl --user -u unified-agent-executor -f
+
+[Unit]
+Description=unified-agent Active Executor Daemon (Phase 4.2)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/agent
+# Explicit override, not just relying on config.py's DEFAULT_WORKSPACE — task
+# #369: this unit silently ran from the wrong directory for days because it
+# had no override and the default drifted stale during the #331 migration.
+Environment=UA_WORKSPACE=%h/dev/agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Client of the Mac hub over Tailscale; this host never runs the hub itself.
+Environment=UA_HTTP_HUB_URL=http://100.64.0.10:8765/mcp
+Environment=UA_EXECUTOR_AGENT=Desktop_agent3
+Environment=UA_EXECUTOR_SHADOW_MODE=0
+# Desktop_agent3 is a remote primary client after the Mac cutover. Set the full
+# canonical /mcp URL in executor.env; this unit intentionally has no loopback
+# fallback. Server-local executors use the deploy/mac-hub launchers instead.
+# Load credentials (GEMINI_API_KEY, UA_EXECUTOR_TOKEN, etc.) from secure file (chmod 600)
+EnvironmentFile=-%h/.config/unified-agent/executor.env
+ExecStart=%h/dev/unified_agent/.venv/bin/unified-agent-executor
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

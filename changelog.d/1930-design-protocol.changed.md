@@ -1,0 +1,1 @@
+- The accepted Command Center protocol now specifies external-effect verification separately from request receipts and describes the app versus exported-preview font boundary. Its static reference demonstrates keyboard navigation, focus restoration, responsive navigation and inspector overlays with explicitly labelled sample actions.

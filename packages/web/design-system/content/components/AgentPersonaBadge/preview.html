@@ -1,0 +1,21 @@
+<!-- @dsCard group="Identity" height=96 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>AgentPersonaBadge — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var A = ['Desktop_Person','agent-hermes','agent-claude','agent-codex','agent-agy','agent-cursor','Desktop_agent12','agent-gcp-agent19'];
+var App = h('div', {className:'stack'},
+  h('div', {className:'row'}, A.map(function(a){return h(U.AgentPersonaBadge, {key:a, label:a});})),
+  h('div', {className:'row'},
+    h(U.AgentPersonaBadge, {label:'agent-claude', size:'md'}),
+    h(U.AgentPersonaBadge, {label:'new_worker'}),
+    h(U.AgentPersonaBadge, {label:'agent-codex', showLabel:false})));
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

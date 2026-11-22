@@ -1,0 +1,432 @@
+# Layer map for src/unified_agent. Checked by scripts/check_layers.py; the
+# rationale and current numbers are in layers.md next to this file.
+#
+# Layers are listed top first. A module may import from its own layer or any
+# layer below it, never above. Modules are placed by exact name (relative to
+# the package) or by glob; an exact name wins over a glob, and a module that
+# two globs claim must be listed by exact name. Every module must be placed.
+#
+# Placement is by role, not by directory. A module that sits in the wrong
+# directory for its role (tools/approvals.py is a core gate, not an MCP tool
+# wrapper) is placed by role and marked "misplaced" so a later move can fix the
+# path without redrawing the map.
+
+package = "unified_agent"
+source = "../../src"
+baseline = "layers-baseline.txt"
+
+[[layer]]
+name = "adapters"
+description = "Interfaces and process entry points: the MCP server, HTTP/JSON, the web control center, OAuth endpoints, CLIs and the TUI."
+modules = [
+    # MCP adapter
+    "server",
+    "health",  # always-on /healthz and /readyz, registered without control-center (#2603)
+    "components",  # component manifests the server composes its tool registry from
+    "components.*",
+    "toolsets",
+    "tool_classification",
+    "tool_schema_fingerprint",
+    "elicitation",
+    "mcp_live_state",
+    "mcp_live_verification",
+    # MCP tool modules that are a surface over a runtime subsystem or the whole
+    # hub rather than a domain operation (misplaced in tools/)
+    "tools.doctor",
+    "tools.langgraph",
+    "tools.bug_worker",
+    "tools.dispatch_report",
+    "tools.evolve",
+    "tools.mcp_health",
+    # HTTP/JSON and the web control center
+    "platform_http",
+    "webui",
+    "webui.*",
+    "pilot_app",
+    "slack_gateway",  # inbound Slack events: an interface, like webui
+    "zulip_automation",  # outbound Zulip digests composed from the control center's payloads
+    # Hub sign-in endpoints and browser/device auth
+    "oauth",
+    "oauth_cimd",
+    "oauth_approver",
+    "passkeys",
+    "workos_hub_auth",
+    # CLIs, TUI and process entry points
+    "cli",
+    "cli.*",
+    "*_cli",
+    "*.cli",
+    "dispatch.cli",
+    "bug_worker.cli",
+    "tools.work_product_cli",
+    "audit.evidence_cli",
+    "tui",
+    "bootstrap",
+    "backup_runner",
+    "backup_loop",
+    "session_end",
+    "harness_usage",  # ua-usage CLI: one harness session's run_usage from its local store
+    "node_agent",
+    "node_claim_journal",  # ua-node durable claim-operation journal and lock (#2136); stdlib only
+    "node_wake_transport",  # ua-node herdr adapter for idle-session wakes (#1873)
+    "dispatch.supervisor_spawn",
+    "demo",
+    "demo.*",
+]
+
+[[layer]]
+name = "runtime"
+description = "Long-running workers, schedulers and orchestrators that drive services: executor, dispatch, bug worker, chat workers, reviewers, LangGraph and ACP runners."
+modules = [
+    "supervisor_loop",
+    "executor",
+    "executor.*",
+    "dispatch",
+    "dispatch.*",
+    "bug_worker",
+    "bug_worker.*",
+    "ts_worker",
+    "ts_worker.*",
+    "acp_*",
+    "session_settings",  # bounded ACP settings and reviewed native mode aliases (#1742)
+    "langgraph_*",
+    "node_queue",
+    "node_command",  # supervised argv commands on a ua-node: fence, outbox, adoption (#2413)
+    "node_claim_ops",  # durable logical claim operations settled in the claim transaction (#2136)
+    "node_acceptance",  # enrolled-device diagnostics, attestation and queue admission (#2112)
+    "acceptance_backend",  # built-in no-model device diagnostic runner (#2112)
+    "node_followups",
+    "node_resume",
+    "native_sessions",  # ua-node discovery of native harness sessions; stdlib only
+    "harness_billing",  # subscription-or-API probe of a harness CLI; reads native_sessions rollouts
+    "turn_checkpoints",  # ua-node per-turn hidden-ref snapshots (#1743); git + redaction
+    "routines",
+    "reviewer",
+    "held_pr",
+    "pr_watch",
+    "lane_reaper",
+    "github_app_worker",
+    "github_app_fastpath",  # prompt Approval Ledger statuses between polls (#2234)
+    "review_head_status",  # the poll's review-head check at each open PR head (#2320)
+    "zulip_worker",
+    "zulip_chat",
+    "slack_chat",
+    "sleep_pass",
+    "consolidate",
+    "evolve",
+    "queue_hygiene",
+    "vault_sync",
+    "cloud_mirror",
+    "cloud_mirror_receiver",
+    "crew",
+    "session_capture",
+    "release",
+    "backup",
+    "audit.surfaces",
+    "audit.evidence_export_sink",
+]
+
+[[layer]]
+name = "services"
+description = "Domain operations every adapter and worker calls: tasks, memory, plans, delegation, vault, goals, skills, run records, audit and evidence reports."
+modules = [
+    "untrusted",
+    "tools",
+    "tools.*",
+    "invocation_service",  # shared transaction owner; isolated synthetic effect proof (#1973)
+    "goals",
+    "task_comments",
+    "task_workflow",  # per-task stage, resume capsule and graded checks (#2398)
+    "review_provenance",  # why a PR head moved off its review read, report mode (#2398)
+    "design_panels",  # independent-first design panels, sealed until reveal (#2399)
+    "friction_rollup",  # friction ranked by severity, count and channels; re-check closure (#2399)
+    "task_notes",
+    "task_liveness",  # action-path classifier, liveness sweep, monitors and declared waits (#1749)
+    "owner_liveness",  # one read of a lease owner over agent, node and task liveness (#2395)
+    "lease_reaper",  # releases a stale claim only after that read (#2395)
+    "task_search",
+    "run_records",
+    "runs_projection",  # read-only uniform runs list over dispatch/selfpickup/session records (#1652)
+    "monitor",
+    "work_graph",
+    "joint_planning",
+    "delivery",
+    "delivery_slo",
+    "budgets",
+    "tool_allowance",  # read-only per-tool call allowance over the live rate limiter (#2144)
+    "scorecards",
+    "project_bindings",
+    "session_owed",  # what an ended session still owes; report only (#2389)
+    "needs_operator",  # one closed list of what waits on the operator; read only (#2411)
+    "pr_owner_notify",  # one message per PR head to the task's claimant (#2396)
+    "queue_closure",  # staleness, park/fold, close-on-merge and queue-health reads (#1848)
+    "task_holds",  # subtree holds: pause, cancel, resume and restore a task subtree (#1747)
+    "claim_release",  # operator release of another agent's live task claim (#1700)
+    "completion_return",  # task origins and the completion-return outbox and drain (#1751)
+    "ready_dependents",  # tell a dependent's owner when its last prerequisite closes (#2454)
+    "skills_registry",
+    "skill_sources",  # git-pinned skill sources: discover, refresh, import (#1750)
+    "skill_catalog",
+    "harness_config",
+    "host_registry",
+    "fleet_actions",
+    "agent_lifecycle",
+    "agent_enrollment",  # unified-agent agent add/remove/list domain operations (#2453)
+    "autonomy_modes",
+    "operating_profiles",
+    "workflow_roles",  # role workflow task projection and persisted frontier (#1737)
+    "workflow_steps",  # the workflow-step read kernel task writers need (#2450)
+    "evidence_claims",  # merge-claim helpers shared by tools.tasks and the evidence report (#2450)
+    "injection_patterns",  # injection phrases shared by the audit and the untrusted scanner (#2450)
+    "team_spec",  # team specs: validate, plan and boot a declared team (#1736)
+    "team_templates",  # reviewed starter packages and revisioned bindings (#1739)
+    "team_snapshot",  # team snapshot, read-only preview and restore (#1738)
+    "capability_verification",
+    "quota_observe",
+    "credential_pool",
+    "delegation_ledger_log",
+    "lane_b_telemetry",
+    "injection_triage",
+    "scout",
+    "planning_loop",  # weekly plans and goal decomposition on demand; the CLI is a thin main()
+    "mcp_matrix",  # MCP client capability data and evaluator; no adapter dependency
+    "node_registry",
+    "session_credentials",  # session-scoped hub MCP credentials for ACP sessions (#1744)
+    "merge",  # git merge and worktree operations; the CLI is a thin main()
+    "wiki",  # vault wiki custodian; the CLI is a thin main()
+    "self_organization",
+    "session_friction",
+    "supervision",
+    "recall_curation",
+    "hosted_capabilities",
+    "sync",
+    "platform_readers",
+    "lifecycle",
+    "lifecycle.capture",
+    "lifecycle.packet",
+    "messaging",
+    "messaging.send",
+    "messaging.availability",  # send preflight: can this agent receive on this host? (#2392)
+    "messaging.delivery",  # delivery facts and the dead-letter notice to the sender (#2391)
+    "messaging.grounding",  # typed handoff fields and receiver grounding tiers, report mode (#2390)
+    "messaging.bridge_brain",  # unified_brain threads <-> hub mail (#1863)
+    "messaging.bridge_a2a",  # hub mail -> Hermes A2A gateways and back (#1863)
+    "messaging.conversations",  # read-only conversation views for the Messages pane (#1864)
+    "messaging.handoff",  # conversation -> task reference, no transcript copy (#1426)
+    "messaging.wake",  # idle-session wake gates; mailbox metadata only, no bodies (#1873)
+    "audit",
+    "audit.engine",
+    "audit.baseline",  # operator-reviewed secret findings, by value hash (#2323)
+    "audit.rules",
+    "audit.grade",
+    "audit.remediate",
+    "audit.triage",
+    "audit.evidence_report",
+    "audit.merge_receipt",  # merge receipt v1: projection of one merged PR + offline verify (#2307)
+    "audit.provenance_graph",
+    "cycle_eligibility",  # green-path and auto-PR verdicts tools.cycles asks for; reviewer re-exports
+    "delivery_receipts",  # read-only dispatch delivery receipts for the evidence report
+    "memory_chunks",  # overlapping chunk vectors for long notes (#2182)
+    "memory_knn",  # bounded sqlite-vec KNN for the semantic leg (#2214)
+    "memory_semantic",  # memory embedding backfill, moved out of storage (#1720)
+    "post_init",  # registers the post-init hooks storage.init_db runs (#1720)
+    "service_probes",  # doctor's systemd/LaunchAgent probes; tools.doctor re-exports (#1722)
+]
+
+[[layer]]
+name = "integrations"
+description = "Clients for outside systems: LLM providers, embeddings, GitHub, Slack, connectors, PDF extraction."
+modules = [
+    "llm_client",
+    "codex_llm_client",
+    "llm_broker",
+    "llm_proxy",
+    "llm_spend",
+    "embeddings",
+    "github_app",
+    "required_settings",  # settings an enabled feature needs (#1783)
+    "slack_outbound",
+    "slack_config",
+    "approval_slack",  # outbound Slack Block Kit approval cards; no approval authority (#2303)
+    "pr_models",
+    "horizon2",
+    "connectors",
+    "connector_oauth",
+    "pdf_worker",
+    "tailnet",
+    "tools.gemini",  # misplaced: the Google AI Studio client, also exposed as a tool
+    "device_login",  # device-side hub credentials; `unified-agent login` is a thin main()
+    "hub_client",  # authenticated HTTP client for the canonical hub; the executor subclasses it
+]
+
+[[layer]]
+name = "core"
+description = "Foundation every layer may use: configuration, storage, the event log, safety and policy chokepoints, identity and profiles, the approval gate, telemetry and projection contracts, evidence signing."
+modules = [
+    "env_allowlist",
+    "affected_tests",  # static import-graph test selection; stdlib only, imports nothing here (#2231)
+    "check_receipts",  # fingerprinted check receipts and the merge route they imply; stdlib only (#2412)
+    "memory_ranking",
+    "memory_graph",  # memory entity/link tables and the graph retrieval leg (#2096)
+    "plan_usage_limit",  # plan usage ceiling text matcher (#1841, moved down by #2026)
+    "config",
+    "source_host",  # the verified caller's host for source_host stamps; imports only config (#1633)
+    "credential_fence",  # hub-wide bearer-change fence (flock); imports only config (#2103)
+    "settings",
+    "projects",
+    "config_revisions",
+    "team_policy",  # teams block parsing and validation for policy revisions (#1736)
+    "storage",
+    "storage_backup",
+    "constraint_migration",  # one-shot #1433 key-constraint rebuild storage.init_db runs (#2326)
+    "org_partition",  # the storage chokepoint for org_id on a partitioned store (#1433)
+    "org_partition_migration",  # the explicit sentinel backfill and its downgrade (#1433)
+    "vector_math",  # embedding blob encoding and the cosine_similarity() SQL function (#1720)
+    "events",
+    "safety",
+    "execution_locality",
+    "hosted_execution",  # typed compatibility surface over the canonical locality policy
+    "hosted_logging",  # stdlib-only process log formatting
+    "device_key",  # shared signing and replay validation for device requests
+    "pytest_attestation",  # in-toto Ed25519 signatures over a local pytest run; keys come from the environment
+    "ready",  # SQLite readiness and bounded advisory reachability
+    "note_lock",  # per-note vault write lock every note writer takes (#2086)
+    "policy",
+    "gateway",
+    "profiles",
+    "agent_access",
+    "trust_presets",
+    "edition",
+    "tenant_tables",  # table tenancy inventory, data only; tests enforce it (#1433)
+    "managed_secrets",
+    "service_env",
+    "registry",
+    "personas",
+    "usage_ledger",
+    "org_registry",
+    "agent_roster",  # operator-added agent seats on event_log, read by config (#2453)
+    "object_model",
+    "oauth_store",
+    "identity_core",  # the WorkOS hub leg and the OAuth provider lookup; workos_hub_auth re-exports (#1721)
+    "independent_review",  # bounded human-attested release review projection/schema (#2158)
+    "pilot_auth",  # WorkOS session verification both WorkOS legs build on; imports nothing from the package (#1721)
+    "scheduled_status",
+    "hub_runtime",  # the hub's start record and checkout HEAD reader (#1771)
+    "dispatch.child_env",  # misplaced: the spawn env allowlist is a safety primitive
+    "tools.approvals",  # misplaced: the approval gate, not an MCP tool wrapper
+    "approval_push",  # the gate's off-by-default phone push for a new pending row (#1988)
+    "approval_webhook",  # bounded best-effort signed approval notifications
+    "approval_receipts",  # durable decision receipts back to the requester (#2394)
+    "tool_errors",  # typed MCP tool error codes and the tools/call handler (#2054)
+    "tool_surface",
+    "change_feed",
+    "dispatch_states",
+    "dispatch_reads",  # read-only readers over dispatch_runs and its approvals
+    "budget_policy",
+    "operating_policy",
+    "table_schemas",
+    "review_reads",  # head-bound review-read rows; storage._migrate creates the table (#2259)
+    "work_proposals",  # agent-filed work batches; storage.init_db creates its tables (#2393)
+    "review_holds",  # operator release/keep of review holds; storage.init_db creates its table (#2514)
+    "task_ownership",  # read model over the stored next-owner columns (#2388)
+    "telemetry",
+    "telemetry.*",
+    # In-process progress and runtime-telemetry recorders the MCP adapter feeds.
+    # They depend on no adapter code, so any layer may report through them.
+    "mcp_progress",
+    "mcp_runtime_telemetry",
+    "mcp_telemetry",
+    "projection",
+    "projection.*",
+    "messaging.schema",
+    "messaging.index",  # derived mailbox table; storage._migrate creates it (#1859)
+    "lifecycle.handoff",  # session handoff notes and context epochs; storage creates the tables (#2397)
+    "messaging.bridge_state",  # the bridges' cursor and idempotency file (#1863)
+    "messaging.brain_format",  # unified_brain thread format, read and written in process (#1863)
+    "lifecycle.schema",
+    "audit.anchor",
+    "audit.anchor_git",
+    "audit.anchor_tsa",
+    "audit.reanchor",
+    "audit.safe_read",  # bounded regular-file reads and writes in a scanned tree; stdlib only, so anchor/reanchor and the audit engine can share it (#2212)
+    "audit.producer_sign",
+    "audit.evidence_signing",
+]
+
+# Seams: deliberate upward imports, each with its reason. They are design, not
+# debt, and the check keeps them apart from the baseline.
+
+[[seam]]
+from = "tool_surface"
+to = "server"
+why = "server.py is the composition root that registers every governed tool; tool_surface imports it lazily on first use so lower layers never name the MCP adapter."
+
+[[seam]]
+from = "events"
+to = "run_records"
+why = "prune_events deletes old event_log rows, so it must drop the heartbeat-usage rows whose self-pickup claim it just pruned (#940); the import is lazy and runs only inside a prune that removed rows."
+
+[[seam]]
+from = "tools.approvals"
+to = "run_records"
+why = "Linking an approval to the caller's open run uses the same unclaimed-doing lease as run records (#1653), so an expired claim and a stale unclaimed row are classified once; the import is lazy, inside that lookup."
+
+[[seam]]
+from = "task_holds"
+to = "node_queue"
+why = "A subtree hold's cancel stops members' queued or claimed node items through the existing node_queue.cancel (#1747); the import is lazy, inside the cancel fan-out, while node_queue calls task_holds.claim_block at module level."
+
+[[seam]]
+from = "team_spec"
+to = "node_queue"
+why = "The default seat launcher enqueues a governed ACP item on the ua-node queue (#1736, the #1329 launch path); the import is lazy, inside NodeSeatLauncher, and tests inject a launcher instead."
+
+[[seam]]
+from = "team_snapshot"
+to = "node_queue"
+why = "Team restore reopens or re-dispatches each seat through the existing approval-gated node queue (#1738), never a new path; the import is lazy, inside restore/preview."
+
+[[seam]]
+from = "team_snapshot"
+to = "node_resume"
+why = "Team snapshot and restore read each seat's resume capability and reopen sessions through node_resume (#1738), so resume rules live in one place; the import is lazy."
+
+[[seam]]
+from = "tools.graph"
+to = "github_app_worker"
+why = "coordination_manage's approval_ledger_rerequest (#1854) asks the Approval Ledger worker to open one missed PR-head row through its own poll path, lock and service identity, never a second path; the import is lazy, inside the action."
+
+[[seam]]
+from = "tools.graph"
+to = "node_command"
+why = "coordination_manage exposes supervised node commands (#2413: start, status, adopt) through the canonical node_command runtime, which owns the fence, outbox and adoption rules; the actions are thin wrappers, never a second queue path."
+
+[[seam]]
+from = "tools.graph"
+to = "node_acceptance"
+why = "coordination_manage exposes enrolled-device diagnostics and operator attestation through the canonical node acceptance runtime (#2112); it imports the registered actions lazily instead of duplicating queue or authority logic."
+
+[[seam]]
+from = "review_head_status"
+to = "shipping_preflight_cli"
+why = "The review-head rule lives in one place, beside its tests, in shipping_preflight_cli (#2259): the poll's required check asks that gate through its strict review_head_check entry point (#2320) instead of holding a second copy of the rule; the import is lazy, inside the one call."
+
+[[seam]]
+from = "post_init"
+to = "github_app_fastpath"
+why = "A human decision on an Approval Ledger row hands that head to the ledger worker's own per-PR poll step at once (#2234), so GitHub shows the final status without waiting for the next poll. The approval gate no longer imports the fast path (#2450): post_init.register_kernel_handlers loads it lazily in every entry point that registers the default hooks, and it registers itself with tools.approvals, which calls it after the resolution commits, only for github_app.process_pr_event rows."
+
+[[seam]]
+from = "tools.approvals"
+to = "approval_slack"
+why = "A committed approval request or decision is handed to the optional Slack card notifier (#2303), beside the signed webhook; the import is lazy, after the row commits, the call only enqueues for its own worker, and nothing it posts can resolve an approval."
+
+[[seam]]
+from = "work_proposals"
+to = "tools.tasks"
+why = "Approving a work-proposal item spawns its task through the real task_add (#2393), so task validation, lanes, idempotency and untrusted propagation live in one place; the import is lazy, inside _spawn_task, after the approving claim commits."
+
+[[seam]]
+from = "approval_receipts"
+to = "messaging.send"
+why = "A committed approval receipt is handed to the requesting agent as one hub inform from the in-process service sender hub-approvals (#2435); the import is lazy, inside the notify call after the receipt event commits, and the message carries ids and the decision only."

@@ -1,0 +1,22 @@
+queue_rules:
+  - name: default
+    batch_size: 5
+    batch_max_wait_time: 5 min
+    merge_method: merge
+    queue_conditions:
+      - check-success = CI / gates
+      - label != held
+    merge_conditions:
+      - check-success = CI / gates
+      - check-success = CI / full-verification
+
+pull_request_rules:
+  - name: queue labeled pull requests in a batch
+    conditions:
+      - base = main
+      - label = queue
+      - -draft
+      - label != held
+    actions:
+      queue:
+        name: default

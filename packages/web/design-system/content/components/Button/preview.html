@@ -1,0 +1,25 @@
+<!-- @dsCard group="Actions" height=120 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Button — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var App = h('div', {className:'stack'},
+  h('div', {className:'row'},
+    h(U.Button, {variant:'primary'}, 'Review and publish'),
+    h(U.Button, null, 'Check surface drift'),
+    h(U.Button, {variant:'danger'}, 'Deny'),
+    h(U.Button, {variant:'ghost'}, 'Dismiss')),
+  h('div', {className:'row'},
+    h(U.Button, {variant:'primary', size:'sm'}, 'Small'),
+    h(U.Button, {variant:'primary', size:'lg'}, 'Large'),
+    h(U.Button, {variant:'primary', disabled:true}, 'Disabled'),
+    h(U.Button, {variant:'primary', loading:true}, 'Dispatching')));
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

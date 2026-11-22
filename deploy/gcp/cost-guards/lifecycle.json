@@ -1,0 +1,50 @@
+{
+  "rule": [
+    {
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "age": 3,
+        "matchesPrefix": [
+          "litestream/"
+        ]
+      }
+    },
+    {
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "numNewerVersions": 2,
+        "matchesPrefix": [
+          "litestream/"
+        ]
+      }
+    },
+    {
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "age": 30,
+        "isLive": true,
+        "matchesPrefix": [
+          "memory-db/"
+        ]
+      }
+    },
+    {
+      "action": {
+        "type": "Delete"
+      },
+      "condition": {
+        "daysSinceNoncurrentTime": 1,
+        "isLive": false,
+        "matchesPrefix": [
+          "memory-db/"
+        ]
+      }
+    }
+  ]
+}

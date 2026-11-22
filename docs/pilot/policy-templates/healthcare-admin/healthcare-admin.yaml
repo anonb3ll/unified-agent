@@ -1,0 +1,38 @@
+# Pilot policy template: healthcare administration (non-clinical), task
+# #1280 (H4). Synthetic starting point — no real patient, client, or
+# facility data belongs here, and this pack is scoped to administrative
+# documents only. Copy this directory, edit the values below, and point the
+# hub's UA_WORK_PRODUCT_TEMPLATE_DIR at wherever you keep the copy (see
+# README.md). This file loads through the same unified_agent.tools.
+# work_product schema the shipped fixture packs use
+# (src/unified_agent/templates/work_product/) — see
+# docs/work-product-release.md.
+id: healthcare-admin
+title: Healthcare administration document (non-clinical)
+description: >-
+  An administrative document an agent prepares for a healthcare
+  organization — a scheduling or credentialing letter, a billing or
+  operations report, a policy or training memo — with a named compliance
+  lead as the intended reviewer before release. The pack does not enforce
+  the named role. Scope is strictly non-clinical: this
+  pack must never be used for patient records, clinical notes, diagnoses,
+  or any protected health information. Route anything clinical through a
+  reviewed, HIPAA-appropriate system instead.
+reviewer_role: compliance_lead
+required_tags:
+  - client
+  - engagement
+release_subfolder: healthcare-admin
+
+# Optional two-person rule (descriptive metadata only — see README.md).
+# This pack ships it enabled by default given the regulatory sensitivity of
+# the vertical, but — exactly as in the other packs — the platform does not
+# yet structurally enforce a second distinct approver; see the
+# professional-services pack's comment for what is and is not enforced
+# today, and the reviewer quick guide for the current limitation. A pilot enforces it
+# operationally: only the named reviewer_role and second_reviewer_role
+# holders should be able to reach approval_resolve, and the privacy officer's sign-off is recorded externally before
+# the platform approval is granted.
+two_person_rule:
+  enabled: true
+  second_reviewer_role: privacy_officer

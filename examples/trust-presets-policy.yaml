@@ -1,0 +1,12 @@
+# Reviewed tightening-only example. Copy into the operator policy file only
+# after review; no live settings are changed by this template. Existing profile
+# tool visibility, approval rules and filesystem roots remain authoritative.
+version: 1
+enabled: true
+default_action: allow
+trust_presets:
+  default: inspection
+  agents:
+    Desktop_Agent2: active-worktree
+    Desktop_Agent1: configured-workspace
+rules: []

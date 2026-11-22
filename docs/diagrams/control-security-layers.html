@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control &amp; Security Layers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --paper:#1e1e2e; --ink:#cdd6f4; --muted:#a6adc8; --accent:#fab387; }
+    body { font-family:'Geist', system-ui, sans-serif; background:var(--paper); color:var(--ink);
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:3rem 2rem; }
+    .frame { max-width:1280px; width:100%; }
+    .eyebrow { font-family:'Geist Mono', monospace; font-size:0.66rem; font-weight:500;
+      letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; }
+    h1 { font-family:'Instrument Serif', serif; font-size:clamp(1.5rem,2.4vw + 0.75rem,2rem);
+      font-weight:400; letter-spacing:-0.02em; line-height:1.15; margin-bottom:1.5rem; }
+    svg { width:100%; min-width:960px; display:block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Layer stack · governance / control catalog · Diagram Design</p>
+    <h1>Control &amp; security layers — where each check is enforced</h1>
+
+    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ctl-title ctl-desc">
+      <title id="ctl-title">Control and security layers</title>
+      <desc id="ctl-desc">unified-agent's checks grouped by enforcement point: identity binding on connect, the profile capability overlay per session, the safety.py chokepoints on every tool call, the test-and-audit gate on merge, human and platform gates on deploy and runtime, and a continuous advisory audit that warns but grants no authority.</desc>
+      <defs>
+        <marker id="down" markerWidth="9" markerHeight="8" refX="4.5" refY="7" orient="auto"><polygon points="0 0, 9 0, 4.5 8" fill="#a6adc8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#1e1e2e"/>
+
+      <text x="40" y="100" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.1em">lifecycle</text>
+      <line x1="84" y1="112" x2="84" y2="588" stroke="rgba(205,214,244,0.28)" stroke-width="1" marker-end="url(#down)"/>
+      <text x="44" y="610" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.1em">runtime</text>
+
+      <!-- stack -->
+      <rect x="128" y="84" width="1088" height="524" rx="8" fill="none" stroke="#a6adc8" stroke-width="1"/>
+      <line x1="128" y1="160" x2="1216" y2="160" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+      <line x1="128" y1="236" x2="1216" y2="236" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+      <line x1="128" y1="380" x2="1216" y2="380" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+      <line x1="128" y1="456" x2="1216" y2="456" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+      <line x1="128" y1="540" x2="1216" y2="540" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+
+      <!-- focal band: per tool call -->
+      <rect x="129" y="237" width="1086" height="142" fill="rgba(250,179,135,0.12)"/>
+      <rect x="128" y="236" width="1088" height="144" fill="none" stroke="#fab387" stroke-width="1.2"/>
+
+      <!-- B1 identity -->
+      <text x="152" y="118" fill="#7f849c" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ON CONNECT</text>
+      <text x="152" y="136" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Identity gate</text>
+      <text x="360" y="122" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">HTTP middleware verifies the bearer token → binds a verified agent</text>
+      <text x="360" y="140" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">gap: stdio + unauthenticated HTTP skip the tool-list filter (local IDE compat)</text>
+      <text x="1192" y="126" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">code · on connect</text>
+
+      <!-- B2 profile -->
+      <text x="152" y="194" fill="#7f849c" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">PER SESSION</text>
+      <text x="152" y="212" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Profile gate</text>
+      <text x="360" y="198" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">capability overlay keyed by identity + MCP session id</text>
+      <text x="360" y="216" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">developer / steward deny-list · research / operator allow-list · cannot grant what safety.py refuses</text>
+      <text x="1192" y="202" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">code · per session</text>
+
+      <!-- B3 per tool call (focal) -->
+      <text x="152" y="266" fill="#fab387" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">EVERY TOOL CALL</text>
+      <text x="152" y="284" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">safety.py chokepoints</text>
+      <text x="360" y="266" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">Path resolver — rejects paths outside root · asymmetric read/write · refuses .git/.husky hook dirs</text>
+      <text x="360" y="286" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">Command vetter — splits the command, accepts only allowlisted programs</text>
+      <text x="360" y="306" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">Policy gate — holds selected calls for a one-time human approval</text>
+      <text x="360" y="332" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">a few chokepoints, not a check per tool — the allowlist does not make arguments safe</text>
+      <text x="360" y="352" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">web_fetch SSRF guard · vault write boundary (.md/.txt into UA_VAULT_WRITE_DIRS)</text>
+      <text x="1192" y="270" fill="#fab387" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">code · on call</text>
+      <text x="1192" y="332" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">+ human · approval</text>
+
+      <!-- B4 merge/CI -->
+      <text x="152" y="414" fill="#7f849c" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ON MERGE</text>
+      <text x="152" y="432" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Merge / CI gate</text>
+      <text x="360" y="418" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">git_merge_task test-and-audit gate · PR runs ruff + pytest + high-severity audit</text>
+      <text x="360" y="436" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">bypassed when work goes through native git in ~/dev/* instead of the MCP tool</text>
+      <text x="1192" y="422" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">CI · on merge</text>
+
+      <!-- B5 deploy/runtime -->
+      <text x="152" y="490" fill="#7f849c" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ON DEPLOY / RUN</text>
+      <text x="152" y="508" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Deploy &amp; runtime</text>
+      <text x="360" y="486" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">hub restart is steward / Operator-gated · UA_WORKSPACE pinned by the systemd unit</text>
+      <text x="360" y="506" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">dispatch child-env allowlist — no TOKEN/SECRET inheritance · Claude sandbox deny rules</text>
+      <text x="360" y="524" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">Mac hub deploy = verified SHA as a git bundle, ff-only, healthz probe</text>
+      <text x="1192" y="494" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">human + platform</text>
+
+      <!-- B6 audit advisory -->
+      <text x="152" y="574" fill="#7f849c" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CONTINUOUS</text>
+      <text x="152" y="592" fill="#cdd6f4" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Audit engine</text>
+      <text x="360" y="578" fill="#a6adc8" font-size="10" font-family="'Geist Mono', monospace">security_audit + skill_review — read-only rule catalogs over the workspace and skills</text>
+      <text x="360" y="596" fill="#7f849c" font-size="10" font-family="'Geist Mono', monospace">it warns about risk · it does not grant authority and does not equal merge or deploy</text>
+      <text x="1192" y="582" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">code · advisory only</text>
+
+      <!-- callout -->
+      <text x="128" y="644" fill="#cdd6f4" font-size="14" font-style="italic" font-family="'Instrument Serif', serif">Different roles, not a single wall. An approval does not bypass a path check; an audit does not grant authority;</text>
+      <text x="128" y="666" fill="#cdd6f4" font-size="14" font-style="italic" font-family="'Instrument Serif', serif">a command allowlist does not vet the arguments. Review evidence is never merge, deploy, or credential access.</text>
+    </svg>
+  </div>
+</body>
+</html>

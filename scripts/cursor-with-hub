@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Launch the Cursor editor with this machine's Desktop_Agent4 hub bearer token,
+# isolated from whatever UA_AGENT_BEARER_TOKEN the parent shell carries (e.g.
+# Codex's). Interactive launcher, not an executor default. Never prints the
+# token. Installed by scripts/install-with-hub-wrappers.sh.
+set -euo pipefail
+
+me="cursor-with-hub"
+TOKEN_FILE="${UA_CURSOR_TOKEN_FILE:-$HOME/.cursor/unified-agent-token}"
+GBRAIN_TOKEN_FILE="${GBRAIN_TOKEN_FILE:-$HOME/.codex/gbrain-token}"
+
+if [[ -n "${CURSOR_BIN:-}" ]]; then
+  bin="$CURSOR_BIN"
+else
+  bin=""
+  for candidate in \
+    /usr/share/cursor/cursor \
+    /Applications/Cursor.app/Contents/Resources/app/bin/cursor; do
+    if [[ -x "$candidate" ]]; then
+      bin="$candidate"
+      break
+    fi
+  done
+  if [[ -z "$bin" ]]; then
+    bin="$(command -v cursor 2>/dev/null || true)"
+  fi
+fi
+
+# A bare command name (e.g. code-insiders) resolves via PATH; paths stay paths.
+if [[ -n "$bin" && "$bin" != */* ]]; then
+  bin="$(command -v "$bin" 2>/dev/null || printf '%s' "$bin")"
+fi
+
+if [[ ! -r "$TOKEN_FILE" ]]; then
+  echo "$me: token file is unavailable: $TOKEN_FILE" >&2
+  echo "$me: run scripts/sync-agent-tokens.sh from the unified_agent checkout" >&2
+  exit 1
+fi
+if [[ -z "$bin" || ! -x "$bin" ]]; then
+  echo "$me: cursor binary not found: ${bin:-<none>} (set CURSOR_BIN)" >&2
+  exit 1
+fi
+
+token="$(tr -d '\r\n' < "$TOKEN_FILE")"
+if [[ -z "$token" ]]; then
+  echo "$me: token file is empty: $TOKEN_FILE" >&2
+  exit 1
+fi
+export UA_CURSOR_HUB_TOKEN="$token"
+# Agent subprocesses that read UA_AGENT_BEARER_TOKEN inherit Cursor's identity,
+# not whatever another agent left in the parent shell.
+export UA_AGENT_BEARER_TOKEN="$token"
+
+# Drop any gbrain bearer inherited from the parent shell so the child never
+# authenticates to gbrain as another agent; re-export only this agent's own.
+unset GBRAIN_BEARER_TOKEN GBRAIN_TOKEN
+if [[ -r "$GBRAIN_TOKEN_FILE" ]]; then
+  gbrain_token="$(tr -d '\r\n' < "$GBRAIN_TOKEN_FILE")"
+  if [[ -n "$gbrain_token" ]]; then
+    export GBRAIN_BEARER_TOKEN="$gbrain_token"
+  fi
+fi
+
+exec "$bin" "$@"

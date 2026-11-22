@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node", "vitest/globals"]
+  },
+  "include": ["src", "tests"],
+  // The design-system checks drive the untyped design-system/build.mjs script and
+  // jsdom (no type package installed); they stay out of the typecheck.
+  "exclude": ["tests/design-*.test.ts"]
+}

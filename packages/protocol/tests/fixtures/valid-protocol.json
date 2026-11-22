@@ -1,0 +1,206 @@
+{
+  "Task": {
+    "id": 572,
+    "title": "Implement protocol models",
+    "notes": "Generated models must agree with Zod.",
+    "status": "doing",
+    "priority": "high",
+    "parent_id": null,
+    "project": "unified-agent",
+    "claimed_by": "Desktop_Agent2",
+    "claimed_at": "2026-08-25T05:52:00Z",
+    "lock_expires_at": null,
+    "worktree_path": "/workspace/unified-agent/.worktrees/task-572",
+    "branch": "codex/task-572-typescript-protocol",
+    "created_at": "2026-08-25T05:52:00Z",
+    "updated_at": "2026-08-25T05:52:00Z",
+    "completed_at": null
+  },
+  "TaskCreateRequest": {
+    "title": "Implement the authenticated SDK write path",
+    "notes": "Fixture request",
+    "priority": "med",
+    "project": "unified-agent",
+    "idempotency_key": "sdk-write-fixture"
+  },
+  "TaskUpdateRequest": {
+    "id": 572,
+    "append_note": "Updated through the typed HTTP client."
+  },
+  "TaskWriteResult": {"id": 573},
+  "PendingApprovalResult": {"approval_id": 18, "status": "pending", "tool": "task_add", "payload": {"title": "Fixture task"}},
+  "TaskWriteOutcome": {"id": 573},
+  "Tool": {
+    "name": "task_list",
+    "description": "List durable tasks.",
+    "input_schema": {"type": "object"}
+  },
+  "ToolInvocation": {
+    "tool": "task_list",
+    "arguments": {"status": "open"},
+    "caller": "Desktop_Agent2",
+    "session_id": "session-572"
+  },
+  "Capability": {
+    "id": "task-management",
+    "name": "Task management",
+    "description": "Read and update durable task state.",
+    "tools": ["task_list", "task_update"]
+  },
+  "Approval": {
+    "id": 17,
+    "tool": "run_cmd",
+    "payload": {"command": "npm test"},
+    "requested_by": "Desktop_Agent2",
+    "status": "pending",
+    "reason": null,
+    "resolved_by": null,
+    "created_at": "2026-08-25T05:52:00Z",
+    "updated_at": "2026-08-25T05:52:00Z",
+    "resolved_at": null
+  },
+  "WorkProductSubmitRequest": {
+    "source_path": "/workspace/drafts/memo.md",
+    "title": "Synthetic memo",
+    "template_pack": "legal",
+    "tags": {"matter": "M-synthetic", "client": "Example Client"},
+    "model": "synthetic-model"
+  },
+  "WorkProductReleaseRequest": {"work_product_id": 27},
+  "WorkProductRow": {
+    "id": 27,
+    "title": "Synthetic memo",
+    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_path": "/workspace/drafts/memo.md",
+    "size_bytes": 18,
+    "mime_type": "text/markdown",
+    "producing_agent": "Desktop_Agent5",
+    "producing_model": "synthetic-model",
+    "template_pack": "legal",
+    "tags": {"matter": "M-synthetic", "client": "Example Client"},
+    "status": "released",
+    "previous_version_id": null,
+    "approval_id": 18,
+    "released_path": "/workspace/released/27-memo.md",
+    "released_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reject_reason": null,
+    "submitted_by": "Desktop_Agent5",
+    "resolved_by": "Desktop_Person",
+    "resolved_at": "2026-09-23T11:00:00Z",
+    "released_at": "2026-09-23T11:01:00Z",
+    "created_at": "2026-09-23T10:59:00Z",
+    "updated_at": "2026-09-23T11:01:00Z"
+  },
+  "WorkProductPending": {"status": "pending", "approval_id": 18, "work_product_id": 27},
+  "WorkProductWriteOutcome": {"status": "pending", "approval_id": 18, "work_product_id": 27},
+  "ApprovalRequest": {
+    "tool": "task_update",
+    "payload": {"id": 572}
+  },
+  "ApprovalRequestResult": {
+    "approval_id": 18,
+    "status": "pending",
+    "tool": "task_update",
+    "payload": {"id": 572}
+  },
+  "ApprovalResolveRequest": {
+    "id": 18,
+    "decision": "deny",
+    "reason": "Fixture request"
+  },
+  "ApprovalResolveResult": {"id": 18, "status": "denied"},
+  "ApprovalToken": {
+    "approval_id": 17,
+    "tool": "run_cmd",
+    "payload_fingerprint": "sha256:fixture",
+    "expires_at": null
+  },
+  "Principal": {
+    "label": "Desktop_Agent2",
+    "kind": "agent",
+    "host": "desktop-host"
+  },
+  "Profile": {
+    "name": "developer",
+    "identity": "Desktop_Agent2",
+    "session_id": "session-572",
+    "denied_tools": []
+  },
+  "PolicyDecision": {
+    "allow": true,
+    "reason": "tool is permitted",
+    "rule": "developer-tool-allowlist",
+    "principal": {
+      "label": "Desktop_Agent2",
+      "kind": "agent",
+      "host": "desktop-host"
+    },
+    "tool": "task_list"
+  },
+  "Execution": {
+    "id": "exec-572",
+    "task_id": 572,
+    "agent": "Desktop_Agent2",
+    "status": "running",
+    "started_at": "2026-08-25T05:52:00Z",
+    "finished_at": null,
+    "summary": "Validating protocol artifacts."
+  },
+  "Event": {
+    "id": "evt-572",
+    "channel": "coord",
+    "type": "task.claimed",
+    "payload": {"task_id": 572},
+    "created_at": "2026-08-25T05:52:00Z",
+    "actor": "Desktop_Agent2"
+  },
+  "EvidenceCreateRequest": {
+    "channel": "sdk.task",
+    "payload": {"task_id": 572},
+    "dedupe_key": "sdk-write-fixture-evidence"
+  },
+  "EvidenceCreateResult": {"event_ulid": "01JFIXTURE", "inserted": true},
+  "EvidenceCreateOutcome": {"event_ulid": "01JFIXTURE", "inserted": true},
+  "Artifact": {
+    "id": "artifact-572",
+    "kind": "file",
+    "uri": "packages/protocol/generated/python/models.py",
+    "media_type": "text/x-python",
+    "sha256": "sha256:fixture"
+  },
+  "Agent": {
+    "label": "Desktop_Agent2",
+    "profile": "developer",
+    "host": "desktop-host",
+    "online": true
+  },
+  "MemoryRecord": {
+    "id": "memory-572",
+    "title": "Protocol validation",
+    "content": "Zod and generated Pydantic models share the fixture contract.",
+    "tags": ["project:unified-agent", "typescript"],
+    "author": "Desktop_Agent2",
+    "salience": 0.8,
+    "created_at": "2026-08-25T05:52:00Z",
+    "updated_at": "2026-08-25T05:52:00Z"
+  },
+  "DispatchRequest": {
+    "agent": "Desktop_Agent2",
+    "prompt": "Validate the protocol artifacts.",
+    "task_id": 572,
+    "context": ["task_notes", "recent_validation"],
+    "project": "unified-agent"
+  },
+  "WorktreePolicy": {
+    "require_task_claim": true,
+    "branch_prefix": "codex/",
+    "allow_outside_workspace": false
+  },
+  "PathResolutionResult": {
+    "requested": "packages/protocol/generated/python/models.py",
+    "resolved": "/workspace/unified-agent/.worktrees/task-572/packages/protocol/generated/python/models.py",
+    "inside_root": true,
+    "root": "/workspace/unified-agent/.worktrees/task-572",
+    "reason": "resolved under the task worktree"
+  }
+}

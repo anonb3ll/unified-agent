@@ -1,0 +1,23 @@
+# Daily memory.db snapshot on the control-plane VM, then an offsite copy to the
+# fleet GCS backup bucket (task #2148). Installed by install.sh.
+[Unit]
+Description=unified-agent hub backup (local snapshot + GCS copy)
+Requires=ua-hub.service
+After=ua-hub.service
+
+[Service]
+Type=oneshot
+# Bounded so the run always ends before the 03:00 UTC snapshot (see the timer).
+TimeoutStartSec=20min
+ExecStart=/usr/local/lib/unified-agent/backup.sh
+# Hardening, as in ua-hub.service. backup.sh reads /mnt/ua-data/backups (the
+# snapshot itself is written by the container, through dockerd) and gcloud
+# writes its config and credential cache under /root/.config/gcloud, so
+# neither ProtectHome nor ProtectSystem=strict is set.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes

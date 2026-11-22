@@ -1,0 +1,33 @@
+# Supervised Zulip coordination worker.
+#
+# Install explicitly; this task does not install, enable, restart, or deploy it:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/systemd/unified-agent-zulip-worker.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now unified-agent-zulip-worker
+#
+# Logs: journalctl --user -u unified-agent-zulip-worker -f
+
+[Unit]
+Description=unified-agent Zulip coordination polling worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/unified_agent
+Environment=UA_WORKSPACE=%h/dev/agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Optional file may provide UA_HOME and other non-worker service settings. Zulip
+# credentials remain owner-only files under the configured UA_HOME.
+EnvironmentFile=-%h/.unified_agent/service.env
+# Live chat replies default OFF. Opt in via service.env:
+#   UA_ZULIP_CHAT=1
+# Chat never bypasses approvals or executes commands.
+ExecStart=%h/dev/unified_agent/.venv/bin/unified-agent-zulip-worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

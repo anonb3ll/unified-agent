@@ -1,0 +1,17 @@
+{
+  "name": "sdk-consumer-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "External-facing governed consumer proof for @unified-agent/client — one approval-gated action + evidence export",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node consumer.mjs",
+    "test": "node --test consumer.test.mjs"
+  },
+  "dependencies": {
+    "@unified-agent/client": "file:../../packages/client"
+  }
+}

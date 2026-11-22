@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-density="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified Agent · Command Center reference (design protocol v1)</title>
+<!--
+  Reference rendering of docs/designs/command-center-design-protocol.md.
+  Static sample data, no hub calls. Token names and values are the ones the
+  protocol specifies for packages/web/src/index.css; copy them, not the layout CSS.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens (protocol §3) ---------- */
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --ua-bg: #11111b; --ua-surface: #181825; --ua-raised: #1e1e2e; --ua-sunken: #11111b;
+  --ua-hover: #232334; --ua-selected: #313244;
+  --ua-border: #2a2b3d; --ua-border-strong: #6c7086;
+  --ua-fg: #cdd6f4; --ua-muted: #a6adc8; --ua-faint: #9399b2;
+  --ua-accent: #cba6f7; --ua-accent-fg: #11111b; --ua-link: #89b4fa; --ua-brand: #f38ba8;
+  --ua-ok: #a6e3a1; --ua-live: #89b4fa; --ua-warn: #f9e2af; --ua-decision: #fab387;
+  --ua-danger: #f38ba8; --ua-danger-fg: #11111b; --ua-info: #94e2d5; --ua-unknown: #7f849c;
+  --ua-shadow-overlay: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --ua-bg: #eff1f5; --ua-surface: #ffffff; --ua-raised: #ffffff; --ua-sunken: #e6e9ef;
+  --ua-hover: #e9ecf2; --ua-selected: #dce0e8;
+  --ua-border: #dce0e8; --ua-border-strong: #7c7f93;
+  --ua-fg: #4c4f69; --ua-muted: #5c5f77; --ua-faint: #6c6f85;
+  --ua-accent: #7028d4; --ua-accent-fg: #ffffff; --ua-link: #1650c8; --ua-brand: #d20f39;
+  --ua-ok: #2f7d1f; --ua-live: #1650c8; --ua-warn: #8a5a0c; --ua-decision: #b54708;
+  --ua-danger: #d20f39; --ua-danger-fg: #ffffff; --ua-info: #0f6f75; --ua-unknown: #6c6f85;
+  --ua-shadow-overlay: 0 16px 40px -12px rgb(76 79 105 / 0.28);
+}
+:root {
+  --ua-ok-surface: color-mix(in oklab, var(--ua-ok) 13%, var(--ua-surface));
+  --ua-live-surface: color-mix(in oklab, var(--ua-live) 13%, var(--ua-surface));
+  --ua-warn-surface: color-mix(in oklab, var(--ua-warn) 13%, var(--ua-surface));
+  --ua-decision-surface: color-mix(in oklab, var(--ua-decision) 14%, var(--ua-surface));
+  --ua-danger-surface: color-mix(in oklab, var(--ua-danger) 14%, var(--ua-surface));
+  --ua-accent-surface: color-mix(in oklab, var(--ua-accent) 16%, var(--ua-surface));
+  --font-sans: "Geist", "Inter", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+  --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 12px;
+  --dur-1: 100ms; --dur-2: 160ms; --dur-3: 220ms; --ease: cubic-bezier(.2,.8,.2,1);
+  --row: 40px;
+}
+[data-density="compact"] { --row: 32px; }
+[data-density="comfortable"] { --row: 48px; }
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--ua-bg); color: var(--ua-fg); font: 400 14px/20px var(--font-sans);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01"; }
+button { font: inherit; color: inherit; }
+.mono { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ua-muted); } .faint { color: var(--ua-faint); }
+.label { font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ua-faint); }
+:focus-visible { outline: 2px solid var(--ua-accent); outline-offset: 2px; border-radius: var(--r-xs); }
+svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Shell (protocol §4) ---------- */
+.shell { display: grid; height: 100vh; grid-template-columns: 232px minmax(0,1fr) auto;
+  grid-template-rows: 52px minmax(0,1fr) 28px; grid-template-areas: "side top top" "side main insp" "status status status"; }
+.side { grid-area: side; background: var(--ua-surface); border-right: 1px solid var(--ua-border);
+  display: flex; flex-direction: column; padding: 12px 10px; gap: 4px; overflow: auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px 12px; font-weight: 600; letter-spacing: -.01em; }
+.mark { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--ua-brand), var(--ua-accent)); color: #11111b; font: 600 11px/1 var(--font-mono); }
+.scope { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; margin-bottom: 10px;
+  border: 1px solid var(--ua-border); border-radius: var(--r-sm); background: var(--ua-sunken); cursor: pointer; }
+.scope small { display: block; color: var(--ua-faint); font-size: 12px; }
+.navgroup { margin: 10px 6px 4px; }
+.nav a { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: var(--r-sm);
+  color: var(--ua-muted); text-decoration: none; font-weight: 500; transition: background var(--dur-1) var(--ease), color var(--dur-1); }
+.nav a:hover { background: var(--ua-hover); color: var(--ua-fg); }
+.nav a[aria-current="page"] { background: var(--ua-selected); color: var(--ua-fg); box-shadow: inset 2px 0 0 var(--ua-accent); }
+.nav a .count { margin-left: auto; min-width: 20px; height: 18px; padding: 0 6px; border-radius: 9px; font: 500 11px/18px var(--font-mono); text-align: center; }
+.count.decision { background: var(--ua-decision-surface); color: var(--ua-decision); }
+.count.neutral { background: var(--ua-selected); color: var(--ua-fg); }
+.side .grow { flex: 1; }
+.me { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-top: 1px solid var(--ua-border); margin-top: 8px; }
+.avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--ua-selected); font-size: 11px; font-weight: 600; }
+.iconbtn { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--ua-muted); cursor: pointer; }
+.iconbtn:hover { background: var(--ua-hover); color: var(--ua-fg); }
+
+.top { grid-area: top; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--ua-border); background: var(--ua-bg); }
+.crumb { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.crumb .sep { color: var(--ua-faint); }
+.fresh { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; color: var(--ua-muted); background: var(--ua-surface); border: 1px solid var(--ua-border); }
+.fresh .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ua-ok); }
+.cmdk { margin-left: auto; display: flex; align-items: center; gap: 8px; width: min(380px, 34vw); height: 32px; padding: 0 10px;
+  border-radius: var(--r-sm); border: 1px solid var(--ua-border); background: var(--ua-surface); color: var(--ua-faint); cursor: text; }
+.cmdk kbd, kbd { margin-left: auto; font: 500 11px/16px var(--font-mono); padding: 0 5px; border-radius: var(--r-xs); border: 1px solid var(--ua-border); color: var(--ua-faint); background: var(--ua-bg); }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--ua-border-strong); background: transparent; font-weight: 500; cursor: pointer; white-space: nowrap;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1); }
+.btn:hover { background: var(--ua-hover); }
+.btn.primary { background: var(--ua-accent); border-color: var(--ua-accent); color: var(--ua-accent-fg); }
+.btn.primary:hover { background: color-mix(in oklab, var(--ua-accent) 88%, var(--ua-fg)); }
+.btn.ghost { border-color: transparent; color: var(--ua-muted); }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 13px; }
+
+.main { grid-area: main; overflow: auto; padding: 20px 24px 32px; }
+.status { grid-area: status; display: flex; align-items: center; gap: 18px; padding: 0 14px; border-top: 1px solid var(--ua-border);
+  background: var(--ua-surface); color: var(--ua-faint); font: 400 11px/28px var(--font-mono); }
+.status .ok { color: var(--ua-ok); } .status .sp { margin-left: auto; }
+
+/* ---------- Page ---------- */
+.pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -.015em; }
+.pagehead p { margin: 2px 0 0; color: var(--ua-muted); font-size: 13px; }
+.tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--ua-border); margin-bottom: 20px; }
+.tabs a { padding: 8px 0 10px; color: var(--ua-muted); text-decoration: none; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-selected="true"] { color: var(--ua-fg); border-color: var(--ua-accent); }
+.tabs a .n { color: var(--ua-faint); font: 400 12px var(--font-mono); margin-left: 4px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1px; background: var(--ua-border); border: 1px solid var(--ua-border); border-radius: var(--r-md); overflow: hidden; margin-bottom: 20px; }
+.kpi { background: var(--ua-surface); padding: 14px 16px 12px; text-decoration: none; color: inherit; display: block; transition: background var(--dur-1); }
+.kpi:hover { background: var(--ua-hover); }
+.kpi .v { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 4px; }
+.kpi .v b { font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi .v .of { color: var(--ua-faint); font-size: 14px; }
+.kpi .meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ua-faint); }
+.kpi svg.spark { width: 72px; height: 20px; stroke: var(--ua-link); stroke-width: 1.5; fill: none; }
+.kpi.decision .v b { color: var(--ua-decision); } .kpi.danger .v b { color: var(--ua-danger); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.region { background: var(--ua-surface); border: 1px solid var(--ua-border); border-radius: var(--r-md); margin-bottom: 20px; overflow: hidden; }
+.region > header { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px 0 16px; border-bottom: 1px solid var(--ua-border); }
+.region > header h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.region > header .n { font: 400 12px var(--font-mono); color: var(--ua-faint); }
+.region > header .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.stamp { font-size: 12px; color: var(--ua-faint); display: inline-flex; align-items: center; gap: 5px; }
+.stamp.stale { color: var(--ua-warn); }
+
+/* Attention row (protocol §6.4) */
+.row { display: grid; grid-template-columns: 112px minmax(0,1fr) auto; align-items: center; gap: 14px; min-height: calc(var(--row) + 16px);
+  padding: 8px 14px 8px 16px; border-bottom: 1px solid var(--ua-border); cursor: pointer; transition: background var(--dur-1); }
+.row:last-child { border-bottom: 0; }
+.row:hover { background: var(--ua-hover); }
+.row[aria-selected="true"] { background: var(--ua-selected); box-shadow: inset 2px 0 0 var(--ua-accent); }
+.row .t { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .sub { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ua-muted); white-space: nowrap; overflow: hidden; }
+.row .sub .arrow { color: var(--ua-faint); }
+
+/* State pill (protocol §6.1) */
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: var(--r-xs);
+  font: 500 11px/1 var(--font-sans); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; width: max-content; }
+.pill::before { font-size: 11px; letter-spacing: 0; }
+.pill.decision { color: var(--ua-decision); background: var(--ua-decision-surface); } .pill.decision::before { content: "◆"; }
+.pill.danger { color: var(--ua-danger); background: var(--ua-danger-surface); } .pill.danger::before { content: "▲"; }
+.pill.live { color: var(--ua-live); background: var(--ua-live-surface); } .pill.live::before { content: "◐"; }
+.pill.ok { color: var(--ua-ok); background: var(--ua-ok-surface); } .pill.ok::before { content: "✓"; }
+.pill.warn { color: var(--ua-warn); background: var(--ua-warn-surface); } .pill.warn::before { content: "◷"; }
+.pill.unknown { color: var(--ua-muted); background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in oklab, var(--ua-unknown) 22%, transparent) 4px 5px); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ua-unknown) 50%, transparent); }
+.pill.unknown::before { content: "?"; font-weight: 600; }
+
+/* Proof rail (protocol §6.3) */
+.rail { display: flex; align-items: center; gap: 3px; }
+.rail i { width: 18px; height: 6px; border-radius: 2px; background: var(--ua-selected); }
+.rail i.ok { background: var(--ua-ok); } .rail i.live { background: var(--ua-live); }
+.rail i.decision { background: var(--ua-decision); } .rail i.danger { background: var(--ua-danger); }
+.rail i.unknown { background: repeating-linear-gradient(135deg, var(--ua-selected) 0 2px, var(--ua-unknown) 2px 3px); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font: 500 11px/16px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ua-faint); padding: 10px 16px 8px; border-bottom: 1px solid var(--ua-border); }
+td { height: var(--row); padding: 0 16px; border-bottom: 1px solid var(--ua-border); font-size: 13px; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: pointer; transition: background var(--dur-1); } tbody tr:hover { background: var(--ua-hover); }
+td.title { max-width: 0; width: 40%; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 14px; }
+
+/* Agent chip (protocol §6.6) */
+.agent { display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 16px; border-bottom: 1px solid var(--ua-border); }
+.agent:last-child { border-bottom: 0; }
+.agent .stripe { width: 3px; align-self: stretch; border-radius: 2px; }
+.agent .who { min-width: 0; flex: 1; }
+.agent .who .mono { color: var(--ua-fg); }
+.agent .who small { display: block; color: var(--ua-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.presence { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.presence.live { background: var(--ua-live); box-shadow: 0 0 0 0 color-mix(in oklab, var(--ua-live) 60%, transparent); animation: pulse 2s var(--ease) infinite; }
+.presence.idle { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ua-faint); }
+.presence.danger { background: var(--ua-danger); }
+@keyframes pulse { 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* Truth-state region bodies (protocol §5) */
+.unavail { margin: 12px 14px 14px 16px; padding: 12px; border-radius: var(--r-sm); border: 1px dashed var(--ua-border-strong);
+  background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in oklab, var(--ua-unknown) 9%, transparent) 6px 7px); font-size: 13px; }
+.unavail b { display: block; font-weight: 500; margin-bottom: 2px; }
+.unavail .muted { font-size: 12px; }
+.health { display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 16px; border-bottom: 1px solid var(--ua-border); font-size: 13px; }
+.health .r { margin-left: auto; }
+
+/* Inspector (protocol §6.5) */
+.insp { grid-area: insp; width: 440px; overflow: hidden; border-left: 1px solid transparent; background: var(--ua-raised); transition: width var(--dur-3) var(--ease); }
+.shell.inspecting .insp { width: 440px; border-left-color: var(--ua-border); }
+.insp .in { width: 440px; height: 100%; overflow: auto; }
+.insp header { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--ua-border); }
+.insp .body { padding: 18px 20px; }
+.insp h3 { margin: 6px 0 4px; font-size: 16px; line-height: 22px; font-weight: 600; letter-spacing: -.01em; }
+.insp dl { display: grid; grid-template-columns: 96px 1fr; gap: 8px 12px; margin: 16px 0 20px; font-size: 13px; }
+.insp dt { color: var(--ua-faint); } .insp dd { margin: 0; }
+.vrail { list-style: none; margin: 8px 0 20px; padding: 0; }
+.vrail li { position: relative; display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: start; padding: 0 0 14px; font-size: 13px; }
+.vrail li::after { content: ""; position: absolute; left: 9px; top: 20px; bottom: 2px; width: 1.5px; background: var(--ua-border); }
+.vrail li:last-child::after { display: none; }
+.vrail .node { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+.vrail .node.ok { background: var(--ua-ok-surface); color: var(--ua-ok); }
+.vrail .node.live { background: var(--ua-live-surface); color: var(--ua-live); }
+.vrail .node.warn { background: var(--ua-warn-surface); color: var(--ua-warn); }
+.vrail .node.decision { background: var(--ua-decision-surface); color: var(--ua-decision); box-shadow: 0 0 0 1.5px var(--ua-decision); }
+.vrail .node.todo { box-shadow: inset 0 0 0 1.5px var(--ua-border-strong); color: var(--ua-faint); }
+.vrail .node.unknown { color: var(--ua-muted); box-shadow: inset 0 0 0 1.5px var(--ua-unknown); background: repeating-linear-gradient(135deg, transparent 0 3px, color-mix(in oklab, var(--ua-unknown) 25%, transparent) 3px 4px); }
+.vrail small { display: block; color: var(--ua-muted); font-size: 12px; }
+.callout { padding: 12px 14px; border-radius: var(--r-sm); background: var(--ua-decision-surface); border: 1px solid color-mix(in oklab, var(--ua-decision) 35%, transparent); font-size: 13px; margin-bottom: 16px; }
+.callout b { color: var(--ua-decision); font-weight: 600; }
+.actions { display: flex; gap: 8px; }
+
+/* Command palette (protocol §6.7) */
+.scrim { position: fixed; inset: 0; background: rgb(17 17 27 / .55); backdrop-filter: blur(2px); display: none; place-items: start center; padding-top: 14vh; z-index: 10; }
+.scrim.open { display: grid; }
+.palette { width: min(620px, 92vw); border-radius: var(--r-lg); background: var(--ua-raised); border: 1px solid var(--ua-border); box-shadow: var(--ua-shadow-overlay); overflow: hidden; animation: rise var(--dur-3) var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px) scale(.99); } }
+.palette input { width: 100%; height: 52px; padding: 0 18px; border: 0; border-bottom: 1px solid var(--ua-border); background: transparent; color: var(--ua-fg); font: 400 15px var(--font-sans); outline: none; }
+.palette .grp { padding: 8px 8px 4px; }
+.palette .grp .label { padding: 4px 10px; }
+.palette .opt { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: var(--r-sm); color: var(--ua-muted); }
+.palette .opt[aria-selected="true"] { background: var(--ua-selected); color: var(--ua-fg); }
+.palette .opt kbd { margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+[hidden] { display: none !important; }
+.reference-note { margin: 0 0 16px; color: var(--ua-muted); font-size: 12px; }
+.mobile-nav, .mobile-inbox { display: none; }
+.palette .field { display: flex; align-items: center; padding-right: 8px; }
+.palette .opt { cursor: pointer; }
+.palette .opt:hover { background: var(--ua-hover); }
+.palette .opt[hidden] { display: none; }
+dialog { width: min(440px, 92vw); border: 1px solid var(--ua-border-strong); border-radius: var(--r-lg); padding: 20px; background: var(--ua-raised); color: var(--ua-fg); }
+dialog::backdrop { background: rgb(17 17 27 / .55); }
+dialog h2 { margin-top: 0; font-size: 18px; }
+.shell.compact { grid-template-columns: 56px minmax(0, 1fr) auto; }
+.shell.compact .side { padding: 12px 6px; }
+.shell.compact .side .navtext, .shell.compact .side .scope, .shell.compact .side .me-info, .shell.compact .side .avatar, .shell.compact .side .navgroup, .shell.compact .side .count { display: none; }
+.shell.compact .brand { flex-wrap: wrap; justify-content: center; padding: 0 0 12px; }
+.shell.compact .nav a { justify-content: center; padding: 0; }
+.shell.compact .me { padding: 8px 0; justify-content: center; }
+@media (max-width: 1439px) {
+  .shell, .shell.compact { grid-template-columns: 232px minmax(0, 1fr); grid-template-areas: "side top" "side main" "status status"; }
+  .shell.compact { grid-template-columns: 56px minmax(0, 1fr); }
+  .insp { position: fixed; top: 52px; right: 0; bottom: 28px; z-index: 5; width: min(440px, 100vw); box-shadow: var(--ua-shadow-overlay); }
+  .insp .in { width: 100%; }
+}
+@media (max-width: 1279px) {
+  .shell, .shell.compact { grid-template-columns: 56px minmax(0, 1fr); }
+  .side { padding: 12px 6px; }
+  .side .navtext, .side .scope, .side .me-info, .side .avatar, .side .navgroup, .side .count { display: none; }
+  .brand { flex-wrap: wrap; justify-content: center; padding: 0 0 12px; }
+  .nav a { justify-content: center; padding: 0; }
+  .me { padding: 8px 0; justify-content: center; }
+  .status { gap: 12px; overflow: hidden; white-space: nowrap; }
+  .status .sp { display: none; }
+}
+@media (max-width: 767px) {
+  .shell, .shell.compact { grid-template-columns: minmax(0, 1fr); grid-template-rows: 52px minmax(0, 1fr) 24px 56px; grid-template-areas: "top" "main" "status" "mobile"; }
+  .side { display: none; }
+  .top { padding: 0 10px; gap: 8px; }
+  .crumb { min-width: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fresh, .cmdk .cmdtext, .cmdk kbd { display: none; }
+  .cmdk { width: 32px; flex: none; justify-content: center; padding: 0; }
+  .mobile-inbox { display: inline-grid; }
+  .main { padding: 16px 12px 24px; }
+  .pagehead { align-items: start; }
+  .pagehead .actions { display: none; }
+  .row { grid-template-columns: 1fr auto; gap: 8px; }
+  .row > .pill { grid-column: 1 / -1; }
+  .row .sub { flex-wrap: wrap; white-space: normal; }
+  .kpi { padding: 12px; }
+  .kpi .meta { flex-wrap: wrap; gap: 4px; }
+  .kpi .v { flex-wrap: wrap; gap: 4px; }
+  .region table { table-layout: fixed; }
+  th, td { padding: 6px 4px; overflow-wrap: anywhere; white-space: normal; }
+  td.title { width: 28%; }
+  .rail { flex-wrap: wrap; gap: 2px; }
+  .rail i { width: 8px; }
+  .insp, .shell.inspecting .insp { inset: 0; width: 100%; height: 100dvh; border: 0; }
+  .insp .in { width: 100%; }
+  .insp .body { padding: 16px; }
+  .insp dl { grid-template-columns: 76px minmax(0, 1fr); }
+  .insp dd { overflow-wrap: anywhere; }
+  .insp .actions { flex-wrap: wrap; }
+  .mobile-nav { grid-area: mobile; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--ua-border); background: var(--ua-surface); }
+  .mobile-nav a { min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; color: var(--ua-muted); text-decoration: none; font-size: 10px; }
+  .mobile-nav a[aria-current="page"] { color: var(--ua-accent); background: var(--ua-accent-surface); }
+  .status { padding: 0 10px; gap: 12px; font-size: 10px; }
+  .status span:nth-child(n+3) { display: none; }
+  .palette { max-height: 80dvh; overflow: auto; }
+  .palette .opt { height: auto; min-height: 44px; }
+}
+/* Layout responds to the main region, not the viewport (protocol §4.3) */
+.main { container-type: inline-size; }
+@container (max-width: 1080px) { .grid { grid-template-columns: 1fr; } }
+@container (max-width: 760px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Lucide-style icons (ISC); production uses lucide-react -->
+  <symbol id="i-overview" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></symbol>
+  <symbol id="i-delivery" viewBox="0 0 24 24"><path d="M4 12h12"/><path d="m12 6 6 6-6 6"/><path d="M20 4v16"/></symbol>
+  <symbol id="i-org" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M21.5 20a6.5 6.5 0 0 0-4-6"/></symbol>
+  <symbol id="i-knowledge" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></symbol>
+  <symbol id="i-analytics" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></symbol>
+  <symbol id="i-decision" viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-audit" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></symbol>
+</svg>
+
+<div class="shell" id="shell">
+  <aside class="side" aria-label="Primary">
+    <div class="brand"><span class="mark">ua</span><span class="navtext">Unified Agent</span><button class="iconbtn" id="nav-toggle" aria-label="Collapse sidebar" aria-expanded="true" aria-keyshortcuts="[">‹</button></div>
+    <div class="scope" role="button" tabindex="0" aria-label="Switch scope">
+      <div><b style="font-weight:500">All projects</b><small>7 agents · 3 hosts</small></div>
+      <svg class="i"><use href="#i-chev"/></svg>
+    </div>
+    <nav class="nav" aria-label="Destinations">
+      <a href="?view=overview" data-go="overview" aria-label="Overview" aria-current="page"><svg class="i"><use href="#i-overview"/></svg><span class="navtext">Overview</span></a>
+      <a href="?view=delivery" data-go="delivery" aria-label="Delivery"><svg class="i"><use href="#i-delivery"/></svg><span class="navtext">Delivery</span></a>
+      <a href="?view=organization" data-go="organization" aria-label="Organization"><svg class="i"><use href="#i-org"/></svg><span class="navtext">Organization</span></a>
+      <a href="?view=knowledge" data-go="knowledge" aria-label="Knowledge"><svg class="i"><use href="#i-knowledge"/></svg><span class="navtext">Knowledge</span></a>
+      <a href="?view=analytics" data-go="analytics" aria-label="Analytics"><svg class="i"><use href="#i-analytics"/></svg><span class="navtext">Analytics</span></a>
+    </nav>
+    <div class="navgroup label">Inbox</div>
+    <nav class="nav" aria-label="Inbox">
+      <a href="?view=decisions" data-go="decisions" aria-label="Decisions"><svg class="i"><use href="#i-decision"/></svg><span class="navtext">Decisions</span><span class="count decision">2</span></a>
+      <a href="?view=messages" data-go="messages" aria-label="Messages"><svg class="i"><use href="#i-msg"/></svg><span class="navtext">Messages</span><span class="count neutral">5</span></a>
+      <a href="?view=audit" data-go="audit" aria-label="Audit"><svg class="i"><use href="#i-audit"/></svg><span class="navtext">Audit</span></a>
+    </nav>
+    <div class="grow"></div>
+    <div class="me">
+      <span class="avatar">AB</span>
+      <div class="me-info" style="min-width:0;flex:1"><div style="font-weight:500;font-size:13px">Operator</div><div class="mono faint" style="font-size:11px">operator · passkey</div></div>
+      <button class="iconbtn" id="theme" aria-label="Switch theme"><svg class="i"><use href="#i-sun"/></svg></button>
+    </div>
+  </aside>
+
+  <header class="top">
+    <div class="crumb">Overview</div>
+    <span class="fresh" title="Event stream connected; last event 2 seconds ago"><span class="dot"></span>Live · 2s</span>
+    <button class="cmdk" id="cmdk" aria-label="Open command palette" aria-keyshortcuts="Meta+K Control+K"><svg class="i"><use href="#i-search"/></svg><span class="cmdtext">Search, jump or run…</span><kbd>⌘K</kbd></button>
+    <button class="iconbtn mobile-inbox" id="mobile-inbox" aria-label="Open Inbox"><svg class="i"><use href="#i-decision"/></svg></button>
+    <button class="btn primary" data-action="Dispatch work" aria-keyshortcuts="."><svg class="i"><use href="#i-send"/></svg>Dispatch</button>
+  </header>
+
+  <main class="main" id="main">
+    <div class="pagehead">
+      <div><h1 id="destination-title">Overview</h1><p>What needs you, what is moving, and what is unproven.</p></div>
+      <div class="actions"><button class="btn sm ghost">Last 7 days<svg class="i"><use href="#i-chev"/></svg></button></div>
+    </div>
+
+    <p class="reference-note">Static sample reference. Navigation and inspectors work; action dialogs send no requests.</p>
+    <section class="region" id="destination-placeholder" hidden><header><h2>Reference destination</h2></header><p style="padding:16px" id="destination-description"></p></section>
+    <div id="overview-content">
+    <section class="kpis" aria-label="Key figures">
+      <a class="kpi decision" href="#"><div class="label">Needs your decision</div><div class="v"><b>2</b></div><div class="meta"><span>oldest 18m</span><span class="stamp">live</span></div></a>
+      <a class="kpi danger" href="#"><div class="label">Blocked</div><div class="v"><b>1</b></div><div class="meta"><span>missing outcome proof</span><span class="stamp">live</span></div></a>
+      <a class="kpi" href="#"><div class="label">In flight</div><div class="v"><b>5</b><span class="of">runs</span></div><div class="meta"><span>3 agents</span><svg class="spark" viewBox="0 0 72 20"><path d="M0 14 9 12 18 15 27 9 36 11 45 6 54 8 63 4 72 7"/></svg></div></a>
+      <a class="kpi" href="#"><div class="label">Verified delivery · 7d</div><div class="v"><b>8</b><span class="of">/ 11 · 73%</span></div><div class="meta"><span>coverage 11/11</span><svg class="spark" viewBox="0 0 72 20"><path d="M0 12 9 13 18 10 27 11 36 8 45 9 54 6 63 7 72 5"/></svg></div></a>
+    </section>
+
+    <div class="grid">
+      <div>
+        <section class="region" aria-labelledby="att-h">
+          <header><h2 id="att-h">Attention</h2><span class="n">3</span><div class="right"><span class="stamp">updated 2s ago</span></div></header>
+          <div class="row" data-inspect="DEMO-104" aria-expanded="false" aria-controls="insp" tabindex="0" role="button" aria-label="Inspect Authorize search-reliability rollout">
+            <span class="pill decision">Decision</span>
+            <div style="min-width:0"><div class="t">Authorize search-reliability rollout</div><div class="sub"><span class="mono">DEMO-104</span>·<span>agent-codex</span><span class="arrow">→</span><b style="font-weight:500;color:var(--ua-fg)">you</b>·<span>release waits on this</span>·<span class="num">18m</span></div></div>
+            <span class="btn sm primary" aria-hidden="true">Review</span>
+          </div>
+          <div class="row" data-inspect="DEMO-107" aria-expanded="false" aria-controls="insp" tabindex="0" role="button" aria-label="Inspect Evidence export">
+            <span class="pill danger">Blocked</span>
+            <div style="min-width:0"><div class="t">Evidence export cannot close</div><div class="sub"><span class="mono">DEMO-107</span>·<span>agent-claude</span><span class="arrow">→</span><span>deploy steward</span>·<span>external verification missing</span>·<span class="num">2h</span></div></div>
+            <span class="btn sm" aria-hidden="true">Inspect gap</span>
+          </div>
+          <div class="row" data-inspect="DEMO-105" aria-expanded="false" aria-controls="insp" tabindex="0" role="button" aria-label="Inspect Connector recovery handoff">
+            <span class="pill warn">Reply</span>
+            <div style="min-width:0"><div class="t">Connector recovery handoff</div><div class="sub"><span>agent-hermes</span><span class="arrow">→</span><b style="font-weight:500;color:var(--ua-fg)">you</b>·<span>expects reply</span>·<span class="num">12m</span></div></div>
+            <span class="btn sm" aria-hidden="true">Open thread</span>
+          </div>
+        </section>
+
+        <section class="region" aria-labelledby="fl-h">
+          <header><h2 id="fl-h">In flight</h2><span class="n">5</span><div class="right"><span class="stamp">updated 4s ago</span></div></header>
+          <table>
+            <thead><tr><th>Work</th><th>Agent</th><th>Proof</th><th>State</th><th style="text-align:right">Age</th></tr></thead>
+            <tbody>
+              <tr><td class="title">Search reliability upgrade</td><td class="mono">agent-codex</td><td><span class="rail" aria-label="task, run, checks done; review done; decision pending; deploy not started; outside effect unverified; request receipt not started"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="decision"></i><i></i><i class="unknown" title="External effect evidence"></i><i></i></span></td><td><span class="pill decision">Decision</span></td><td class="num faint" style="text-align:right">2h</td></tr>
+              <tr><td class="title">Connector recovery</td><td class="mono">agent-hermes</td><td><span class="rail" aria-label="task done; run waiting for reply; checks and review not started; reply waiting; external action not started; external effect unknown; request recorded"><i class="ok"></i><i class="live"></i><i></i><i></i><i class="warn"></i><i></i><i class="unknown" title="External effect evidence"></i><i class="ok"></i></span></td><td><span class="pill warn">Reply</span></td><td class="num faint" style="text-align:right">12m</td></tr>
+              <tr><td class="title">Evidence export</td><td class="mono">agent-claude</td><td><span class="rail" aria-label="task, run, checks, review and decision done; merge and deploy unknown: request acknowledged, merged SHA and loaded target revision not observed; external effect unknown; request recorded, delivery blocked"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="unknown" title="Request acknowledged; merged SHA and loaded target revision not observed"></i><i class="unknown" title="External effect evidence"></i><i class="ok"></i></span></td><td><span class="pill danger">Blocked</span></td><td class="num faint" style="text-align:right">2h</td></tr>
+              <tr><td class="title">Session credential hardening</td><td class="mono">agent-server-agent2</td><td><span class="rail" aria-label="task and run done; checks unknown; later steps not started; external effect unknown"><i class="ok"></i><i class="ok"></i><i class="unknown"></i><i></i><i></i><i></i><i class="unknown" title="External effect evidence"></i><i></i></span></td><td><span class="pill unknown">Unknown</span></td><td class="num faint" style="text-align:right">41m</td></tr>
+              <tr><td class="title">Vault inbox ingest</td><td class="mono">agent-cloud-agent17</td><td><span class="rail" aria-label="all prior steps done; sample destination file hashes verified; request recorded"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok" title="Sample destination file hashes verified"></i><i class="ok"></i></span></td><td><span class="pill ok">Verified</span></td><td class="num faint" style="text-align:right">5m</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div>
+        <section class="region" aria-labelledby="fleet-h">
+          <header><h2 id="fleet-h">Fleet</h2><span class="n">7</span><div class="right"><span class="stamp">live</span></div></header>
+          <div class="agent"><span class="stripe" style="background:#f2cdcd"></span><div class="who"><span class="mono">agent-claude</span><small>DEMO-107 · waiting on deploy steward</small></div><span class="presence live" title="Active, heartbeat 3s"></span></div>
+          <div class="agent"><span class="stripe" style="background:#89dceb"></span><div class="who"><span class="mono">agent-codex</span><small>DEMO-104 · parked for decision</small></div><span class="presence idle" title="Idle"></span></div>
+          <div class="agent"><span class="stripe" style="background:#cba6f7"></span><div class="who"><span class="mono">agent-hermes</span><small>DEMO-105 · run 12m</small></div><span class="presence live"></span></div>
+          <div class="agent"><span class="stripe" style="background:#94e2d5"></span><div class="who"><span class="mono">agent-server-agent2</span><small>no heartbeat for 41m</small></div><span class="presence danger" title="Heartbeat overdue"></span></div>
+        </section>
+
+        <section class="region" aria-labelledby="hl-h">
+          <header><h2 id="hl-h">Health exceptions</h2><div class="right"><span class="stamp stale">partial</span></div></header>
+          <div class="health"><span class="pill warn">Stale</span><span>Doctor · Mac hub</span><span class="r faint num">26h</span></div>
+          <div class="unavail" role="status"><b>Quota source unavailable</b><span class="muted">Read failed (HTTP 503). Last known: 2 of 4 lanes available, 14m ago. Not shown as zero.</span></div>
+        </section>
+      </div>
+    </div>
+    </div>
+  </main>
+
+  <aside class="insp" aria-labelledby="inspector-title" id="insp" hidden inert>
+    <div class="in">
+      <header><span class="mono faint">DEMO-104</span><span class="pill decision" style="margin-left:6px">Decision</span>
+        <span style="margin-left:auto"></span><button class="iconbtn" data-action="Open full page" aria-label="Open full page"><svg class="i"><use href="#i-ext"/></svg></button><button class="iconbtn" id="close" aria-label="Close inspector"><svg class="i"><use href="#i-x"/></svg></button></header>
+      <div class="body">
+        <div class="label">Delivery</div>
+        <h3 id="inspector-title" tabindex="-1">Authorize search-reliability rollout</h3>
+        <div class="muted" style="font-size:13px">Hybrid recall ranking with freshness decay, behind a flag.</div>
+        <dl>
+          <dt>Owner</dt><dd class="mono">agent-codex</dd>
+          <dt>Next actor</dt><dd><b style="font-weight:500">you</b> <span class="faint">· requested 18m ago</span></dd>
+          <dt>Scope</dt><dd class="mono" style="font-size:12px">src/unified_agent/tools/memory.py +2</dd>
+          <dt>Head</dt><dd class="mono" style="font-size:12px">a91c03e · CI green on exact head</dd>
+        </dl>
+        <div class="callout"><b>Your decision releases this.</b> Passing checks alone do not deploy it. Approving records your actor and presence.</div>
+        <div class="label">Proof</div>
+        <ol class="vrail">
+          <li><span class="node ok">✓</span><div>Task claimed<small>agent-codex · worktree task/104</small></div><span class="faint num" style="font-size:12px">2h</span></li>
+          <li><span class="node ok">✓</span><div>Run finished<small>exit 0 · 14m · 3 files</small></div><span class="faint num" style="font-size:12px">48m</span></li>
+          <li><span class="node ok">✓</span><div>Checks on exact head<small>ruff · 42 targeted tests · audit</small></div><span class="faint num" style="font-size:12px">40m</span></li>
+          <li><span class="node ok">✓</span><div>Review<small>agent-claude · no blocking findings</small></div><span class="faint num" style="font-size:12px">22m</span></li>
+          <li><span class="node decision">◆</span><div>Operator decision<small>waiting on you</small></div><span></span></li>
+          <li><span class="node todo"></span><div class="muted">Merge and deploy</div><span></span></li>
+          <li><span class="node unknown">?</span><div class="muted">External effect verified<small>merge SHA, loaded target revision and behavior checks not observed</small></div><span></span></li>
+          <li><span class="node todo"></span><div class="muted">Request receipt<small>recording a request does not prove delivery</small></div><span></span></li>
+        </ol>
+        <div class="actions"><button class="btn primary" data-action="Approve">Approve…</button><button class="btn" data-action="Request changes">Request changes</button><button class="btn ghost" data-action="Discuss">Discuss</button></div>
+      </div>
+    </div>
+  </aside>
+
+  <nav class="mobile-nav" aria-label="Mobile destinations">
+    <a href="?view=overview" data-go="overview" aria-label="Overview" aria-current="page"><svg class="i"><use href="#i-overview"/></svg>Overview</a>
+    <a href="?view=delivery" data-go="delivery" aria-label="Delivery"><svg class="i"><use href="#i-delivery"/></svg>Delivery</a>
+    <a href="?view=organization" data-go="organization" aria-label="Organization"><svg class="i"><use href="#i-org"/></svg>Organization</a>
+    <a href="?view=knowledge" data-go="knowledge" aria-label="Knowledge"><svg class="i"><use href="#i-knowledge"/></svg>Knowledge</a>
+    <a href="?view=analytics" data-go="analytics" aria-label="Analytics"><svg class="i"><use href="#i-analytics"/></svg>Analytics</a>
+  </nav>
+
+  <footer class="status" aria-label="Connection status">
+    <span class="ok">● hub connected</span><span>stream seq 48211</span><span>7 agents · 2 running</span><span>last event 2s</span>
+    <span class="sp">density: default</span><span>main @ 0499080</span>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim" aria-hidden="true" hidden inert>
+  <div class="palette" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="field"><input id="command-input" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="palette-options" placeholder="Search sample work or jump to a destination…" aria-label="Command"><button class="iconbtn" id="palette-close" aria-label="Close command palette">×</button></div>
+    <div id="palette-options" role="listbox" aria-label="Commands">
+    <div class="grp"><div class="label">Actions</div>
+      <div class="opt" role="option" id="command-dispatch" data-command="dispatch" aria-selected="true"><svg class="i"><use href="#i-send"/></svg>Dispatch work…<kbd>.</kbd></div>
+      <div class="opt" role="option" id="command-decision" data-command="inspect:DEMO-104"><svg class="i"><use href="#i-decision"/></svg>Review next decision<kbd>Enter</kbd></div>
+    </div>
+    <div class="grp"><div class="label">Work</div>
+      <div class="opt" role="option" id="command-task104" data-command="inspect:DEMO-104"><span class="mono">DEMO-104</span>Authorize search-reliability rollout</div>
+      <div class="opt" role="option" id="command-task107" data-command="inspect:DEMO-107"><span class="mono">DEMO-107</span>Evidence export</div>
+    </div>
+    <div class="grp" style="padding-bottom:8px"><div class="label">Go to</div>
+            <div class="opt" role="option" id="command-go-overview" data-command="go:overview">Overview<kbd>g o</kbd></div>
+      <div class="opt" role="option" id="command-go-delivery" data-command="go:delivery">Delivery<kbd>g d</kbd></div>
+      <div class="opt" role="option" id="command-go-organization" data-command="go:organization">Organization<kbd>g t</kbd></div>
+      <div class="opt" role="option" id="command-go-knowledge" data-command="go:knowledge">Knowledge<kbd>g k</kbd></div>
+      <div class="opt" role="option" id="command-go-analytics" data-command="go:analytics">Analytics<kbd>g a</kbd></div>
+      <div class="opt" role="option" id="command-go-decisions" data-command="go:decisions">Decisions<kbd>g x</kbd></div>
+      <div class="opt" role="option" id="command-go-messages" data-command="go:messages">Messages<kbd>g m</kbd></div>
+      <div class="opt" role="option" id="command-go-audit" data-command="go:audit">Audit<kbd>g u</kbd></div>
+    </div>
+    </div>
+    <p class="muted" style="padding:0 12px 12px">j / k move between attention rows · Enter / Space inspect · [ collapse sidebar · Escape close</p>
+  </div>
+</div>
+
+<dialog id="sample-action" aria-labelledby="sample-action-title"><h2 id="sample-action-title"></h2><p>Sample only: the production action opens a governed form. No request has been sent.</p><button class="btn" id="sample-action-close">Close sample action</button></dialog>
+<script>
+const shell = document.getElementById('shell');
+const inspector = document.getElementById('insp');
+const title = document.getElementById('inspector-title');
+const rows = [...document.querySelectorAll('[data-inspect]')];
+const scrim = document.getElementById('scrim');
+const commandInput = document.getElementById('command-input');
+const options = [...document.querySelectorAll('[data-command]')];
+const sampleAction = document.getElementById('sample-action');
+const background = [...document.querySelectorAll('.side, .top, .main, .status, .mobile-nav')];
+let inspectorTrigger = null;
+let paletteTrigger = null;
+let actionTrigger = null;
+let chord = false;
+let chordTimer;
+
+const samples = {
+  'DEMO-104': { title: 'Authorize search-reliability rollout', state: 'decision', label: 'Decision', owner: 'agent-codex', next: 'you', scope: 'src/unified_agent/tools/memory.py +2', head: 'a91c03e · checks on exact head', summary: 'Hybrid recall ranking with freshness decay, behind a flag.', consequence: 'Your decision releases this. Checks alone do not deploy it.', steps: [
+    ['ok', 'Task claimed', 'agent-codex · task/104'], ['ok', 'Run finished', 'exit 0 · 14m'], ['ok', 'Checks on exact head', 'a91c03e · targeted tests and audit'], ['ok', 'Review', 'agent-claude · no blocking findings'], ['decision', 'Operator decision', 'waiting on you'], ['todo', 'Merge and deploy', 'not started'], ['unknown', 'External effect verified', 'merge SHA, target revision and behavior not observed'], ['todo', 'Request receipt', 'not recorded; a receipt alone would not prove delivery']
+  ] },
+  'DEMO-107': { title: 'Evidence export cannot close', state: 'danger', label: 'Blocked', owner: 'agent-claude', next: 'deploy steward', scope: 'Evidence export service', head: 'b72de4f · checks on exact head', summary: 'The request is recorded, but the destination outcome is unverified.', consequence: 'The hub receipt does not establish which revision the target loaded or whether the export works.', steps: [
+    ['ok', 'Task claimed', 'agent-claude'], ['ok', 'Run finished', 'exit 0'], ['ok', 'Checks on exact head', 'b72de4f'], ['ok', 'Review', 'no blocking findings'], ['ok', 'Operator decision', 'recorded'], ['unknown', 'Merge and deploy', 'request acknowledged; merged SHA and loaded target revision not observed'], ['unknown', 'External effect verified', 'target revision and export behavior not observed'], ['ok', 'Request receipt', 'hub recorded the request; delivery remains unverified']
+  ] },
+  'DEMO-105': { title: 'Connector recovery handoff', state: 'warn', label: 'Reply', owner: 'agent-hermes', next: 'you', scope: 'Connector recovery', head: 'c812f17 · run in progress', summary: 'The connector worker needs a reply before continuing.', consequence: 'A recorded request does not mean the connector recovered.', steps: [
+    ['ok', 'Task claimed', 'agent-hermes'], ['live', 'Run in progress', 'waiting for reply'], ['todo', 'Checks', 'not started'], ['todo', 'Review', 'not started'], ['warn', 'Reply', 'waiting on you'], ['todo', 'External action', 'not started'], ['unknown', 'External effect verified', 'connector outcome not observed'], ['ok', 'Request receipt', 'request recorded, outcome still unknown']
+  ] }
+};
+function syncOverlay() {
+  const modalInspector = !inspector.hidden && innerWidth < 1440;
+  inspector.setAttribute('role', modalInspector ? 'dialog' : 'complementary');
+  if (modalInspector) inspector.setAttribute('aria-modal', 'true');
+  else inspector.removeAttribute('aria-modal');
+  for (const region of background) region.inert = modalInspector || !scrim.hidden;
+  inspector.inert = inspector.hidden || !scrim.hidden;
+}
+function restoreFocus(trigger) {
+  if (trigger && trigger.isConnected && trigger.getClientRects().length && !trigger.closest('[inert]')) trigger.focus();
+  else document.getElementById('cmdk').focus();
+}
+function inspect(on, row = rows[0], restore = true) {
+  if (on) {
+    inspectorTrigger = row;
+    const sample = samples[row.dataset.inspect];
+    title.textContent = sample.title;
+    inspector.querySelector('header .mono').textContent = row.dataset.inspect;
+    const pill = inspector.querySelector('header .pill');
+    pill.className = `pill ${sample.state}`;
+    pill.textContent = sample.label;
+    const fields = inspector.querySelectorAll('dd');
+    [sample.owner, sample.next, sample.scope, sample.head].forEach((value, i) => fields[i].textContent = value);
+    title.nextElementSibling.textContent = sample.summary;
+    inspector.querySelector('.callout').textContent = sample.consequence;
+    const rail = inspector.querySelector('.vrail');
+    rail.replaceChildren(...sample.steps.map(([state, label, detail]) => {
+      const li = document.createElement('li');
+      const node = document.createElement('span');
+      node.className = `node ${state}`;
+      node.textContent = ({ ok: '✓', decision: '◆', unknown: '?', live: '◐', warn: '◷' })[state] || '';
+      const text = document.createElement('div');
+      text.textContent = label;
+      const small = document.createElement('small');
+      small.textContent = detail;
+      text.append(small);
+      li.append(node, text);
+      return li;
+    }));
+  }
+  inspector.hidden = !on;
+  shell.classList.toggle('inspecting', on);
+  rows.forEach(item => item.setAttribute('aria-expanded', String(on && item === row)));
+  const url = new URL(location.href);
+  if (on) url.searchParams.set('inspect', row.dataset.inspect);
+  else url.searchParams.delete('inspect');
+  history.replaceState(null, '', url);
+  syncOverlay();
+  if (on) title.focus();
+  else if (restore) restoreFocus(inspectorTrigger);
+}
+function selectOption(option) {
+  options.forEach(item => item.setAttribute('aria-selected', String(item === option)));
+  if (option) commandInput.setAttribute('aria-activedescendant', option.id);
+  else commandInput.removeAttribute('aria-activedescendant');
+}
+function filterOptions() {
+  const search = commandInput.value.trim().toLowerCase();
+  options.forEach(option => option.hidden = !option.textContent.toLowerCase().includes(search));
+  selectOption(options.find(option => !option.hidden));
+}
+function palette(on, restore = true) {
+  if (on) paletteTrigger = document.activeElement;
+  scrim.hidden = !on;
+  scrim.inert = !on;
+  scrim.classList.toggle('open', on);
+  scrim.setAttribute('aria-hidden', String(!on));
+  commandInput.setAttribute('aria-expanded', String(on));
+  syncOverlay();
+  if (on) { commandInput.value = ''; filterOptions(); commandInput.focus(); }
+  else if (restore) restoreFocus(paletteTrigger);
+}
+function navigate(destination, focus = true) {
+  inspect(false, rows[0], false);
+  document.querySelectorAll('[data-go]').forEach(link => {
+    if (link.dataset.go === destination) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+  const name = destination[0].toUpperCase() + destination.slice(1);
+  const heading = document.getElementById('destination-title');
+  heading.textContent = name;
+  document.querySelector('.crumb').textContent = name;
+  heading.tabIndex = -1;
+  document.getElementById('overview-content').hidden = destination !== 'overview';
+  document.getElementById('destination-placeholder').hidden = destination === 'overview';
+  document.getElementById('destination-description').textContent = `${name} selected. This reference contains Overview sample data; this destination's panes are described in the protocol.`;
+  const url = new URL(location.href);
+  url.searchParams.set('view', destination);
+  history.replaceState(null, '', url);
+  if (focus) heading.focus();
+}
+function action(label) {
+  actionTrigger = document.activeElement;
+  document.getElementById('sample-action-title').textContent = `${label} — sample action`;
+  sampleAction.showModal();
+}
+function runCommand(option) {
+  const command = option.dataset.command;
+  palette(false, false);
+  if (command.startsWith('go:')) navigate(command.slice(3));
+  else if (command.startsWith('inspect:')) {
+    navigate('overview', false);
+    inspect(true, rows.find(row => row.dataset.inspect === command.slice(8)));
+  } else { restoreFocus(paletteTrigger); action('Dispatch work'); }
+}
+function trapFocus(event, container) {
+  const focusable = [...container.querySelectorAll('button, input, a[href], [tabindex="0"]')].filter(item => !item.disabled && !item.closest('[hidden], [inert]'));
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (!first) return;
+  if (event.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement))) { event.preventDefault(); first.focus(); }
+}
+rows.forEach((row, index) => {
+  row.addEventListener('click', () => inspect(true, row));
+  row.addEventListener('keydown', event => {
+    if (event.target !== row) return;
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); inspect(true, row); }
+    if (['j', 'k', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
+      event.preventDefault();
+      rows[(index + (['j', 'ArrowDown'].includes(event.key) ? 1 : rows.length - 1)) % rows.length].focus();
+    }
+  });
+});
+document.querySelectorAll('[data-go]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); navigate(link.dataset.go); }));
+document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); action(button.dataset.action); }));
+document.getElementById('sample-action-close').addEventListener('click', () => sampleAction.close());
+sampleAction.addEventListener('close', () => restoreFocus(actionTrigger));
+document.getElementById('close').addEventListener('click', () => inspect(false));
+document.getElementById('cmdk').addEventListener('click', () => palette(true));
+document.getElementById('palette-close').addEventListener('click', () => palette(false));
+document.getElementById('mobile-inbox').addEventListener('click', () => { palette(true); commandInput.value = 'Decisions'; filterOptions(); });
+commandInput.addEventListener('input', filterOptions);
+commandInput.addEventListener('keydown', event => {
+  const visible = options.filter(option => !option.hidden);
+  const current = visible.findIndex(option => option.getAttribute('aria-selected') === 'true');
+  if (['ArrowDown', 'ArrowUp'].includes(event.key) && visible.length) {
+    event.preventDefault();
+    selectOption(visible[(current + (event.key === 'ArrowDown' ? 1 : visible.length - 1)) % visible.length]);
+  }
+  if (event.key === 'Enter' && visible[current]) { event.preventDefault(); runCommand(visible[current]); }
+});
+options.forEach(option => option.addEventListener('click', () => runCommand(option)));
+scrim.addEventListener('click', event => { if (event.target === scrim) palette(false); });
+document.addEventListener('keydown', event => {
+  if (sampleAction.open) return;
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); palette(scrim.hidden); return; }
+  if (event.key === 'Escape') {
+    if (!scrim.hidden) { event.preventDefault(); palette(false); }
+    else if (!inspector.hidden) { event.preventDefault(); inspect(false); }
+    return;
+  }
+  if (event.key === 'Tab') {
+    if (!scrim.hidden) trapFocus(event, scrim);
+    else if (!inspector.hidden && innerWidth < 1440) trapFocus(event, inspector);
+    return;
+  }
+  if (!scrim.hidden || !inspector.hidden && innerWidth < 1440 || event.target.closest('input, textarea, select, [contenteditable="true"]') || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (chord) {
+    chord = false;
+    clearTimeout(chordTimer);
+    const destination = ({ o: 'overview', d: 'delivery', t: 'organization', k: 'knowledge', a: 'analytics', x: 'decisions', m: 'messages', u: 'audit' })[event.key.toLowerCase()];
+    if (destination) { event.preventDefault(); navigate(destination); }
+    return;
+  }
+  if (event.key === 'g') { chord = true; chordTimer = setTimeout(() => chord = false, 800); }
+  if (event.key === '[') { event.preventDefault(); toggleSidebar(); }
+  if (event.key === '?') { event.preventDefault(); palette(true); }
+  if (event.key === '.') { event.preventDefault(); action('Dispatch work'); }
+});
+function toggleSidebar() {
+  shell.classList.toggle('compact');
+  syncSidebar();
+}
+function syncSidebar() {
+  const expanded = !shell.classList.contains('compact') && innerWidth >= 1280;
+  const toggle = document.getElementById('nav-toggle');
+  toggle.setAttribute('aria-expanded', String(expanded));
+  toggle.setAttribute('aria-label', expanded ? 'Collapse sidebar' : 'Expand sidebar (desktop)');
+}
+document.getElementById('nav-toggle').addEventListener('click', toggleSidebar);
+window.addEventListener('resize', () => { syncOverlay(); syncSidebar(); });
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+const query = new URLSearchParams(location.search);
+if (query.get('theme')) document.documentElement.dataset.theme = query.get('theme');
+if (query.get('view') && document.querySelector(`[data-go="${CSS.escape(query.get('view'))}"]`)) navigate(query.get('view'), false);
+if (query.has('inspect')) inspect(true, rows.find(row => row.dataset.inspect === query.get('inspect')) || rows[0]);
+if (query.has('palette')) palette(true);
+syncOverlay();
+syncSidebar();
+</script>
+</body>
+</html>

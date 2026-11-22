@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Launch OpenCode as Desktop_agent12 with the unified-agent hub and gbrain bearer
+# tokens. Does not depend on shell .zshenv / ZDOTDIR being loaded first.
+# Interactive launcher, not an executor default. Never prints a token.
+# Installed by scripts/install-with-hub-wrappers.sh.
+set -euo pipefail
+
+me="opencode-with-hub"
+UA_TOKEN_FILE="${UA_OC_TOKEN_FILE:-$HOME/.opencode/unified-agent-token}"
+GBRAIN_TOKEN_FILE="${GBRAIN_OC_TOKEN_FILE:-$HOME/.opencode/gbrain-token}"
+if [[ ! -r "$GBRAIN_TOKEN_FILE" ]]; then
+  GBRAIN_TOKEN_FILE="${GBRAIN_TOKEN_FILE:-$HOME/.codex/gbrain-token}"
+fi
+bin="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
+
+# A bare command name (e.g. code-insiders) resolves via PATH; paths stay paths.
+if [[ -n "$bin" && "$bin" != */* ]]; then
+  bin="$(command -v "$bin" 2>/dev/null || printf '%s' "$bin")"
+fi
+
+if [[ ! -r "$UA_TOKEN_FILE" ]]; then
+  echo "$me: token file is unavailable: $UA_TOKEN_FILE" >&2
+  echo "$me: run scripts/sync-agent-tokens.sh from the unified_agent checkout" >&2
+  exit 1
+fi
+if [[ ! -r "$GBRAIN_TOKEN_FILE" ]]; then
+  echo "$me: gbrain token file is unavailable: $GBRAIN_TOKEN_FILE" >&2
+  exit 1
+fi
+if [[ ! -x "$bin" ]]; then
+  echo "$me: opencode binary not found: $bin (set OPENCODE_BIN)" >&2
+  exit 1
+fi
+
+token="$(tr -d '\r\n' < "$UA_TOKEN_FILE")"
+gbrain_token="$(tr -d '\r\n' < "$GBRAIN_TOKEN_FILE")"
+if [[ -z "$token" || -z "$gbrain_token" ]]; then
+  echo "$me: token file is empty" >&2
+  exit 1
+fi
+
+export UA_OC_HUB_TOKEN="$token"
+unset GBRAIN_TOKEN
+export GBRAIN_BEARER_TOKEN="$gbrain_token"
+# Always Desktop_agent12's own token: inheriting a parent shell's
+# UA_AGENT_BEARER_TOKEN would let OpenCode subprocesses act as another agent.
+export UA_AGENT_BEARER_TOKEN="$token"
+
+exec "$bin" "$@"

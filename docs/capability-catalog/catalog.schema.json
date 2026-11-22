@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unified-agent.dev/schemas/capability-catalog.schema.json",
+  "title": "Unified-Agent capability catalog",
+  "description": "Canonical evidence-backed capability catalog and ledger. One authoritative structured representation; rendered views are generated from this file. See docs/capability-catalog/README.md for the update procedure and verification limits.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "freshness",
+    "families",
+    "items",
+    "queue_coverage",
+    "traceable_paths"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "freshness": {
+      "type": "object",
+      "required": [
+        "as_of",
+        "source_baseline_sha",
+        "origin_main_sha",
+        "live_hub_checked_at",
+        "verification_limits",
+        "update_instructions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "type": "string",
+          "description": "ISO date the catalog facts were checked against source and, where possible, live state.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "source_baseline_sha": {
+          "type": "string",
+          "description": "Commit SHA of the local source baseline the code/test evidence was read against (short or full).",
+          "minLength": 7
+        },
+        "origin_main_sha": {
+          "type": "string",
+          "description": "Commit SHA of origin/main at check time; equal to source baseline when the catalog was built on current main.",
+          "minLength": 7
+        },
+        "live_hub_checked_at": {
+          "type": "string",
+          "description": "ISO datetime (UTC) of the last live read-only check against the canonical hub (task_list / profile_status / vault captures). 'not performed' is an honest value.",
+          "minLength": 3
+        },
+        "verification_limits": {
+          "type": "array",
+          "description": "Explicit statements of what this catalog could NOT verify (missing live probes, unavailable tools, stale references).",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "update_instructions": {
+          "type": "array",
+          "description": "Step-by-step instructions a future agent follows to refresh this catalog without interpreting this conversation.",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "families": {
+      "type": "array",
+      "description": "The ten required capability families. Every catalog item must belong to exactly one family id.",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "pilot", "definition"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "label": { "type": "string", "minLength": 1 },
+          "pilot": {
+            "type": "boolean",
+            "description": "True for the five high-value families the first slice proves the schema on."
+          },
+          "definition": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "Every capability. Each item carries all required fields; classification, consumer, evidence, boundary, and freshness are mandatory.",
+      "items": {
+        "$ref": "#/$defs/capability_item"
+      }
+    },
+    "queue_coverage": {
+      "type": "array",
+      "description": "Existing queue items this catalog must not duplicate (acceptance criterion 6). Live status at the freshness date.",
+      "items": {
+        "type": "object",
+        "required": ["task_ref", "title", "status", "coverage_note", "decision"],
+        "additionalProperties": false,
+        "properties": {
+          "task_ref": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "coverage_note": { "type": "string", "minLength": 1 },
+          "decision": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "traceable_paths": {
+      "type": "array",
+      "description": "At least five representative items traced capability -> consumer -> behavior evidence -> owner/task or explicit closure decision (acceptance criterion 7).",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "consumer", "behavior_evidence", "owner_or_closure"],
+        "additionalProperties": false,
+        "properties": {
+          "capability_id": { "type": "string", "minLength": 1 },
+          "consumer": { "type": "string", "minLength": 1 },
+          "behavior_evidence": { "type": "string", "minLength": 1 },
+          "owner_or_closure": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "capability_item": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "capability",
+        "customer_purpose",
+        "origin",
+        "implementation_state",
+        "consumer",
+        "entry_point",
+        "connection_state",
+        "evidence",
+        "boundaries",
+        "wedge"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "family": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Must match a family id in families[]." },
+        "capability": { "type": "string", "minLength": 1 },
+        "customer_purpose": { "type": "string", "minLength": 1 },
+        "origin": {
+          "type": "object",
+          "required": ["kind", "refs"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["task", "pr", "adr", "source", "decision"]
+            },
+            "refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "implementation_state": {
+          "type": "string",
+          "enum": [
+            "shipped-and-used",
+            "shipped-but-unconsumed",
+            "partially-wired",
+            "dormant/uncertain",
+            "superseded",
+            "speculative",
+            "blocked"
+          ],
+          "description": "Allowed classifications from the task spec. Code presence alone is never 'shipped-and-used'."
+        },
+        "consumer": {
+          "type": "string",
+          "description": "Named consumer workflow, tool, or human surface; use the literal value 'no verified consumer' when none is known.",
+          "minLength": 1
+        },
+        "entry_point": {
+          "type": "object",
+          "required": ["kind", "ref", "note"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["mcp-tool", "cli", "web-ui", "library", "event-hook", "config", "not-applicable"]
+            },
+            "ref": { "type": "string", "minLength": 1, "description": "Exact tool name, CLI command, route, module, or file path." },
+            "note": { "type": "string", "description": "How a caller actually reaches it. Empty string is allowed when not-applicable." }
+          }
+        },
+        "connection_state": {
+          "type": "string",
+          "enum": ["live", "degraded", "error", "unknown", "dormant", "misconfigured", "blocked", "not-applicable"],
+          "description": "Never inferred from code or config alone; records the live evidence actually obtained."
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["type", "ref", "detail"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["code", "test", "ci", "deployed", "live"],
+                "description": "code=source seam, test=local/CI test run, ci=CI pipeline, deployed=deployment claim, live=live authenticated probe result."
+              },
+              "ref": { "type": "string", "minLength": 1 },
+              "detail": { "type": "string", "minLength": 1 },
+              "date": {
+                "type": "string",
+                "description": "ISO date when the evidence was produced. REQUIRED for type=live; recommended for all.",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              }
+            }
+          }
+        },
+        "boundaries": {
+          "type": "object",
+          "required": ["security", "identity", "approval", "privacy", "release", "tenant_workspace"],
+          "additionalProperties": false,
+          "properties": {
+            "security": { "type": "string", "minLength": 1 },
+            "identity": { "type": "string", "minLength": 1 },
+            "approval": { "type": "string", "minLength": 1 },
+            "privacy": { "type": "string", "minLength": 1 },
+            "release": { "type": "string", "minLength": 1 },
+            "tenant_workspace": { "type": "string", "minLength": 1 }
+          }
+        },
+        "incomplete": {
+          "type": ["object", "null"],
+          "description": "Required when implementation_state is not 'shipped-and-used' or 'superseded' with a closure decision; the validator enforces this.",
+          "properties": {
+            "owner": { "type": "string", "description": "Current owner agent/profile or 'unassigned'." },
+            "task_ref": { "type": "string", "description": "Live queue task id or decision ref, or null." },
+            "decision": { "type": "string", "description": "Existing decision or explicit closure, or null." },
+            "smallest_next_action": { "type": "string", "minLength": 1 },
+            "non_action": { "type": "string", "minLength": 1 }
+          },
+          "required": ["owner", "smallest_next_action", "non_action"]
+        },
+        "wedge": {
+          "type": "string",
+          "enum": ["evidence-wedge", "expansion-slice"],
+          "description": "Whether the capability strengthens the evidence/control wedge or belongs to an expansion slice."
+        }
+      }
+    }
+  }
+}

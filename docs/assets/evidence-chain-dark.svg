@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">The five-link accountability chain</title>
+  <desc id="d">Every governed action is traced from the human who authorized it, through the device and the agent, to the action and its proof. Each link is recorded on a hash-chained ledger, signed by the producer, and can be anchored outside the hub.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9198a1"/></marker></defs>
+  <rect x="10" y="30" width="196" height="100" rx="14" fill="#2a1b0f" stroke="#f0883e" stroke-width="1.8"/>
+  <text x="108.0" y="74" fill="#f0883e" font-size="20" font-weight="700" text-anchor="middle">Human</text>
+  <text x="108.0" y="102" fill="#e6edf3" font-size="13" font-weight="400" text-anchor="middle">who authorized it</text>
+  <line x1="212" y1="80" x2="250" y2="80" stroke="#9198a1" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="256" y="30" width="196" height="100" rx="14" fill="#2a1b0f" stroke="#f0883e" stroke-width="1.8"/>
+  <text x="354.0" y="74" fill="#f0883e" font-size="20" font-weight="700" text-anchor="middle">Device</text>
+  <text x="354.0" y="102" fill="#e6edf3" font-size="13" font-weight="400" text-anchor="middle">which machine was used</text>
+  <line x1="458" y1="80" x2="496" y2="80" stroke="#9198a1" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="502" y="30" width="196" height="100" rx="14" fill="#1e1631" stroke="#ab7df8" stroke-width="1.8"/>
+  <text x="600.0" y="74" fill="#ab7df8" font-size="20" font-weight="700" text-anchor="middle">Agent</text>
+  <text x="600.0" y="102" fill="#e6edf3" font-size="13" font-weight="400" text-anchor="middle">which identity acted</text>
+  <line x1="704" y1="80" x2="742" y2="80" stroke="#9198a1" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="748" y="30" width="196" height="100" rx="14" fill="#121d2f" stroke="#4493f8" stroke-width="1.8"/>
+  <text x="846.0" y="74" fill="#4493f8" font-size="20" font-weight="700" text-anchor="middle">Action</text>
+  <text x="846.0" y="102" fill="#e6edf3" font-size="13" font-weight="400" text-anchor="middle">the task, tool, or release</text>
+  <line x1="950" y1="80" x2="988" y2="80" stroke="#9198a1" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="994" y="30" width="196" height="100" rx="14" fill="#12261e" stroke="#3fb950" stroke-width="1.8"/>
+  <text x="1092.0" y="74" fill="#3fb950" font-size="20" font-weight="700" text-anchor="middle">Proof</text>
+  <text x="1092.0" y="102" fill="#e6edf3" font-size="13" font-weight="400" text-anchor="middle">PR, commit, hash, receipt</text>
+  <rect x="60" y="160" width="1080" height="64" rx="12" fill="#151b23" stroke="#3d444d" stroke-width="1.5"/>
+  <rect x="236" y="177" width="166" height="30" rx="15" fill="#12261e" stroke="#3fb950" stroke-width="1"/>
+  <text x="319.0" y="196.68" fill="#3fb950" font-size="13" font-weight="500" text-anchor="middle">hash-chained ledger</text>
+  <rect x="416" y="177" width="180" height="30" rx="15" fill="#12261e" stroke="#3fb950" stroke-width="1"/>
+  <text x="506.0" y="196.68" fill="#3fb950" font-size="13" font-weight="500" text-anchor="middle">HMAC-signed producers</text>
+  <rect x="610" y="177" width="210" height="30" rx="15" fill="#12261e" stroke="#3fb950" stroke-width="1"/>
+  <text x="715.0" y="196.68" fill="#3fb950" font-size="13" font-weight="500" text-anchor="middle">TSA / git / vault anchors</text>
+  <rect x="834" y="177" width="129" height="30" rx="15" fill="#12261e" stroke="#3fb950" stroke-width="1"/>
+  <text x="898.5" y="196.68" fill="#3fb950" font-size="13" font-weight="500" text-anchor="middle">signed exports</text>
+</svg>

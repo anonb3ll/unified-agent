@@ -1,0 +1,11 @@
+[Unit]
+Description=Deterministic anomaly check with cooldown-based iMessage notify
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+# anomaly-check-cron.sh calls a bare `uv run python3 -c ...`. uv lives in
+# ~/.local/bin, which is not on the systemd user manager's default PATH.
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/deploy/anomaly-check-cron.sh

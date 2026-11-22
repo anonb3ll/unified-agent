@@ -1,0 +1,22 @@
+# Minimal hub deployment (task #1194).
+#   docker compose -f deploy/docker/compose.yaml up -d
+# First start prints the generated bearer token once — `docker compose logs hub`.
+services:
+  hub:
+    image: ${UA_IMAGE_REPOSITORY:?set UA_IMAGE_REPOSITORY to your image repository}:${UA_IMAGE_TAG:-v0.3.2}
+    restart: unless-stopped
+    ports:
+      # Loopback publish by default — the hub binds 0.0.0.0 inside the
+      # container, so publishing on 127.0.0.1 keeps the host-side posture the
+      # same as everywhere else this project deploys.
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - ua-data:/data
+    # Extra hostnames serving the UI/API (comma-separated), folded into
+    # UA_HTTP_ALLOWED_HOSTS by the entrypoint:
+    # environment:
+    #   UA_PUBLIC_HOSTS: "hub.example.com:*"
+    # env_file: service.env.extra
+
+volumes:
+  ua-data:

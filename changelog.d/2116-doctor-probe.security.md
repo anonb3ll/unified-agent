@@ -1,0 +1,1 @@
+- Keep bearer configuration and child-process output out of doctor credential-probe failure details while preserving bounded, fail-closed checks.

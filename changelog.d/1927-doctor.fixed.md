@@ -1,0 +1,1 @@
+- **Doctor polling recovers after a stalled refresh (#1927).** A forced refresh that outwaits a hung probe becomes the shared run for subsequent callers. Late results from the displaced run cannot replace its reading or alter newer refresh errors.

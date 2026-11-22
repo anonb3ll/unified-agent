@@ -1,0 +1,67 @@
+# Example Phase 3 policy.yaml (task #1031).
+# Point UA_POLICY_FILE at a reviewed copy; this file is documentation, not live config.
+#
+# Phase 1 episode rules (cooldown / max_calls_per_episode / fatigue_band_cap)
+# remain supported. Phase 3 adds tool / role / threshold with actions:
+#   allow | deny | require_approval
+# Gateway rules (task #1357) add rate_limit and optional bind
+# (company / agent / project / task). Deny beats allow. A rate limit does
+# not hide the tool. Window is 1–3600 seconds; max_calls is 1–1000.
+#
+# require_approval reuses the hub approval queue (force=True) and fails closed.
+
+version: 2
+enabled: true
+default_action: allow
+
+rules:
+  # Tool-based: park mutating shell in the approval queue.
+  - name: approve_run_cmd
+    description: Human must approve run_cmd invocations
+    type: tool
+    tool: run_cmd
+    action: require_approval
+
+  # Tool-based: hard deny of a destructive tool.
+  - name: deny_task_delete
+    description: task_delete is blocked by policy
+    type: tool
+    tool: task_delete
+    action: deny
+
+  # Role-based: only steward / chief-of-staff may resolve approvals.
+  - name: steward_only_approval_resolve
+    description: Restrict approval_resolve to operator profiles
+    type: role
+    tool: approval_resolve
+    roles:
+      - steward
+      - chief-of-staff
+    action: allow
+
+  # Threshold-based: require approval when a budget field exceeds a bound.
+  - name: budget_cap
+    description: Budget overages need a human pass
+    type: threshold
+    tool: "*"
+    field: budget_usd
+    max: 5.0
+    action: require_approval
+
+  # Optional role scope on a tool rule: deny only for research sessions.
+  - name: research_cannot_delegate
+    type: tool
+    tool: delegate
+    roles:
+      - research
+    action: deny
+
+  # Per-caller cap. Does not remove web_search from tools/list.
+  - name: web_search_burst
+    description: One caller may search at most 30 times a minute
+    type: rate_limit
+    tool: web_search
+    max_calls: 30
+    window_seconds: 60
+    bind:
+      agent: "*"

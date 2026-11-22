@@ -1,0 +1,1 @@
+- A dead letter recorded in report mode (no notice sent) no longer silences the stranded notice for the same message; the stranded sweep now skips only mail whose sender actually got a dead-letter notice (task #2555).

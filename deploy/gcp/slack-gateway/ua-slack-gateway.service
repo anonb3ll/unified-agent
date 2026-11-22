@@ -1,0 +1,28 @@
+[Unit]
+Description=Unified-Agent Slack TLS forwarder (stateless; no local DB)
+Documentation=file:///opt/unified_agent/deploy/gcp/slack-gateway/RUNBOOK.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust WorkingDirectory / ExecStart to the synced checkout on the worker.
+WorkingDirectory=/opt/unified_agent
+EnvironmentFile=-/etc/ua-slack-gateway.env
+ExecStart=/usr/bin/python3 /opt/unified_agent/deploy/gcp/slack-gateway/forwarder.py
+Restart=on-failure
+RestartSec=3
+# Hardening: no ambient secrets in the unit file; EnvironmentFile only.
+# The forwarder is stateless and binds an unprivileged loopback port, so it runs
+# as a transient unprivileged user, not root. systemd reads the 0600 root-owned
+# EnvironmentFile before dropping privileges; forwarder.py itself must stay
+# world-readable (a normal checkout under /opt is).
+DynamicUser=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target

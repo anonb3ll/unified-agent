@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for ua-cloud-mirror.service (metadata-only cloud mirror shipper, task #1285)
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=false
+
+[Install]
+WantedBy=timers.target

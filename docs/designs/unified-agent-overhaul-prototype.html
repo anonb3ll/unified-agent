@@ -1,0 +1,301 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified Agent · redesign prototype</title>
+<style>
+  #ua-overhaul { color-scheme: dark; --u-bg: light-dark(#f7f8fa,#11111b); --u-panel: light-dark(#ffffff,#181825); --u-rail: light-dark(#eef1f5,#11111b); --u-text: light-dark(#1b2638,#cdd6f4); --u-muted: light-dark(#58667b,#bac2de); --u-line: light-dark(#e1e6ee,#313244); --u-soft: light-dark(#f0f3f8,#313244); --u-accent: light-dark(#3153cb,#f38ba8); --u-link: light-dark(#3153cb,#89b4fa); --u-info: light-dark(#24686a,#94e2d5); --u-selected: light-dark(#e1e8fb,#45475a); --u-good: light-dark(#226448,#a6e3a1); --u-warn: light-dark(#83540b,#f9e2af); --u-bad: light-dark(#a13143,#f38ba8); --u-button: light-dark(#2f4ba0,#f38ba8); --u-button-text: light-dark(#ffffff,#11111b); background:var(--u-bg); color:var(--u-text); font:14px/1.5 system-ui,sans-serif; border-radius:12px; overflow:hidden; }
+  #ua-overhaul * { box-sizing:border-box; }
+  #ua-overhaul [hidden] { display:none !important; }
+  #ua-overhaul button, #ua-overhaul input, #ua-overhaul select, #ua-overhaul textarea { font:inherit; }
+  #ua-overhaul button { color:inherit; background:var(--u-panel); border:1px solid var(--u-line); border-radius:7px; padding:8px 11px; text-align:left; }
+  #ua-overhaul button:hover { background:var(--u-soft); }
+  #ua-overhaul button:focus-visible, #ua-overhaul input:focus-visible, #ua-overhaul select:focus-visible, #ua-overhaul textarea:focus-visible { outline:3px solid var(--u-accent); outline-offset:2px; }
+  #ua-overhaul button.primary { background:var(--u-button); color:var(--u-button-text); border-color:var(--u-button); }
+  #ua-overhaul button.primary:hover { background:var(--u-button); filter:brightness(.94); }
+  #ua-overhaul .quiet { border-color:transparent; background:transparent; }
+  #ua-overhaul .link { padding:0; border:0; background:transparent; color:var(--u-link); text-decoration:underline; text-underline-offset:3px; }
+  #ua-overhaul h1 { font-size:25px; line-height:1.2; font-weight:600; margin:0 0 7px; letter-spacing:-.6px; }
+  #ua-overhaul h2 { font-size:16px; font-weight:600; margin:0; }
+  #ua-overhaul h3 { font-size:14px; font-weight:600; margin:0 0 8px; }
+  #ua-overhaul p { margin:0 0 12px; }
+  #ua-overhaul .muted { color:var(--u-muted); }
+  #ua-overhaul .small { font-size:12px; }
+  #ua-overhaul .eyebrow { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1.1px; color:var(--u-muted); margin-bottom:8px; }
+  #ua-overhaul .row { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  #ua-overhaul .between { justify-content:space-between; }
+  #ua-overhaul .top { padding:14px 20px; background:var(--u-bg); border-bottom:1px solid var(--u-line); }
+  #ua-overhaul .brand { font-weight:600; letter-spacing:-.3px; }
+  #ua-overhaul .logo { display:inline-grid; place-items:center; width:27px; height:27px; background:var(--u-button); color:var(--u-button-text); border-radius:7px; }
+  #ua-overhaul .sample { color:var(--u-muted); background:var(--u-soft); border-radius:4px; padding:3px 7px; font-size:11px; }
+  #ua-overhaul .workspace { display:grid; grid-template-columns:182px minmax(0,1fr); }
+  #ua-overhaul .appbody { min-width:0; }
+  #ua-overhaul aside { padding:19px 12px; border-right:1px solid var(--u-line); background:var(--u-rail); display:flex; flex-direction:column; }
+  #ua-overhaul .sidebar-brand { padding:0 5px 18px; }
+  #ua-overhaul .workspace-name { padding:11px 12px; border:1px solid var(--u-line); border-radius:8px; margin-bottom:23px; background:var(--u-bg); }
+  #ua-overhaul .workspace-name strong { display:block; font-weight:500; }
+  #ua-overhaul .sidebar-account { margin-top:auto; padding:30px 9px 0; }
+  #ua-overhaul .avatar { display:inline-grid; place-items:center; width:29px; height:29px; border-radius:50%; background:var(--u-soft); color:var(--u-text); font-size:12px; }
+  #ua-overhaul .nav-mark { display:inline-grid; place-items:center; width:21px; height:21px; border:1px solid var(--u-line); border-radius:5px; color:var(--u-muted); font-size:11px; margin-right:7px; }
+  #ua-overhaul .section-crumb { font-weight:500; }
+  #ua-overhaul .searchkey { padding:1px 5px; border:1px solid var(--u-line); border-radius:4px; font-size:11px; color:var(--u-muted); margin-left:10px; }
+  #ua-overhaul nav { display:grid; gap:5px; }
+  #ua-overhaul nav button { width:100%; border:0; background:transparent; }
+  #ua-overhaul nav button[aria-current="page"] { color:var(--u-text); background:var(--u-selected); font-weight:600; }
+  #ua-overhaul .navlabel { padding:0 9px; margin:6px 0 8px; }
+  #ua-overhaul .divider { border-top:1px solid var(--u-line); margin:16px 0; }
+  #ua-overhaul main { min-width:0; padding:24px; }
+  #ua-overhaul .intro { margin-bottom:22px; }
+  #ua-overhaul { --u-magenta: light-dark(#97527f,#f5c2e7); }
+  #ua-overhaul .overview-intro { position:relative; isolation:isolate; overflow:hidden; padding:20px; border-radius:10px; background:var(--u-bg); }
+  #ua-overhaul .accent-art { position:absolute; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 90% 30%,color-mix(in srgb,var(--u-accent) 35%,transparent),transparent 65%),radial-gradient(ellipse at 55% 100%,color-mix(in srgb,var(--u-magenta) 22%,transparent),transparent 70%); }
+  #ua-overhaul .accent-art canvas { display:block; width:100%; height:100%; opacity:0; }
+  #ua-overhaul .accent-art[data-shader-state="ready"] canvas { opacity:.24; }
+  #ua-overhaul .accent-art::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,color-mix(in srgb,var(--u-bg) 94%,transparent),color-mix(in srgb,var(--u-bg) 45%,transparent)); }
+  #ua-overhaul .overview-intro p:last-child { margin-bottom:0; }
+  #ua-overhaul .motion-button { font-size:12px; padding:5px 8px; flex-shrink:0; }
+  #ua-overhaul .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:20px; }
+  #ua-overhaul .stat { padding:12px 14px; background:var(--u-panel); border:1px solid var(--u-line); border-radius:9px; }
+  #ua-overhaul .stat strong { display:block; font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; margin:4px 0; }
+  #ua-overhaul .panel { background:var(--u-panel); border:1px solid var(--u-line); border-radius:9px; margin-bottom:14px; }
+  #ua-overhaul .panelhead { padding:14px 16px; border-bottom:1px solid var(--u-line); }
+  #ua-overhaul .pad { padding:16px; }
+  #ua-overhaul .item { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:12px 16px; border-bottom:1px solid var(--u-line); }
+  #ua-overhaul .item:last-child { border-bottom:0; }
+  #ua-overhaul .item > :first-child { min-width:0; }
+  #ua-overhaul .item strong { display:block; font-weight:600; }
+  #ua-overhaul .item .small { margin-top:3px; }
+  #ua-overhaul .badge { display:inline-block; padding:3px 7px; border-radius:4px; background:var(--u-soft); font-size:11px; font-weight:600; }
+  #ua-overhaul .good { color:var(--u-good); }
+  #ua-overhaul .warn { color:var(--u-warn); }
+  #ua-overhaul .info { color:var(--u-info); }
+  #ua-overhaul .section-tabs { margin-bottom:22px; }
+  #ua-overhaul .section-tabs button { font-size:12px; padding:7px 9px; }
+  #ua-overhaul .bad { color:var(--u-bad); }
+  #ua-overhaul .twocol { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  #ua-overhaul .tabs { display:flex; gap:5px; flex-wrap:wrap; margin:0 0 16px; }
+  #ua-overhaul .tabs button[aria-pressed="true"] { color:var(--u-text); background:var(--u-selected); border-color:var(--u-accent); }
+  #ua-overhaul .notice { padding:12px 14px; background:var(--u-soft); border-left:3px solid var(--u-accent); margin-bottom:16px; }
+  #ua-overhaul .pipeline { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  #ua-overhaul .step { padding:12px; background:var(--u-soft); border-radius:6px; }
+  #ua-overhaul .step span { display:block; font-size:12px; margin-top:4px; }
+  #ua-overhaul dl { display:grid; grid-template-columns:115px minmax(0,1fr); gap:8px 12px; margin:0; }
+  #ua-overhaul dt { color:var(--u-muted); }
+  #ua-overhaul dd { margin:0; overflow-wrap:anywhere; }
+  #ua-overhaul .bars { display:grid; gap:13px; }
+  #ua-overhaul .bartrack { height:7px; border-radius:4px; background:var(--u-soft); margin-top:5px; overflow:hidden; }
+  #ua-overhaul .bar { height:100%; background:var(--u-link); }
+  #ua-overhaul .message { padding:13px; margin:8px 0; background:var(--u-soft); border-radius:8px; }
+  #ua-overhaul .message p { margin:5px 0 0; }
+  #ua-overhaul input, #ua-overhaul textarea, #ua-overhaul select { width:100%; color:var(--u-text); background:var(--u-bg); border:1px solid var(--u-line); border-radius:6px; padding:9px; }
+  #ua-overhaul label { display:block; margin-bottom:12px; }
+  #ua-overhaul label > span { display:block; margin-bottom:5px; font-weight:600; }
+  #ua-overhaul dialog { width:min(580px,calc(100% - 24px)); max-height:85dvh; overflow:auto; padding:0; border:1px solid var(--u-line); border-radius:12px; color:var(--u-text); background:var(--u-panel); }
+  #ua-overhaul dialog::backdrop { background:rgb(12 19 31 / .55); }
+  #ua-overhaul .dialogtitle { padding:16px 20px; border-bottom:1px solid var(--u-line); }
+  #ua-overhaul .dialogbody { padding:20px; }
+  #ua-overhaul .footer { padding:11px 20px; border-top:1px solid var(--u-line); font-size:11px; color:var(--u-muted); }
+  #ua-overhaul .checks { list-style:none; padding:0; margin:0; }
+  #ua-overhaul .checks li { padding:9px 0; border-bottom:1px solid var(--u-line); }
+  #ua-overhaul .checks li:last-child { border:0; }
+  #ua-overhaul .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  @media(max-width:650px) { #ua-overhaul .workspace { grid-template-columns:1fr; } #ua-overhaul aside { border-right:0; border-bottom:1px solid var(--u-line); padding:10px; } #ua-overhaul nav { display:flex; flex-wrap:wrap; gap:3px; } #ua-overhaul nav button { width:auto; } #ua-overhaul .navlabel,#ua-overhaul aside .divider,#ua-overhaul aside .scope,#ua-overhaul .workspace-name,#ua-overhaul .sidebar-account,#ua-overhaul .nav-mark { display:none; } #ua-overhaul .sidebar-brand { padding:3px 5px 12px; } #ua-overhaul main { padding:18px 14px; } #ua-overhaul .top { padding:13px 14px; } #ua-overhaul .section-crumb,#ua-overhaul .searchkey { display:none; } #ua-overhaul .twocol { grid-template-columns:1fr; } #ua-overhaul .stats { gap:7px; } #ua-overhaul .stat { padding:10px; } #ua-overhaul .item { flex-wrap:wrap; } }
+  @media(max-width:390px) { #ua-overhaul .stats { grid-template-columns:1fr; } #ua-overhaul .pipeline { grid-template-columns:1fr 1fr; } #ua-overhaul dl { grid-template-columns:1fr; gap:3px; } #ua-overhaul dd { margin-bottom:7px; } }
+  @media(pointer:coarse) { #ua-overhaul button { min-height:44px; } #ua-overhaul input,#ua-overhaul select,#ua-overhaul textarea { font-size:16px; } }
+</style>
+<div id="ua-overhaul" aria-label="Unified Agent redesign prototype">
+  <div class="workspace">
+    <aside>
+      <div class="sidebar-brand row"><span class="logo" aria-hidden="true">u</span><span class="brand">Unified Agent</span></div>
+      <div class="workspace-name"><strong>Product team</strong><span class="small muted">All projects · 3 agents</span></div>
+      <p class="eyebrow navlabel">Workspace</p>
+      <nav aria-label="Main navigation">
+        <button data-view="overview" aria-current="page"><span class="nav-mark" aria-hidden="true">O</span>Overview</button>
+        <button data-view="delivery"><span class="nav-mark" aria-hidden="true">D</span>Delivery</button>
+        <button data-view="organization"><span class="nav-mark" aria-hidden="true">T</span>Organization</button>
+        <button data-view="knowledge"><span class="nav-mark" aria-hidden="true">K</span>Knowledge</button>
+        <button data-view="analytics"><span class="nav-mark" aria-hidden="true">A</span>Analytics</button>
+      </nav>
+      <div class="divider"></div>
+      <nav aria-label="Always available">
+        <button data-view="decisions">Decisions <span class="badge warn">1</span></button>
+        <button data-view="messages">Messages <span class="badge">1</span></button>
+        <button data-view="audit">Audit trail</button>
+      </nav>
+      <div class="divider"></div>
+      <div class="scope small muted">Workspace policy active<br>2 executors available</div>
+      <div class="sidebar-account row"><span class="avatar" aria-hidden="true">A</span><div>Operator<br><span class="small muted">Operator</span></div></div>
+    </aside>
+    <div class="appbody">
+    <header class="top row between">
+      <div class="row"><span class="section-crumb" id="ua-breadcrumb">Overview</span><span class="sample">Prototype · sample data</span></div>
+      <div class="row"><button class="quiet" data-action="search">Search<span class="searchkey" aria-hidden="true">⌘ K</span></button><button class="quiet" data-action="theme" aria-label="Switch appearance">◐</button><button class="primary" data-action="dispatch">Dispatch work ↗</button></div>
+    </header>
+    <main id="ua-content" aria-label="Overview"></main>
+    <footer class="footer row between"><span>Prototype · fictional sample records · no hub connection</span><span>One workspace, from one agent to a team</span></footer>
+    </div>
+  </div>
+  <dialog id="ua-dialog" aria-labelledby="ua-dialog-title"><div class="dialogtitle row between"><h2 id="ua-dialog-title"></h2><button class="quiet" data-action="close">Close</button></div><div class="dialogbody" id="ua-dialog-body"></div></dialog>
+  <span id="ua-announcement" class="sr" aria-live="polite"></span>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('ua-overhaul');
+  const content = root.querySelector('#ua-content');
+  const dialog = root.querySelector('#ua-dialog');
+  const modalBody = root.querySelector('#ua-dialog-body');
+  const notice = root.querySelector('#ua-announcement');
+  const state = { view:'overview', tab:'work', knowledge:'memory', density:'comfortable', facet:'Summary', motion:true };
+  const titles = { overview:'Overview', delivery:'Delivery', organization:'Organization', knowledge:'Knowledge', analytics:'Analytics', decisions:'Decisions', messages:'Messages', audit:'Audit trail' };
+  const esc = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const action = (label,name,primary=false) => `<button class="${primary?'primary':''}" data-action="${name}">${label}</button>`;
+  const badge = (text,tone='') => `<span class="badge ${tone}">${text}</span>`;
+  const intro = (title,desc) => `<div class="intro"><p class="eyebrow">Product team / all projects</p><h1>${title}</h1><p class="muted">${desc}</p></div>`;
+  const overviewIntro = () => `<div class="intro overview-intro"><div class="accent-art" aria-hidden="true" data-shader-state="static"><canvas id="ua-accent-canvas" style="width:100%;height:100%"></canvas></div><div class="row between"><p class="eyebrow">Product team / all projects</p><button class="quiet motion-button" data-action="motion" aria-pressed="false">Motion unavailable</button></div><h1>A clear view of the work.</h1><p class="muted">Decisions first. Progress and proof close behind.</p></div>`;
+  const panel = (title,body,extra='') => `<section class="panel"><div class="panelhead row between"><h2>${title}</h2>${extra}</div>${body}</section>`;
+  const item = (title,meta,button) => `<div class="item"><div><strong>${title}</strong><div class="small muted">${meta}</div></div>${button}</div>`;
+  const stats = entries => `<div class="stats">${entries.map(([label,value,meta])=>`<div class="stat"><span class="small muted">${label}</span><strong>${value}</strong><span class="small muted">${meta}</span></div>`).join('')}</div>`;
+  const checks = entries => `<ul class="checks">${entries.map(([status,text,tone])=>`<li><span class="${tone||'good'}">${status}</span> &nbsp; ${text}</li>`).join('')}</ul>`;
+  function open(title,body) { root.querySelector('#ua-dialog-title').textContent=title; modalBody.innerHTML=body; if(!dialog.open) dialog.showModal(); }
+  function announce(text) { notice.textContent=text; }
+  function remember() { if(window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{section:state.view},privateContent:{...state}}).catch(()=>{}); }
+  // One decorative effect. The UI stays complete while the optional CDN module loads.
+  const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+  let accentInstance=null, accentEpoch=0, accentModule=null, accentFailure=null;
+  let accentIntersection=null, accentResize=null, accentVisible=true;
+  function accentHost() { return content.querySelector('.accent-art'); }
+  function updateMotionButton() {
+    const button=content.querySelector('[data-action="motion"]'); if(!button) return;
+    const supported=isSecureContext&&!!navigator.gpu;
+    button.disabled=motionPreference.matches||!supported||!!accentFailure;
+    button.textContent=motionPreference.matches?'Reduced motion':!supported||accentFailure?'Static accent':state.motion?'Pause motion':'Enable motion';
+    button.setAttribute('aria-pressed',String(state.motion&&!button.disabled));
+  }
+  function stopAccent() {
+    accentEpoch++;
+    accentIntersection?.disconnect(); accentIntersection=null;
+    accentResize?.disconnect(); accentResize=null;
+    accentInstance?.destroy(); accentInstance=null;
+    const host=accentHost(); if(host) host.dataset.shaderState='static';
+  }
+  function syncAccentVisibility() {
+    if(!accentInstance) return;
+    if(document.hidden||!accentVisible) accentInstance.pause(); else accentInstance.resume();
+  }
+  async function startAccent() {
+    updateMotionButton();
+    const host=accentHost(), canvas=host?.querySelector('canvas');
+    if(!canvas||!state.motion||motionPreference.matches||!isSecureContext||!navigator.gpu||accentFailure||document.hidden) return;
+    const epoch=++accentEpoch;
+    const current=()=>epoch===accentEpoch&&canvas.isConnected&&state.motion&&!motionPreference.matches;
+    try {
+      accentModule??=import('https://cdn.jsdelivr.net/npm/shaders@4.0.0/dist/js/bundle.js');
+      const {createShader}=await accentModule;
+      if(!current()) return;
+      // Resolve the light/dark tokens through actual rendered colors, not raw light-dark().
+      const resolveColor=token=>{const probe=document.createElement('span');probe.style.color=`var(${token})`;probe.hidden=true;root.append(probe);const value=getComputedStyle(probe).color;probe.remove();const rgb=value.match(/\d+/g).slice(0,3);return '#'+rgb.map(channel=>Number(channel).toString(16).padStart(2,'0')).join('');};
+      const instance=await createShader(canvas,{components:[{type:'FlowingGradient',id:'mocha-flow',props:{colorA:resolveColor('--u-bg'),colorB:resolveColor('--u-accent'),colorC:resolveColor('--u-magenta'),colorD:resolveColor('--u-panel'),speed:.15,distortion:.18,seed:7,colorSpace:'linear'}}]}, {
+        disableTelemetry:true,enablePerformanceTracking:false,observeElement:false,
+        onReady:()=>{if(current()) host.dataset.shaderState='ready';},
+        // Dispose even recoverable errors: a static fallback must not hide a live GPU loop.
+        onError:()=>{if(current()){host.dataset.shaderState='static';queueMicrotask(()=>{if(!current()) return;accentFailure=accentInstance?.getFailureReason()||'device-error';stopAccent();updateMotionButton();});}}
+      });
+      if(!current()) {instance.destroy();return;}
+      if(instance.getFailureReason()) {accentFailure=instance.getFailureReason();host.dataset.shaderState='static';instance.destroy();updateMotionButton();return;}
+      accentInstance=instance;
+      accentVisible=true;
+      accentIntersection=new IntersectionObserver(entries=>{accentVisible=entries[0].isIntersecting;syncAccentVisibility();});
+      accentIntersection.observe(canvas);
+      accentResize=new ResizeObserver(()=>accentInstance?.resize());accentResize.observe(canvas);
+      syncAccentVisibility();
+    } catch {
+      if(current()) {host.dataset.shaderState='static';accentFailure='load-or-init-failed';updateMotionButton();}
+    }
+  }
+  motionPreference.addEventListener('change',()=>{stopAccent();startAccent();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden) syncAccentVisibility();else if(accentInstance) syncAccentVisibility();else startAccent();});
+  window.addEventListener('pagehide',stopAccent);
+  window.addEventListener('pageshow',event=>{if(event.persisted) startAccent();});
+  function render() {
+    stopAccent();
+    content.setAttribute('aria-label',titles[state.view]);
+    root.querySelector('#ua-breadcrumb').textContent=titles[state.view];
+    root.querySelectorAll('[data-view]').forEach(button=>{ if(button.dataset.view===state.view) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
+    content.innerHTML = sectionTabs() + (state.facet==='Summary' ? views[state.view]() : facetView());
+    root.style.setProperty('--u-density',state.density);
+    startAccent();
+  }
+
+  // Coverage catalogue: legacy destinations and nested surfaces, deliberately sample-only.
+  const features = [{"id":"home","label":"Home","view":"overview","facet":"Summary","description":"Prioritized decisions, blockers, progress and current operational signals."},{"id":"attention","label":"Attention","view":"overview","facet":"Attention","description":"Consequences, owners, age and next action for each exception."},{"id":"tasks","label":"Tasks","view":"delivery","facet":"Tasks","description":"Queue, ownership, due dates, comments and linked delivery context."},{"id":"board","label":"Board","view":"delivery","facet":"Tasks","description":"Alternate status view over the same task records."},{"id":"goals","label":"Goals","view":"delivery","facet":"Planning","description":"Objectives and the reason each task exists."},{"id":"plans","label":"Plans","view":"delivery","facet":"Planning","description":"Steps, ownership, dependencies and plan review checkpoints."},{"id":"canvas","label":"Canvas","view":"delivery","facet":"Planning","description":"A planning canvas linked to work; drawings do not grant authority."},{"id":"work-graph","label":"Work Graph","view":"delivery","facet":"Planning","description":"Goal-to-evidence relationships and ready or blocked work."},{"id":"task-graph","label":"Task Graph","view":"delivery","facet":"Planning","description":"Dependencies and task or plan lineage; alternate work view."},{"id":"cycles","label":"Cycles","view":"delivery","facet":"Runs","description":"Autonomous cycles with scope, progress and intervention history."},{"id":"langgraph","label":"Execution checkpoints","view":"delivery","facet":"Runs","description":"Execution checkpoints for diagnosing a selected run."},{"id":"dispatch_receipts","label":"Delivery receipts","view":"delivery","facet":"Releases","description":"Run delivery summaries, proof gaps and linked release artifacts."},{"id":"org","label":"Teams & ownership","view":"organization","facet":"Teams","description":"Offices, members, owned work and governed team startup."},{"id":"agent-topology","label":"Team topology","view":"organization","facet":"Teams","description":"Agent relationships, assignments, delegations and handoffs."},{"id":"sessions","label":"Sessions","view":"organization","facet":"Sessions","description":"Active sessions, crew context and native execution continuity."},{"id":"operating","label":"Operating policy","view":"organization","facet":"Authority","description":"Profiles, inherited settings, overrides and effective enforcement."},{"id":"executor","label":"Executor","view":"organization","facet":"Resources","description":"Executor health, delegations and worktree availability."},{"id":"quota","label":"Capacity & quota","view":"organization","facet":"Resources","description":"Metered, unknown or exhausted lane capacity with observations."},{"id":"credential_pool","label":"Credential metadata","view":"organization","facet":"Resources","description":"Provider credential labels and status; secret values stay out of the UI."},{"id":"devices","label":"Devices","view":"organization","facet":"Resources","description":"Registered hosts, node inventory and observation freshness."},{"id":"cloud","label":"Cloud","view":"organization","facet":"Resources","description":"Worker health, backups and observed resource spend."},{"id":"doctor","label":"Health diagnostics","view":"organization","facet":"Resources","description":"Capability health and configuration failures with freshness."},{"id":"platform","label":"Platform objects","view":"organization","facet":"Diagnostics","description":"Object kinds, lifecycles and permission-aware object inspection."},{"id":"memory","label":"Memory","view":"knowledge","facet":"Memory","description":"Memory content, author, sources, freshness, supersession and retrieval explanation."},{"id":"vault","label":"Vault","view":"knowledge","facet":"Sources","description":"Source search, backlinks, ingest status and briefings."},{"id":"capabilities","label":"Capabilities","view":"knowledge","facet":"Tools","description":"Supported capabilities and current actor reach."},{"id":"skills-teams","label":"Skills & team definitions","view":"knowledge","facet":"Skills","description":"Versioned skills, governed team definitions and surface drift."},{"id":"proposals","label":"Proposals","view":"knowledge","facet":"Learning","description":"Learning proposals with source sessions and review state."},{"id":"connectors","label":"Connectors","view":"knowledge","facet":"Connections","description":"Registered, authorized, dormant and revoked connections."},{"id":"flow","label":"Delivery flow","view":"analytics","facet":"Delivery","description":"Delivery phases, waits, queue health and reliability measures."},{"id":"telemetry","label":"Run monitoring","view":"analytics","facet":"Runs","description":"Run waterfalls, exceptions, scorecards and usage coverage."},{"id":"approvals","label":"Approvals","view":"decisions","facet":"Approvals","description":"Canonical approval statements with actor, scope and current preconditions."},{"id":"messages","label":"Messages","view":"messages","facet":"Conversations","description":"Addressed conversations, unanswered requests and delivery states."},{"id":"zulip","label":"Zulip","view":"messages","facet":"Connections","description":"Coordination gateway health and inbound context."},{"id":"slack_gateway","label":"Slack","view":"messages","facet":"Connections","description":"Slack ingress state and failures."},{"id":"notify_delivery","label":"Outbound delivery","view":"messages","facet":"Delivery","description":"Outbound attempts, failure reasons and observed receipt status."},{"id":"evidence","label":"Evidence","view":"audit","facet":"Records","description":"Evidence events, ledger rows, verification coverage and exclusions."},{"id":"provenance","label":"Provenance","view":"audit","facet":"Lineage","description":"Human, device, agent, action and proof relationships."},{"id":"dispatch","label":"Dispatch","view":"dispatch","facet":"Launch","description":"Task and executor selection with effective policy and launch preflight."},{"id":"extra-0","label":"Work products","view":"delivery","facet":"Releases","description":"Approved artifacts, release state and proof linked to each outcome."},{"id":"extra-1","label":"Automation","view":"delivery","facet":"Automation","description":"Scheduled routines, owners, next run, last outcome and pause state."},{"id":"extra-2","label":"Configuration and lifecycle","view":"organization","facet":"Authority","description":"Configuration history, effective changes and governed agent intervention."},{"id":"extra-3","label":"Organization changes","view":"decisions","facet":"Organization changes","description":"Review proposed changes to the organization and their consequences."},{"id":"extra-4","label":"Costs","view":"analytics","facet":"Costs","description":"Observed spend, estimates, unmetered runs and subscription coverage."},{"id":"extra-5","label":"Quality","view":"analytics","facet":"Quality","description":"Delivery reliability, scorecards and service objectives with coverage."},{"id":"extra-6","label":"Task comments","view":"delivery","facet":"Tasks","description":"Work discussion linked to the task and its author."},{"id":"extra-7","label":"Harness diagnostics","view":"organization","facet":"Diagnostics","description":"Runtime configuration, surface drift and diagnostic observations."},{"id":"extra-8","label":"Passkey registration","view":"organization","facet":"Identity","description":"Operator identity and registered authentication methods."},{"id":"extra-9","label":"Reviewed workflows","view":"delivery","facet":"Automation","description":"Source-controlled workflows, supported inputs and governed launch."}];
+  function facets(view) { return [...new Set(features.filter(f=>f.view===view).map(f=>f.facet))].filter(f=>f!=='Summary'); }
+  function validFacet(view,facet) { return facet==='Summary'||facets(view).includes(facet); }
+  function sectionTabs() {
+    return `<div class="tabs section-tabs" aria-label="${titles[state.view]} views">${['Summary',...facets(state.view)].map(f=>`<button data-facet="${esc(f)}" aria-pressed="${state.facet===f}">${esc(f)}</button>`).join('')}</div>`;
+  }
+  function facetView() {
+    const selected=features.filter(f=>f.view===state.view&&f.facet===state.facet);
+    return intro(state.facet, 'Explore '+titles[state.view].toLowerCase()+' in the context of the work.')+panel('Views and workflows',selected.map(f=>item(esc(f.label),esc(f.description),`<button data-feature="${f.id}">Inspect</button>`)).join(''))+'<p class="small muted">Design preview · these views have a planned home; live records and actions are not connected.</p>';
+  }
+  function inspectFeature(id) {
+    const f=features.find(f=>f.id===id); if(!f) return;
+    open(f.label, `<p>${esc(f.description)}</p><dl><dt>Location</dt><dd>${titles[f.view]||'Dispatch'} / ${esc(f.facet)}</dd><dt>State</dt><dd>Design preview · no live data or mutation</dd></dl><div class="divider"></div><p class="small muted">Existing views retain their permissions and deep links when connected. Inspection must show loading, unavailable, stale and partial data explicitly.</p>`+(f.view==='delivery'?action('Inspect sample delivery','work'):f.view==='organization'?action('Inspect sample policy','authority'):f.id==='memory'?action('Inspect sample sources','memory'):f.view==='analytics'?action('Inspect sample definitions','metrics'):f.view==='messages'?action('Inspect sample handoff','conversation'):f.view==='audit'?action('Inspect sample verification','audit-report'):f.view==='decisions'?action('Inspect sample decision','approval'):f.id==='capabilities'?action('Inspect sample tool contract','tool'):''));
+  }
+  const workRows = () => item('Search reliability upgrade', 'DEMO-104 · Codex · approval needed · next: Operator',action('Inspect delivery','work')) + item('Connector recovery', 'DEMO-105 · Hermes · running for 12 min · next: Hermes',badge('Running','info')) + item('Evidence export', 'DEMO-107 · Claude · blocked on missing proof · next: Claude',action('Inspect gap','gap')) + item('Documentation refresh', 'DEMO-106 · Claude · deployed with receipt',action('View receipt','receipt'));
+  const views = {
+    overview: () => overviewIntro() + stats([['Active work','3','1 running · 1 awaiting authority · 1 blocked'],['Needs attention','3','1 decision · 1 blocked · 1 reply'],['Reported deliveries','8','This week · 6 have complete evidence']]) + panel('Needs your attention', item('Authorize the search rollout', 'Operator · requested 18 min ago · release waits for this decision',action('Review decision','approval',true)) + item('Evidence export is blocked', 'Claude · missing deployment receipt · delivery is unverified',action('Inspect gap','gap')) + item('A handoff needs your reply','Hermes → Operator · connector recovery · unanswered for 12 min',action('Open conversation','conversation'))) + panel('Delivery in motion',workRows(),'<button class="link" data-view="delivery">All delivery →</button>') + panel('Operational signals',item('Executors are responding','2/2 reporting · latest heartbeat 24 seconds ago',badge('Available','good')) + item('One integration has stale health data','Last observation 38 minutes ago · current state unknown',action('Inspect resources','resources'))) + '<p class="small muted">All values are illustrative. Attention items have distinct owners; delivery, decisions and conversations refer to the same work.</p>',
+    delivery: () => intro('Deliver outcomes, with proof.','Follow each outcome from assignment through review, authority and verified delivery.') + '<div class="notice"><strong>Next checkpoint:</strong> search reliability is ready for an operator decision. Passing tests alone do not release it.</div>' + panel('Current delivery',workRows(),action('Dispatch work','dispatch')) + panel('Delivery standard','<div class="pad pipeline"><div class="step">1 · Assigned<span>Owner and allowed scope</span></div><div class="step">2 · Running<span>Run and active policy</span></div><div class="step">3 · Checked<span>Exact-head checks</span></div><div class="step">4 · Reviewed<span>Independent verdict</span></div><div class="step">5 · Authorized<span>Required authority</span></div><div class="step">6 · Delivered<span>Deploy + receipt</span></div></div>') + '<p class="small muted">Boards, dependency graphs and run diagnostics are alternate views of these work records.</p>',
+    organization: () => intro('Ownership and control.','People, agents, authority and capacity in the context of their work.') + panel('Product engineering',item('Operator · Operator','Direction, policy and required release decisions',action('Inspect authority','authority')) + item('Codex · Developer','Search reliability · 1 active assignment',action('Inspect delivery','work')) + item('Claude · Steward','Evidence export · 1 blocked assignment',action('Inspect gap','gap')) + item('Hermes · Coordinator','Connector recovery · awaiting a reply',action('Open handoff','conversation'))) + panel('Effective authority','<div class="pad"><dl><dt>Assignment</dt><dd>Claimed owner controls the worktree</dd><dt>Execution</dt><dd>Effective scope and supported limits are inspected per run</dd><dt>Release</dt><dd>Current-head review, checks and required approval</dd><dt>Deployment</dt><dd>Designated steward; verified receipt</dd></dl></div>',action('Policy detail','authority')) + panel('Resources',item('Two executors available','Heartbeats observed 24 seconds ago · availability is separate from quota',badge('Available','good')) + item('Integration health is stale','Last successful check 38 min ago · no fresh health claim',action('Inspect','resources'))) + '<p class="small muted">One agent uses this same experience. Add teams and authority detail as the organization grows.</p>',
+    knowledge: () => intro('Knowledge the team can trust.','Reusable memory and capabilities, with visible sources, revisions and limits.') + `<div class="tabs" aria-label="Knowledge views"><button data-knowledge="memory" aria-pressed="${state.knowledge==='memory'}">Memory & sources</button><button data-knowledge="tools" aria-pressed="${state.knowledge==='tools'}">Tools & skills</button></div>` + (state.knowledge==='memory' ? panel('Shared memory',item('Delivery requires a deployment receipt','Decision · Operator · revised 2 days ago · 2 linked sources',action('Inspect sources','memory')) + item('Connector retry policy','Fact · Hermes · 2 versions disagree · resolution needed',action('Inspect conflict','conflict')) + item('Search rollout constraints','Run context · Codex · linked to DEMO-104',action('Open linked work','work'))) + '<p class="small muted">Target UX: source attribution, freshness, conflict handling and retrieval explanation. These capabilities need backend gap assessment.</p>' : panel('Unified capabilities',item('Task operations','Available · read and write within task authority',action('Inspect contract','tool')) + item('Evidence verification','Available · read-only verification with coverage',action('Inspect audit','audit')) + item('External messaging','Registered · current authorization unknown',action('Inspect connection','resources')) + item('Delivery review skill','Version 3 · source-controlled · attached to DEMO-104',action('Inspect usage','skill'))) + '<p class="small muted">Registered does not imply usable. Tool permissions come from the active actor and policy.</p>'),
+    analytics: () => intro('Know what improves delivery.','Every metric has a cohort, a definition and an evidence trail.') + '<p class="small muted">Sample cohort: this week · 8 reported deliveries · 20 completed runs</p>' + stats([['Verified delivery','75%','6 / 8 deliveries have all required evidence'],['Run success','90%','18 / 20 completed runs · 0 unknown'],['Cost coverage','60%','12 / 20 runs report usage']]) + panel('Where delivery waits','<div class="pad bars"><div><div class="row between"><span>Execution</span><span>34 min median</span></div><div class="bartrack"><div class="bar" style="width:56.7%"></div></div></div><div><div class="row between"><span>Review wait</span><span>52 min median</span></div><div class="bartrack"><div class="bar" style="width:86.7%"></div></div></div><div><div class="row between"><span>Authority wait</span><span>18 min median</span></div><div class="bartrack"><div class="bar" style="width:30%"></div></div></div><p class="small muted">Common scale: 0–60 minutes · 6 deliveries with complete phase timing. Phase medians do not sum to end-to-end lead time.</p></div>',action('Inspect cohort','metrics')) + panel('Evidence and spend coverage',item('Two deliveries lack required evidence','Excluded from verified delivery · still included in the denominator',action('Inspect missing proof','gap')) + item('Known spend: $4.80 across 12 runs','8 runs have unknown spend · no estimate of full-cohort cost',action('Metric definitions','metrics'))) + '<p class="small muted">Use outcome and reliability measures, with coverage. Tool-call volume alone does not establish productivity.</p>',
+    decisions: () => intro('Decisions with clear consequences.','One place to inspect and resolve authority checkpoints.') + panel('Waiting for Operator',item('Search reliability rollout','DEMO-APP-7 → DEMO-104 · approval would permit the scoped rollout',action('Inspect readiness','approval',true))) + '<div class="notice"><strong>Decision scope:</strong> actor, exact revision, policy, expiry and evidence belong on the statement. A conversation is context; it does not grant approval.</div>' + panel('Recent decision',item('Documentation refresh accepted','DEMO-APP-6 · attributed to Operator · linked receipt recorded',action('Inspect receipt','receipt'))),
+    messages: () => intro('Keep the conversation with the work.','Requests, replies and handoffs stay connected to their outcome.') + panel('Needs a reply',item('Connector recovery · handoff','Hermes → Operator · DEMO-105 · answer requested 12 min ago',action('Read conversation','conversation',true))) + panel('Work conversations',item('Search reliability · review discussion','Codex ↔ Claude · DEMO-104 · no unanswered request',action('Inspect thread','review-thread')) + item('Documentation refresh · completion return','Claude → Operator · DEMO-106 · receipt delivered',action('View receipt','receipt'))) + '<p class="small muted">Transport health and message delivery status remain visible in the thread inspector. Sending uses the actor’s supported permissions.</p>',
+    audit: () => intro('A traceable record of every handoff.','Who acted, under which authority, and what evidence remains.') + '<div class="notice"><strong>Sample verification:</strong> 24/26 included events are chain-verified. Two events lack required proof. Human presence and external anchoring are not established by chain verification.</div>' + panel('Evidence linked to work',item('Review recorded → search reliability','DEMO-EVT-24 · Claude · revision demo-a18f · verdict: pass',action('Inspect delivery','work')) + item('Decision requested → search reliability','DEMO-EVT-25 · Codex · pending authority; no approval claimed',action('Inspect statement','approval')) + item('Delivery verified → documentation refresh','DEMO-EVT-26 · Claude · deploy + health receipt',action('Inspect receipt','receipt'))) + panel('Verification coverage',item('Missing deployment receipt','DEMO-107 · completion is unverified',action('Inspect gap','gap')) + item('Evidence export','Coverage, exclusions and verification methods must travel with the report',action('Inspect report','audit-report'))) + '<p class="small muted">Audit events and memory notes remain separate. An asserted event is not automatically verified human authority.</p>'
+  };
+  function workDetail(tab='work') {
+    state.tab=tab;
+    const labels = {work:'Work',activity:'Run',decisions:'Decision',evidence:'Evidence',messages:'Messages'};
+    const tabs=`<div class="tabs" aria-label="Delivery detail">${Object.entries(labels).map(([id,label])=>`<button data-tab="${id}" aria-pressed="${id===tab}">${label}</button>`).join('')}</div>`;
+    const bodies={
+      work:'<p class="muted">DEMO-104 · Search reliability upgrade</p><dl><dt>Outcome</dt><dd>Reliable recall when exact wording differs</dd><dt>Owner</dt><dd>Codex · Product engineering</dd><dt>Next actor</dt><dd>Operator · rollout authorization</dd><dt>Scope</dt><dd>Search ranking and regression tests</dd><dt>State</dt><dd>Awaiting authority; deployment not started</dd></dl><div class="divider"></div>'+checks([['Pass','98 checks on revision demo-a18f'],['Pass','Independent review by Claude on demo-a18f'],['Waiting','Required operator decision','warn'],['Pending','Deployment and behavior receipt','warn']]),
+      activity:'<dl><dt>Run</dt><dd>DEMO-RUN-21 · completed</dd><dt>Executor</dt><dd>Codex · Desktop</dd><dt>Duration</dt><dd>34 minutes</dd><dt>Scope</dt><dd>Task workspace only; no deploy authority</dd><dt>Revision</dt><dd>demo-a18f</dd></dl><div class="divider"></div><p>Implementation completed. The outcome is still waiting for release authority.</p>',
+      decisions:'<p><strong>DEMO-APP-7 · Pending</strong></p><p>Permit the search rollout for revision demo-a18f after matching checks and review.</p><p class="small muted">Requested by Codex · decision actor: Operator · statement digest: demo-s17</p>'+action('Inspect readiness','approval'),
+      evidence:checks([['Verified','Task → DEMO-RUN-21 attribution'],['Verified','98 checks → demo-a18f'],['Verified','Independent review → demo-a18f'],['Missing','Operator approval and deployment receipt','warn']])+'<p class="small muted" style="margin-top:12px">Proof coverage is partial. Chain verification does not establish human presence.</p>'+action('Open audit trail','audit'),
+      messages:'<div class="message"><strong>Claude · Reviewer</strong><p>Regression checks pass on demo-a18f. The rollout still needs the required operator decision.</p></div><div class="message"><strong>Codex · Owner</strong><p>The decision request references the same revision. Deployment remains held.</p></div>'+action('Open review thread','review-thread')
+    };
+    open('Search reliability · delivery detail',tabs+bodies[tab]);
+  }
+  const actions = {
+    close:()=>dialog.close(), work:()=>workDetail(),
+    theme:()=>{root.style.colorScheme=getComputedStyle(root).colorScheme==='dark'?'light':'dark';stopAccent();startAccent();announce('Appearance switched');},
+    motion:()=>{state.motion=!state.motion;stopAccent();startAccent();remember();announce(state.motion?'Motion enabled when available':'Motion paused');},
+    audit:()=>navigate('audit'), resources:()=>open('Resources · freshness and availability','<dl><dt>Executors</dt><dd>2/2 reporting · last sample 24 seconds ago</dd><dt>Integration</dt><dd>Registered; last health sample 38 minutes ago</dd><dt>Current health</dt><dd>Unknown · observation is stale</dd><dt>Authorization</dt><dd>Unknown until a current check succeeds</dd><dt>Next step</dt><dd>Coordinator investigates and refreshes through supported tools</dd></dl>'),
+    authority:()=>open('Effective authority · inspect policy','<p>Product engineering · policy revision DEMO-POL-3</p><dl><dt>Developer</dt><dd>Claim, implement and test inside task scope</dd><dt>Reviewer</dt><dd>Independent verdict; no self-review release</dd><dt>Operator</dt><dd>Required human decisions on the matching statement</dd><dt>Steward</dt><dd>Serialized merge and deploy after all release gates</dd><dt>Override</dt><dd>None in this sample</dd></dl><div class="divider"></div><p class="small muted">Inspecting policy does not grant authority. Policy editing would retain its existing approval requirements.</p>'),
+    approval:()=>open('Search rollout · decision readiness','<p class="eyebrow">DEMO-APP-7 / DEMO-104</p><p><strong>Authorize rollout of revision demo-a18f.</strong></p><p>Effect: permit the designated steward to deploy this revision after matching release checks.</p><dl><dt>Actor</dt><dd>Operator · operator</dd><dt>Revision</dt><dd>demo-a18f</dd><dt>Statement</dt><dd>demo-s17 · fetched before resolution</dd><dt>Expires</dt><dd>In 42 minutes · sample</dd></dl><div class="divider"></div>'+checks([['Pass','Checks and independent review match the revision'],['Pass','Scope and designated deploy actor are recorded'],['Required','Human authorization is still pending','warn']])+'<div class="divider"></div>'+action('Simulate decision preflight','decision-preflight',true)+'<p class="small muted" style="margin-top:12px">Prototype only. This does not record an approval or release work.</p>'),
+    'decision-preflight':()=>{ modalBody.insertAdjacentHTML('beforeend','<div class="notice" role="status"><strong>Preflight simulated.</strong> A real resolution must recheck actor permission, statement digest, revision, expiry and any required presence. No approval recorded.</div>'); modalBody.querySelector('[data-action="decision-preflight"]').disabled=true; },
+    gap:()=>open('Evidence gap · delivery is unverified','<p><strong>DEMO-107 · Evidence export</strong></p><dl><dt>Owner</dt><dd>Claude · Steward</dd><dt>Missing</dt><dd>Deployment receipt and affected-behavior check</dd><dt>Consequence</dt><dd>Cannot count this as verified delivery</dd><dt>Next action</dt><dd>Locate or generate supported deployment evidence</dd><dt>Analytics</dt><dd>Included in 8 deliveries; excluded from 6 verified deliveries</dd></dl>'),
+    receipt:()=>open('Documentation refresh · delivery receipt','<p class="eyebrow">DEMO-106 / DEMO-RECEIPT-8</p>'+checks([['Verified','Owner and approved task scope'],['Verified','Checks and independent review on demo-b22e'],['Verified','Required decision attributed to Operator'],['Verified','Steward deploy on demo-b22e'],['Verified','Affected behavior check and receipt recorded']])+'<div class="divider"></div><p class="small muted">Illustrative receipt. Separate verification would be needed to establish cryptographic human presence.</p>'+action('Browse audit trail','audit')),
+    memory:()=>open('Memory · sources and supersession','<p><strong>Delivery requires a deployment receipt</strong></p><dl><dt>Kind</dt><dd>Decision · project: platform</dd><dt>Author</dt><dd>Operator</dd><dt>Supersession</dt><dd>Linked prior note · full revision history not established</dd><dt>Freshness</dt><dd>Reviewed 2 days ago · next review in 28 days</dd><dt>Sources</dt><dd>Operator decision DEMO-DEC-2; delivery contract DEMO-DOC-9</dd><dt>Recall reason</dt><dd>Project match and explicit delivery terminology</dd></dl><div class="divider"></div><p class="small muted">Sources and retrieval explanation can reuse existing reads. Full revision history requires a separate contract. A recalled decision is context; current policy and approvals remain authoritative.</p>'),
+    conflict:()=>open('Memory conflict · unresolved','<p><strong>Connector retry policy</strong></p><div class="message">Note A · Hermes · “Retry twice after a transient failure.”</div><div class="message">Note B · Claude · “Retry once when delivery state is unknown.”</div><p>These apply to different failure states, but their scope is not explicit. The UI should surface the conflict and route it to the owner.</p><p class="small muted">No version is silently selected or rewritten by this prototype.</p>'),
+    tool:()=>open('Task operations · unified tool contract','<dl><dt>Availability</dt><dd>Usable in this sample workspace</dd><dt>Surfaces</dt><dd>Web, MCP, CLI, HTTP and SDK</dd><dt>Authority</dt><dd>Same actor and policy gate across adapters</dd><dt>Read scope</dt><dd>Authorized project records</dd><dt>Write scope</dt><dd>Allowed task operations; claim and version checks apply</dd><dt>Audit</dt><dd>Attribution and mutation evidence</dd></dl>'),
+    skill:()=>open('Delivery review skill · usage','<dl><dt>Version</dt><dd>3 · source-controlled package</dd><dt>Used by</dt><dd>Claude on DEMO-104</dd><dt>Output</dt><dd>Independent review tied to demo-a18f</dd><dt>Authority</dt><dd>No additional permission from skill installation</dd></dl>'),
+    metrics:()=>open('Analytics · definitions and coverage','<dl><dt>Window</dt><dd>Sample week; fixed fictional cohort</dd><dt>Verified delivery</dt><dd>6 complete evidence receipts / 8 reported deliveries = 75%</dd><dt>Run success</dt><dd>18 successful / 20 completed runs = 90%; active runs excluded</dd><dt>Wait medians</dt><dd>6 fully timed deliveries; missing phase timing excluded</dd><dt>Known spend</dt><dd>$4.80 from 12 of 20 runs; 8 unknown</dd><dt>Cost coverage</dt><dd>12 metered / 20 completed runs = 60%</dd></dl><div class="divider"></div>'+action('Inspect missing proof','gap')),
+    'audit-report':()=>open('Audit report · coverage contract','<dl><dt>Window</dt><dd>26 sample events linked to the selected delivery cohort</dd><dt>Chain coverage</dt><dd>24/26 events verified; two have proof gaps</dd><dt>Actor attribution</dt><dd>Recorded identity; distinct from human presence</dd><dt>Human presence</dt><dd>Not established in this sample</dd><dt>External anchor</dt><dd>Not established in this sample</dd><dt>Export contract</dt><dd>Records, exclusions, methods and observed verification results</dd></dl><div class="divider"></div><p class="small muted">A real export must preserve these limitations. No report is generated by this prototype.</p>'),
+    conversation:()=>open('Connector recovery · handoff','<p class="small muted">DEMO-THREAD-5 → DEMO-105 · addressed to Operator · awaiting answer</p><div class="message"><strong>Hermes · 12 min ago</strong><p>The connector is registered but its authorization is unknown. Should I investigate the last failed callback within the existing task scope?</p></div><label><span>Draft reply</span><textarea id="ua-reply" rows="3" placeholder="Reply with task context…"></textarea></label>'+action('Preview reply','reply-preview',true)+'<p class="small muted" style="margin-top:12px">Local draft only. A real send would show recipient, session, work link and delivery status.</p>'),
+    'reply-preview':()=>{ const value=modalBody.querySelector('#ua-reply').value.trim(); modalBody.querySelector('#ua-reply-result')?.remove(); modalBody.insertAdjacentHTML('beforeend',`<div id="ua-reply-result" role="${value?'status':'alert'}" class="notice">${value?'<strong>Draft preview · not sent</strong><br>To Operator’s conversation with Hermes<br>'+esc(value):'Enter a reply to preview.'}</div>`); },
+    'review-thread':()=>open('Search reliability · review conversation','<p class="small muted">DEMO-THREAD-4 → DEMO-104 · no outstanding request</p><div class="message"><strong>Claude · Reviewer</strong><p>Checks pass on demo-a18f. Required approval and deployment remain outstanding.</p></div><div class="message"><strong>Codex · Owner</strong><p>The request is bound to that revision. I will hold release for the designated actor.</p></div>'+action('Inspect linked delivery','work')),
+    dispatch:()=>open('Dispatch bounded work','<p class="muted">Choose the work, executor and limits before launch.</p><form id="ua-dispatch-form"><label><span>Task</span><select name="task"><option value="DEMO-108">DEMO-108 · Diagnose stale integration health</option><option value="DEMO-109">DEMO-109 · Investigate missing delivery receipt</option></select></label><label><span>Executor</span><select name="executor"><option>Codex · Available</option><option>Hermes · Available</option></select></label><label><span>Allowed scope</span><input name="scope" value="Read connector status and callback logs; no credential changes" required maxlength="240"></label><div class="twocol"><label><span>Requested time limit (minutes)</span><input name="minutes" type="number" min="1" max="60" value="20" required></label><label><span>Requested spend limit (USD)</span><input name="spend" type="number" min="0.01" max="25" step="0.01" value="2.00" required></label></div><label><span>Expected output</span><input name="output" value="Diagnosis with evidence and a proposed repair" required maxlength="240"></label><button type="submit" class="primary">Inspect preflight</button></form><p class="small muted" style="margin-top:12px">Prototype only. No run is launched. Live preflight must check policy, capacity, claim, budget and approval.</p>'),
+    search:()=>open('Find work or a destination','<label><span>Search this prototype</span><input id="ua-search" placeholder="Try audit, memory or search reliability…" autocomplete="off"></label><div id="ua-search-results"></div>')
+  };
+  const validView=view=>typeof view==='string'&&Object.hasOwn(views,view)&&typeof views[view]==='function';
+  function navigate(view,facet='Summary') { if(!validView(view)) return; if(dialog.open) dialog.close(); state.view=view; state.facet=facet; render(); announce(titles[view]+' opened'); remember(); }
+  root.addEventListener('click',event=>{ const target=event.target.closest('button'); if(!target) return; if(target.dataset.feature) inspectFeature(target.dataset.feature); else if(target.dataset.facet) {state.facet=target.dataset.facet;render();remember();announce(state.facet+' opened');} else if(target.dataset.view) navigate(target.dataset.view,target.dataset.targetFacet||'Summary'); else if(target.dataset.tab) {const tab=target.dataset.tab;workDetail(tab);modalBody.querySelector(`[data-tab="${tab}"]`)?.focus();remember();} else if(target.dataset.knowledge) {state.knowledge=target.dataset.knowledge;render();remember();} else if(actions[target.dataset.action]) { actions[target.dataset.action](); if(target.dataset.action==='search') updateSearch(''); } });
+  root.addEventListener('submit',event=>{ if(event.target.id!=='ua-dispatch-form') return; event.preventDefault(); const data=new FormData(event.target); const scope=String(data.get('scope')).trim(); const output=String(data.get('output')).trim(); modalBody.querySelector('#ua-preflight')?.remove(); if(!scope||!output) {modalBody.insertAdjacentHTML('beforeend','<div id="ua-preflight" class="notice" role="alert">Scope and expected output must contain text.</div>');return;} modalBody.insertAdjacentHTML('beforeend',`<div id="ua-preflight" class="notice" role="status"><strong>Preflight preview · no launch</strong><br>${esc(data.get('task'))} → ${esc(data.get('executor'))}<br>Scope: ${esc(scope)}<br>Requested limits: ${esc(data.get('minutes'))} minutes / $${Number(data.get('spend')).toFixed(2)}<br>Output: ${esc(output)}<br><span class="small">Live claim, permission, capacity, budget and approval checks remain required. Requested limits are not proof of enforcement; show effective policy before launch.</span></div>`); });
+  function updateSearch(value) { const options=Object.entries(titles).map(([view,label])=>({view,label})); features.filter(f=>f.view!=='dispatch').forEach(f=>options.push({feature:f.id,label:f.label+' · '+f.facet})); options.push({action:'work',label:'Search reliability · DEMO-104'},{view:'knowledge',label:'Memory & unified tools'}); const matches=options.filter(option=>option.label.toLowerCase().includes(value.toLowerCase())); modalBody.querySelector('#ua-search-results').innerHTML=matches.length ? matches.map(option=>`<div class="item"><button class="link" ${option.feature?'data-feature="'+option.feature+'"':option.view?'data-view="'+option.view+'"':'data-action="'+option.action+'"'}>${esc(option.label)}</button></div>`).join('') : '<p role="status">No matching sample record.</p>'; }
+  root.addEventListener('input',event=>{if(event.target.id==='ua-search') updateSearch(event.target.value);});
+  document.addEventListener('keydown',event=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){event.preventDefault();actions.search();updateSearch('');}});
+  root.addEventListener('change',event=>{if(event.target.matches('#ua-dispatch-form select[name="task"]')) {const form=event.target.form;const receipt=event.target.value==='DEMO-109';form.elements.scope.value=receipt?'Read deployment records and existing evidence; no release changes':'Read connector status and callback logs; no credential changes';form.elements.output.value=receipt?'Evidence gap diagnosis with supported receipt references':'Diagnosis with evidence and a proposed repair';modalBody.querySelector('#ua-preflight')?.remove();}});
+  window.addEventListener('openai:set_globals',event=>{const saved=event.detail?.globals?.widgetState?.privateContent;if(saved&&validView(saved.view)) {state.motion=saved.motion!==false;state.view=saved.view;state.facet=validFacet(saved.view,saved.facet)?saved.facet:'Summary';state.knowledge=saved.knowledge==='tools'?'tools':'memory';render();}});
+  const saved=window.openai?.widgetState?.privateContent; if(saved&&validView(saved.view)) {state.motion=saved.motion!==false;state.view=saved.view;state.facet=validFacet(saved.view,saved.facet)?saved.facet:'Summary';state.knowledge=saved.knowledge==='tools'?'tools':'memory';}
+  render();
+  if(globalThis.Tweak) {const tweak=new Tweak({container:root,onChange:()=>{content.style.padding=state.density==='compact'?'16px':'24px';stopAccent();startAccent();}});tweak.addSelect(state,'density',{label:'Content density',options:['comfortable','compact']});tweak.addToggle(state,'motion',{label:'Accent motion'});}
+})();
+</script>

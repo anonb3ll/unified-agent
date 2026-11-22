@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for ua-lane-reaper.service (every 15 minutes)
+
+[Timer]
+# Calendar trigger so Persistent=true catches up missed boots/sleeps
+# (OnUnitActiveSec is monotonic and ignores Persistent=).
+OnBootSec=5min
+OnCalendar=*:0/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

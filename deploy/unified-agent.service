@@ -1,0 +1,72 @@
+# unified-agent hub service (systemd user unit)
+#
+# Install:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/unified-agent.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now unified-agent
+#   loginctl enable-linger $USER        # keep it running without a login session
+#
+# Expose tailnet-only (keeps the bind on loopback; never bind 0.0.0.0):
+#   tailscale serve --bg --tcp 8765 127.0.0.1:8765
+#
+# Logs:  journalctl --user -u unified-agent -f
+
+[Unit]
+Description=unified-agent MCP hub (streamable HTTP)
+After=network-online.target
+
+[Service]
+# `uv tool install .` places the console script here. Keep this template
+# independent of the checkout path and omit operator-specific hooks.
+ExecStart=%h/.local/bin/unified-agent
+Environment=UA_TRANSPORT=http
+Environment=UA_HTTP_HOST=127.0.0.1
+Environment=UA_HTTP_PORT=8765
+Environment=UA_WORKSPACE=%h/.unified_agent/workspace
+# Shared operator config: secrets (UA_AGENT_TOKENS, UA_ENFORCE_AUTH) and any
+# relocated state paths (UA_HOME, UA_BACKUP_DIR). Read by ua-database-backup
+# too, so the hub and the backup timer cannot disagree about which database is
+# the real one. Leading `-` means "optional": absent file, no error.
+EnvironmentFile=-%h/.unified_agent/service.env
+# Vault tools default to %h/vaults/main (config.py); uncomment only to point
+# elsewhere, or set to an empty value to disable the vault plane entirely:
+#Environment=UA_VAULT_PATH=%h/vaults/main
+# State snapshots (Logs/state_*.md|txt) sync on every mutation by default:
+#Environment=UA_STATE_SYNC=0
+# Host-header allowlist (comma-separated; enables DNS-rebinding protection).
+# REQUIRED for remote/tailnet clients: with it unset, the MCP SDK's streamable-HTTP
+# stack accepts only localhost Host headers and answers everything else with 421.
+# List every name/IP clients will dial, e.g. your MagicDNS name and loopback:
+#Environment=UA_HTTP_ALLOWED_HOSTS=127.0.0.1:*,localhost:*,desktop-host:*,desktop-host.<tailnet>.ts.net:*,100.64.0.30:*
+# Browser Origin allowlist for the web control center at /ui and for any browser
+# that calls /mcp directly. Defaults to "null" (file:// pages, e.g. deploy/metrics.html)
+# plus this hub's own origin and every UA_HTTP_ALLOWED_HOSTS entry, so it usually needs
+# no override. Set it only to narrow the list:
+#Environment=UA_HTTP_ALLOWED_ORIGINS=http://127.0.0.1:8765,https://desktop-host.<tailnet>.ts.net
+#
+# Bearer tokens (UA_AGENT_TOKENS) and UA_ENFORCE_AUTH are secrets and do NOT belong
+# in this template: Environment= values are readable by any user via
+# `systemctl --user show unified-agent`. EnvironmentFile contents are not, so the
+# convention is a chmod-600 file, now referenced by the unit itself below rather
+# than by a hand-made drop-in. Write it without clobbering what is already there —
+# `install /dev/null` copies an empty file over the destination, which silently
+# discards existing tokens and, after the restart, brings the hub back
+# unauthenticated:
+#
+#   touch ~/.unified_agent/service.env && chmod 600 ~/.unified_agent/service.env
+#   printf 'UA_AGENT_TOKENS=label:token,label2:token2\nUA_ENFORCE_AUTH=1\n' \
+#       >> ~/.unified_agent/service.env
+#   systemctl --user restart unified-agent
+#
+# An existing drop-in at unified-agent.service.d/ still works; drop-ins are
+# additive, so nothing needs undoing on hosts that already have one.
+#
+# Every client must then send a matching token. Claude Code, the TUI and the executor
+# already do — see docs/web-ui.md for which, and for the two-stage rollout that uses
+# the /ui anonymous-request gauge to verify nothing is left behind before enforcing.
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

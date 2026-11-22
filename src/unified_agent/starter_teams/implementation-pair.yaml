@@ -1,0 +1,45 @@
+id: implementation-pair
+version: 1
+description: Build and independently review an exact commit.
+guidance: Confirm identity and read team edges. Use existing task, policy, profile
+  and approval gates; a template grants no authority. Preserve task/artifact references
+  and explicit closure reasons. Human release approvals remain required.
+roles:
+  builder: Implement in a claimed worktree. Record exact commit and focused checks.
+    Hand off immutable head to checker.
+  checker: Review independently with a different harness. Read full diff at exact
+    builder commit; reproduce defects and report SHIP or FIX-FIRST with severity,
+    file, line, scenario and fix. New commits invalidate review.
+independent_roles:
+- builder
+- checker
+steps:
+- name: step-1-builder
+  handoff_commit: true
+  actor_role: builder
+  objective: Implement in a claimed worktree. Record exact commit and focused checks.
+    Hand off immutable head to checker.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - checker
+- name: step-2-checker
+  actor_role: checker
+  objective: Review independently with a different harness. Read full diff at exact
+    builder commit; reproduce defects and report SHIP or FIX-FIRST with severity,
+    file, line, scenario and fix. New commits invalidate review.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - done
+  - waiting
+  - blocked
+  - failed

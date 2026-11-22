@@ -1,0 +1,16 @@
+<!-- @dsCard group="Overlays" height=240 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>ConfirmDialog — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;max-width:28rem;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+function D(){var s=React.useState(true);return h(U.ConfirmDialog,{open:s[0],title:'Delete this memory note?',objectName:'project:alpha / decisions',consequence:'Agents stop finding it in search.',confirmLabel:'Delete note',variant:'danger',onConfirm:function(){s[1](false)},onCancel:function(){s[1](false)}});}
+var App = h(D);
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

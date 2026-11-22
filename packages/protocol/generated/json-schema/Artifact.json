@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "default": "file",
+      "type": "string",
+      "enum": [
+        "file",
+        "diff",
+        "log",
+        "url",
+        "blob"
+      ]
+    },
+    "uri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "uri"
+  ]
+}

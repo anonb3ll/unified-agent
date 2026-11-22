@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "default": "agent",
+      "type": "string",
+      "enum": [
+        "agent",
+        "human",
+        "system"
+      ]
+    },
+    "host": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "label"
+  ]
+}

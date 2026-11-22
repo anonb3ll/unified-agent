@@ -1,0 +1,35 @@
+# Pilot policy template: accounting / tax, task #1280 (H4).
+# Synthetic starting point — no real client, return, or engagement data
+# belongs here. Copy this directory, edit the values below, and point the
+# hub's UA_WORK_PRODUCT_TEMPLATE_DIR at wherever you keep the copy (see
+# README.md). This file loads through the same unified_agent.tools.
+# work_product schema the shipped fixture packs use
+# (src/unified_agent/templates/work_product/) — see
+# docs/work-product-release.md.
+id: accounting-tax
+title: Accounting or tax work product
+description: >-
+  A document an agent prepares for an accounting or tax engagement — a
+  draft return, a workpaper, a management letter, a reconciliation memo —
+  with a named reviewing CPA as the intended reviewer before release.
+  The pack does not enforce the named role. Never a filed
+  return itself: this pack governs the internal draft-review-release step
+  before anything leaves the firm.
+reviewer_role: reviewing_cpa
+required_tags:
+  - client
+  - engagement
+release_subfolder: accounting-tax
+
+# Optional two-person rule (descriptive metadata only — see README.md).
+# Preparer/reviewer separation is a standard control in tax and audit
+# practice; this pack ships it enabled by default as a starting point, but
+# it is still not structurally enforced by the platform today — see the
+# professional-services pack's comment for exactly what that means and what
+# is out of scope until work-product role enforcement is added. A pilot enforces it operationally: only the
+# named reviewer_role and second_reviewer_role holders should be able to
+# reach approval_resolve, and the second reviewer's sign-off is recorded externally before
+# the platform approval is granted.
+two_person_rule:
+  enabled: true
+  second_reviewer_role: engagement_partner

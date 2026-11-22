@@ -1,0 +1,832 @@
+{
+  "schema_version": 1,
+  "inventory_head": "321d5306dae1b41cfbf41cb29e7656aabbd46cd4",
+  "status": "design contracts; no live bindings",
+  "legacy_views": [
+    {
+      "legacy_view": "home",
+      "label": "Home",
+      "destination": "overview",
+      "facet": "Summary",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/overview"
+        },
+        {
+          "method": "GET",
+          "path": "/api/attention"
+        }
+      ]
+    },
+    {
+      "legacy_view": "attention",
+      "label": "Attention",
+      "destination": "overview",
+      "facet": "Attention",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/attention"
+        }
+      ]
+    },
+    {
+      "legacy_view": "tasks",
+      "label": "Tasks",
+      "destination": "delivery",
+      "facet": "Tasks",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/tasks"
+        },
+        {
+          "method": "GET",
+          "path": "/api/tasks/search"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/task"
+        }
+      ]
+    },
+    {
+      "legacy_view": "board",
+      "label": "Board",
+      "destination": "delivery",
+      "facet": "Tasks",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/board"
+        }
+      ]
+    },
+    {
+      "legacy_view": "goals",
+      "label": "Goals",
+      "destination": "delivery",
+      "facet": "Planning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/goals"
+        },
+        {
+          "method": "GET",
+          "path": "/api/tasks/{task_id}/why-chain"
+        }
+      ]
+    },
+    {
+      "legacy_view": "plans",
+      "label": "Plans",
+      "destination": "delivery",
+      "facet": "Planning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/plans"
+        },
+        {
+          "method": "GET",
+          "path": "/api/plans/{plan_id}"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/plan"
+        }
+      ]
+    },
+    {
+      "legacy_view": "canvas",
+      "label": "Canvas",
+      "destination": "delivery",
+      "facet": "Planning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/graph-canvas"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/graph-canvas"
+        }
+      ]
+    },
+    {
+      "legacy_view": "work-graph",
+      "label": "Work Graph",
+      "destination": "delivery",
+      "facet": "Planning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/work-graph"
+        }
+      ]
+    },
+    {
+      "legacy_view": "task-graph",
+      "label": "Task Graph",
+      "destination": "delivery",
+      "facet": "Planning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/overview"
+        }
+      ],
+      "payload_field": "task_graph",
+      "gap": "Current reader slices the composite Overview; use a focused guarded projection or an explicitly reviewed work-graph migration."
+    },
+    {
+      "legacy_view": "cycles",
+      "label": "Cycles",
+      "destination": "delivery",
+      "facet": "Runs",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/cycles"
+        },
+        {
+          "method": "GET",
+          "path": "/api/cycles/{cycle_id}"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/cycle"
+        }
+      ]
+    },
+    {
+      "legacy_view": "langgraph",
+      "label": "LangGraph",
+      "destination": "delivery",
+      "facet": "Runs",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/langgraph/checkpoints"
+        }
+      ]
+    },
+    {
+      "legacy_view": "dispatch_receipts",
+      "label": "Delivery Receipts",
+      "destination": "delivery",
+      "facet": "Releases",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/dispatch_receipts"
+        }
+      ]
+    },
+    {
+      "legacy_view": "org",
+      "label": "Org",
+      "destination": "organization",
+      "facet": "Teams",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/org"
+        },
+        {
+          "method": "GET",
+          "path": "/api/teams"
+        },
+        {
+          "method": "GET",
+          "path": "/api/teams/plan"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/team-up"
+        }
+      ]
+    },
+    {
+      "legacy_view": "agent-topology",
+      "label": "Topology",
+      "destination": "organization",
+      "facet": "Teams",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/agent-graph"
+        }
+      ]
+    },
+    {
+      "legacy_view": "sessions",
+      "label": "Sessions",
+      "destination": "organization",
+      "facet": "Sessions",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/sessions"
+        },
+        {
+          "method": "GET",
+          "path": "/api/sessions/{id}"
+        },
+        {
+          "method": "GET",
+          "path": "/api/nodes/native-sessions"
+        },
+        {
+          "method": "GET",
+          "path": "/api/sessions/{id}/crew"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/crew-intervene"
+        }
+      ]
+    },
+    {
+      "legacy_view": "operating",
+      "label": "Operating",
+      "destination": "organization",
+      "facet": "Authority",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/operating"
+        },
+        {
+          "method": "GET",
+          "path": "/api/operating/resolve"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/operating-run"
+        }
+      ]
+    },
+    {
+      "legacy_view": "executor",
+      "label": "Executor",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/executor-delegation"
+        }
+      ]
+    },
+    {
+      "legacy_view": "quota",
+      "label": "Quota",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/quota"
+        }
+      ]
+    },
+    {
+      "legacy_view": "credential_pool",
+      "label": "Credential Pool",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/credential_pool"
+        }
+      ]
+    },
+    {
+      "legacy_view": "devices",
+      "label": "Devices",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/devices"
+        },
+        {
+          "method": "GET",
+          "path": "/api/nodes"
+        }
+      ]
+    },
+    {
+      "legacy_view": "cloud",
+      "label": "Cloud",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/cloud"
+        }
+      ]
+    },
+    {
+      "legacy_view": "doctor",
+      "label": "Doctor",
+      "destination": "organization",
+      "facet": "Resources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/health"
+        }
+      ]
+    },
+    {
+      "legacy_view": "platform",
+      "label": "Platform",
+      "destination": "organization",
+      "facet": "Diagnostics",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/platform/manifest"
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/objects/{kind}/{object_id}"
+        }
+      ]
+    },
+    {
+      "legacy_view": "memory",
+      "label": "Memory",
+      "destination": "knowledge",
+      "facet": "Memory",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/memory"
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/objects/{kind}/{object_id}"
+        }
+      ]
+    },
+    {
+      "legacy_view": "vault",
+      "label": "Vault",
+      "destination": "knowledge",
+      "facet": "Sources",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/vault/search"
+        },
+        {
+          "method": "GET",
+          "path": "/api/vault/page"
+        },
+        {
+          "method": "GET",
+          "path": "/api/vault/ingest-status"
+        },
+        {
+          "method": "GET",
+          "path": "/api/vault/briefing"
+        }
+      ]
+    },
+    {
+      "legacy_view": "capabilities",
+      "label": "Capabilities",
+      "destination": "knowledge",
+      "facet": "Tools",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/capability-catalog"
+        }
+      ]
+    },
+    {
+      "legacy_view": "skills-teams",
+      "label": "Skills & Teams",
+      "destination": "knowledge",
+      "facet": "Skills",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/skills-teams"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/skills-teams"
+        }
+      ]
+    },
+    {
+      "legacy_view": "proposals",
+      "label": "Proposals",
+      "destination": "knowledge",
+      "facet": "Learning",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/proposals"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/proposal"
+        },
+        {
+          "method": "POST",
+          "path": "/api/session-capture"
+        }
+      ]
+    },
+    {
+      "legacy_view": "connectors",
+      "label": "Connectors",
+      "destination": "knowledge",
+      "facet": "Connections",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/connectors"
+        },
+        {
+          "method": "GET",
+          "path": "/api/connectors/oauth/{provider}"
+        },
+        {
+          "method": "POST",
+          "path": "/api/connectors/oauth/{provider}/begin"
+        },
+        {
+          "method": "POST",
+          "path": "/api/connectors/oauth/{provider}/disconnect"
+        }
+      ]
+    },
+    {
+      "legacy_view": "flow",
+      "label": "Flow",
+      "destination": "analytics",
+      "facet": "Delivery",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/flow-metrics"
+        },
+        {
+          "method": "GET",
+          "path": "/api/delivery_slo"
+        },
+        {
+          "method": "GET",
+          "path": "/api/execution-graph"
+        }
+      ]
+    },
+    {
+      "legacy_view": "telemetry",
+      "label": "Telemetry",
+      "destination": "analytics",
+      "facet": "Runs",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/telemetry"
+        },
+        {
+          "method": "GET",
+          "path": "/api/scorecards"
+        },
+        {
+          "method": "GET",
+          "path": "/api/costs"
+        }
+      ]
+    },
+    {
+      "legacy_view": "approvals",
+      "label": "Approvals",
+      "destination": "decisions",
+      "facet": "Approvals",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/approvals"
+        },
+        {
+          "method": "GET",
+          "path": "/api/approvals/{id}"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/approval"
+        }
+      ]
+    },
+    {
+      "legacy_view": "messages",
+      "label": "Messages",
+      "destination": "messages",
+      "facet": "Conversations",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/messages/conversations"
+        },
+        {
+          "method": "GET",
+          "path": "/api/messages/conversations/{conversation_id}"
+        },
+        {
+          "method": "GET",
+          "path": "/api/messages/sessions"
+        },
+        {
+          "method": "POST",
+          "path": "/api/messages"
+        }
+      ]
+    },
+    {
+      "legacy_view": "zulip",
+      "label": "Zulip",
+      "destination": "messages",
+      "facet": "Connections",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/zulip"
+        }
+      ]
+    },
+    {
+      "legacy_view": "slack_gateway",
+      "label": "Slack",
+      "destination": "messages",
+      "facet": "Connections",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/slack_gateway"
+        }
+      ]
+    },
+    {
+      "legacy_view": "notify_delivery",
+      "label": "Notify Delivery",
+      "destination": "messages",
+      "facet": "Delivery",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/notify_delivery"
+        }
+      ]
+    },
+    {
+      "legacy_view": "evidence",
+      "label": "Evidence",
+      "destination": "audit",
+      "facet": "Records",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/evidence"
+        },
+        {
+          "method": "GET",
+          "path": "/api/events"
+        },
+        {
+          "method": "GET",
+          "path": "/api/ledger/rows"
+        }
+      ]
+    },
+    {
+      "legacy_view": "provenance",
+      "label": "Provenance",
+      "destination": "audit",
+      "facet": "Lineage",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/platform/provenance-graph"
+        }
+      ]
+    },
+    {
+      "legacy_view": "dispatch",
+      "label": "Dispatch",
+      "destination": "dispatch",
+      "facet": "Launch",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/dispatch-routes"
+        },
+        {
+          "method": "GET",
+          "path": "/api/operating/resolve"
+        },
+        {
+          "method": "GET",
+          "path": "/api/dispatch-stack"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/dispatch"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/dispatch-stack"
+        }
+      ],
+      "gap": "Bounded task launch and dependency-stack preview remain different workflows; preserve task_ids/project/expected_lane stack contract."
+    }
+  ],
+  "aliases": {
+    "actions": "approvals",
+    "portfolio": "home",
+    "queue": "tasks",
+    "kanban": "board",
+    "topology": "agent-topology"
+  },
+  "additional_surfaces": [
+    {
+      "name": "Work products",
+      "destination": "delivery",
+      "facet": "Releases",
+      "http": [
+        {
+          "method": "POST",
+          "path": "/api/work-products"
+        },
+        {
+          "method": "POST",
+          "path": "/api/work-products/{id}/release"
+        }
+      ],
+      "gap": "release projection and receipt join needed; no assumed list endpoint"
+    },
+    {
+      "name": "Automation",
+      "destination": "delivery",
+      "facet": "Automation",
+      "http": [
+        {
+          "method": "POST",
+          "path": "/api/routines/{routine_id}/fire"
+        }
+      ],
+      "gap": "routine list and pause need guarded HTTP adapters"
+    },
+    {
+      "name": "Configuration and lifecycle",
+      "destination": "organization",
+      "facet": "Authority",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/config-revisions"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/config-revision"
+        },
+        {
+          "method": "GET",
+          "path": "/api/agent-lifecycle"
+        },
+        {
+          "method": "POST",
+          "path": "/api/agent-lifecycle"
+        }
+      ],
+      "gap": "reuse existing nested controls and gates"
+    },
+    {
+      "name": "Organization changes",
+      "destination": "decisions",
+      "facet": "Organization changes",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/org-proposals"
+        },
+        {
+          "method": "GET",
+          "path": "/api/org-proposals/{proposal_id}"
+        }
+      ],
+      "gap": "keep separate from session-learning proposals"
+    },
+    {
+      "name": "Costs",
+      "destination": "analytics",
+      "facet": "Costs",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/costs"
+        },
+        {
+          "method": "GET",
+          "path": "/api/quota"
+        }
+      ],
+      "gap": "separate metered, estimated, unknown and subscription usage"
+    },
+    {
+      "name": "Quality",
+      "destination": "analytics",
+      "facet": "Quality",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/scorecards"
+        },
+        {
+          "method": "GET",
+          "path": "/api/delivery_slo"
+        }
+      ],
+      "gap": "verified delivery needs defined cohort and proof completeness"
+    },
+    {
+      "name": "Task comments",
+      "destination": "delivery",
+      "facet": "Tasks",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/tasks/{task_id}/comments"
+        },
+        {
+          "method": "POST",
+          "path": "/api/tasks/{task_id}/comments"
+        }
+      ],
+      "gap": "comments are not approvals or message receipts"
+    },
+    {
+      "name": "Harness diagnostics",
+      "destination": "organization",
+      "facet": "Diagnostics",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/harness-config"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/harness-config"
+        }
+      ],
+      "gap": "advanced inspector; retain guarded edits"
+    },
+    {
+      "name": "Passkey registration",
+      "destination": "organization",
+      "facet": "Identity",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/oauth/passkeys"
+        },
+        {
+          "method": "POST",
+          "path": "/api/oauth/passkeys"
+        }
+      ],
+      "gap": "registration alone does not prove human approval presence"
+    },
+    {
+      "name": "Reviewed workflows",
+      "destination": "delivery",
+      "facet": "Automation",
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/overview"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/workflow"
+        }
+      ],
+      "payload_field": "workflows",
+      "gap": "Current workflow catalogue is inside Overview; reuse reviewed YAML workflows and retain launch gates. Add a focused read adapter before frequent catalogue polling."
+    }
+  ]
+}

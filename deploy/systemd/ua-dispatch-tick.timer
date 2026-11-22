@@ -1,0 +1,14 @@
+[Unit]
+Description=Timer for ua-dispatch-tick.service
+
+[Timer]
+# Every 2 minutes. A tick is cheap when nothing is ready: it reclaims expired
+# leases, dead-letters exhausted retries, and queries the ready set.
+OnCalendar=*:0/2
+# Deliberately false: a missed window must not fire a catch-up burst of claims
+# after the host wakes.
+Persistent=false
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

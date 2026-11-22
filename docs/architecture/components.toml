@@ -1,0 +1,487 @@
+# Component map for src/unified_agent. Checked by scripts/check_components.py;
+# the rule, the numbers and the reasons for by-role placements are in
+# components.md next to this file. Spec: kernel-split-spec.md (K1, #2439).
+#
+# Every module belongs to exactly one component (exact name or glob; an exact
+# name wins over a glob). A module may import its own component and anything
+# in the transitive depends_on of its component. kernel depends on nothing;
+# mcp-adapter is the composition root and nothing depends on it. Imports that
+# break the rule today are listed in components-baseline.txt, which only
+# shrinks.
+
+package = "unified_agent"
+source = "../../src"
+baseline = "components-baseline.txt"
+
+[[component]]
+name = "kernel"
+description = "Identity, policy, storage, events, tasks, messages, lexical memory, vault, approvals, evidence ledger, sessions; and the primitives they stand on."
+depends_on = []
+certifiable = false
+modules = [
+    "agent_access",
+    "agent_lifecycle",
+    "agent_enrollment",  # by role: issues an agent its token, roster label and office seat (#2453)
+    "agent_roster",  # by role: runtime labels config, org_registry and profiles read (#2453)
+    "approval_push",
+    "approval_receipts",  # by role: the decision's receipt intent and its delivery, beside the gate (#2394)
+    "approval_webhook",
+    "audit.producer_sign",  # by role: evidence-ledger producer signatures; tasks, approvals, delegation sign with it
+    "budget_policy",  # by role: authority-config parsing that config_revisions versions
+    "change_feed",
+    "claim_release",
+    "config",
+    "config_revisions",
+    "constraint_migration",
+    "credential_fence",
+    "delivery",
+    "dispatch.child_env",  # by role: agent bearer-token and spawn-env primitive (core layer)
+    "dispatch_states",  # by role: run-state vocabulary, no imports; run_records reads it
+    "edition",
+    "env_allowlist",
+    "events",
+    "execution_locality",
+    "gateway",
+    "hosted_capabilities",
+    "hosted_execution",
+    "hub_runtime",
+    "identity_core",
+    "invocation_service",
+    "lease_reaper",
+    "lifecycle",  # by role: session start/end packets and capture
+    "lifecycle.capture",  # by role: session capture
+    "lifecycle.handoff",  # by role: session handoff notes and context epochs the packet reads (#2397)
+    "lifecycle.packet",  # by role: session packet
+    "lifecycle.schema",  # by role: session lifecycle vocabulary
+    "managed_secrets",
+    "memory_ranking",
+    "messaging",
+    "messaging.availability",
+    "messaging.conversations",
+    "messaging.delivery",
+    "messaging.grounding",
+    "messaging.handoff",
+    "messaging.index",
+    "messaging.schema",
+    "messaging.send",
+    "messaging.wake",
+    "node_registry",  # by role: node and agent liveness reads; 6 kernel modules import it
+    "note_lock",
+    "oauth_store",  # by role: credential tables; storage and agent_lifecycle import it
+    "object_model",
+    "operating_policy",
+    "operating_profiles",
+    "org_partition",
+    "org_partition_migration",
+    "org_registry",
+    "owner_liveness",
+    "personas",
+    "pilot_auth",  # by role: WorkOS session verification identity_core builds on
+    "plan_usage_limit",
+    "policy",
+    "profiles",
+    "project_bindings",
+    "projects",
+    "ready",
+    "ready_dependents",  # by role: run_records' completion hook writes its readiness rows in the same transaction (#2454)
+    "registry",
+    "review_reads",  # by role: storage imports its table
+    "review_holds",  # by role: storage imports its table; the inbox and the merge preflight read it (#2514)
+    "run_records",  # by role: task run state; events, tasks and approvals import it
+    "safety",
+    "scheduled_status",
+    "scout",
+    "self_organization",
+    "service_env",
+    "session_credentials",  # by role: session identity; agent_lifecycle and tasks import it
+    "session_owed",
+    "settings",
+    "source_host",
+    "storage",
+    "storage_backup",
+    "supervision",
+    "sync",
+    "table_schemas",
+    "tailnet",
+    "task_comments",
+    "task_liveness",
+    "task_notes",
+    "task_ownership",
+    "task_workflow",  # by role: stage, resume capsule and graded checks lifecycle.packet reads (#2398)
+    "telemetry.jwk",  # by role: redaction's JWK private-member detector (stdlib only)
+    "telemetry.jwk_fallback",  # by role: redaction's coarse JWK fallback (stdlib only)
+    "telemetry.oct_blocks",  # by role: redaction's oct-key rule (stdlib only)
+    "telemetry.redaction",  # by role: secret-redaction primitive; 8 kernel modules import it
+    "telemetry.yaml_jwk",  # by role: redaction's YAML JWK rule (stdlib only)
+    "tenant_tables",
+    "tool_allowance",
+    "tool_errors",
+    "tool_surface",  # governed tool registry; its lazy import of server is baselined
+    "tools",
+    "tools.approvals",
+    "tools.config_revisions",
+    "tools.delegate",
+    "tools.delegate_receipts",
+    "tools.delegation_spec",
+    "tools.digest",
+    "tools.events",
+    "tools.git",  # by role: task claims create and remove worktrees through it
+    "tools.learning",  # by role: session-end learning proposals into memory
+    "tools.lifecycle",
+    "tools.memory",
+    "tools.memory_prune",
+    "tools.messages",
+    "tools.notify",
+    "tools.plan",
+    "tools.plan_preview",
+    "tools.profiles",
+    "tools.registry",
+    "tools.state_verify",
+    "tools.tasks",
+    "tools.token_lifecycle",
+    "tools.vault",
+    "tools.vault_graph",
+    "tools.vault_ingest",
+    "tools.work_product",
+    "tools.worktree_policy",  # by role: task-claim worktree policy
+    "trust_presets",
+    "untrusted",  # by role: provenance wrapper on the memory, message and vault read paths
+    "usage_ledger",  # by role: storage imports its table
+    "host_registry",  # by role: host last-seen and doctor snapshots the kernel heartbeat (tools.registry) writes; imports only kernel (#2450)
+    "evidence_claims",  # by role: merge-claim helpers tools.tasks and the evidence report share (#2450)
+    "injection_patterns",  # by role: injection phrases the untrusted read-path scanner counts (#2450)
+    "vector_math",  # by role: similarity math with no imports; storage imports it
+    "work_proposals",  # by role: batch work proposals and their frozen contracts (#2393)
+    "workflow_steps",  # by role: is-this-task-a-workflow-step read run_records needs (#2450)
+]
+
+[[component]]
+name = "auth"
+description = "Hub sign-in: OAuth server and approver, CIMD, passkeys, WorkOS, device login, OAuth stores and session-scoped credentials."
+depends_on = ["kernel"]
+certifiable = false
+modules = [
+    "oauth",
+    "oauth_approver",
+    "oauth_cimd",
+    "passkeys",
+    "workos_hub_auth",
+    "device_login",
+    "device_key",  # by role: device enrollment key written at login
+    "hub_client",  # by role: how a client signs in to and calls the hub
+    "tools.oauth_devices",
+]
+
+[[component]]
+name = "telemetry"
+description = "Monitoring, scorecards, budgets, quota and usage observation, MCP runtime telemetry, OTel export and telemetry projections."
+depends_on = ["kernel", "auth"]
+certifiable = false
+modules = [
+    "telemetry",
+    "telemetry.fixtures",
+    "telemetry.otel",
+    "telemetry.producers",
+    "telemetry.projection",
+    "telemetry.schema",
+    "monitor",
+    "scorecards",
+    "budgets",
+    "session_friction",
+    "mcp_runtime_telemetry",
+    "mcp_progress",
+    "mcp_telemetry",
+    "lane_b_telemetry",
+    "quota_observe",
+    "delivery_slo",
+    "service_probes",  # by role: systemd and LaunchAgent health probes
+]
+
+[[component]]
+name = "retrieval"
+description = "Semantic retrieval: embeddings, vector math, memory chunks and semantic backfill, task search, the symbol indexer, recall curation, PDF extraction."
+depends_on = ["kernel"]
+certifiable = false
+modules = [
+    "embeddings",
+    "memory_knn",  # by role: sqlite-vec KNN, the semantic leg
+    "memory_graph",  # by role: graph retrieval leg of memory_search
+    "memory_semantic",
+    "memory_chunks",
+    "task_search",
+    "tools.indexer",
+    "recall_curation",
+    "pdf_worker",
+]
+
+[[component]]
+name = "llm"
+description = "LLM clients and broker, provider credentials, LangGraph runners, the Gemini and Pi tools."
+depends_on = ["kernel", "auth", "telemetry"]
+certifiable = false
+modules = [
+    "llm_*",
+    "codex_llm_client",
+    "credential_pool",
+    "langgraph_*",
+    "tools.langgraph",
+    "tools.gemini",
+    "tools.pi_runner",
+]
+
+[[component]]
+name = "node"
+description = "ua-node: the node queue, registry, claims, follow-ups, resume, acceptance, harness config and usage, host registry."
+depends_on = ["kernel", "auth", "telemetry"]
+certifiable = false
+modules = [
+    "node_acceptance",
+    "node_agent",
+    "node_claim_journal",
+    "node_claim_ops",
+    "node_followups",
+    "node_queue",
+    "node_command",
+    "node_resume",
+    "node_wake_transport",
+    "native_sessions",
+    "harness_*",
+    "turn_checkpoints",
+    "acceptance_backend",
+    "acp_*",  # by role: the ACP session protocol ua-node drives
+    "session_settings",  # by role: ACP session settings
+    "fleet_actions",  # by role: control of registered hosts
+]
+
+[[component]]
+name = "dispatch"
+description = "Approved dispatch, the executor daemon, ACP runners, teams and crews, routines, holds, autonomy modes, delivery receipts."
+depends_on = ["kernel", "auth", "telemetry", "llm", "node"]
+certifiable = false
+modules = [
+    "dispatch",
+    "dispatch.*",
+    "dispatch_reads",
+    "executor",
+    "executor.*",
+    "supervisor_loop",
+    "routines",
+    "crew",
+    "team_*",
+    "delivery_receipts",
+    "task_holds",
+    "autonomy_modes",
+    "lane_reaper",
+    "design_panels",  # by role: a design question dispatched to seats; tools.graph and queue hygiene call it (#2399)
+    "friction_rollup",  # by role: friction reports and fix-claim verdicts; tools.graph and queue hygiene call it (#2399)
+    "tools.dispatch_report",  # MCP surface over dispatch self-report
+    "tools.graph",  # by role: execution-graph handoffs over teams, holds and node acceptance
+]
+
+[[component]]
+name = "audit"
+description = "Security audit engine and rules, evidence reports, signing, anchoring and export, the untrusted-content triage."
+depends_on = ["kernel", "dispatch"]
+certifiable = false
+modules = [
+    "audit",
+    "audit.*",
+    "tools.audit",
+    "tools.evidence",
+    "injection_triage",
+]
+
+[[component]]
+name = "cloud"
+description = "Cloud mirror and bridge, Horizon 2 connectors, the TypeScript worker transport, GCloud and cloud recovery tools."
+depends_on = ["kernel", "telemetry", "dispatch"]
+certifiable = false
+modules = [
+    "cloud_*",
+    "connectors",
+    "connector_oauth",
+    "horizon2",
+    "tools.horizon2",
+    "ts_worker",
+    "ts_worker.*",
+    "tools.gcloud",
+    "tools.cloud_recovery",
+    "tools.mcp_gateway",  # by role: fronts downstream MCP servers (Horizon 2 registrations)
+    "hosted_logging",  # by role: hosted-hub log format
+]
+
+[[component]]
+name = "github"
+description = "GitHub App and worker, PR watch, the review pipeline, held PRs, merge, cycle eligibility, shipping preflight, release."
+depends_on = ["kernel", "dispatch", "audit", "cloud"]
+certifiable = false
+modules = [
+    "github_app",
+    "github_app_*",
+    "pr_*",
+    "review_head_status",
+    "reviewer",
+    "held_pr",
+    "merge",
+    "cycle_eligibility",
+    "shipping_preflight_cli",  # a library as well as a CLI: reviewer code imports it
+    "review_provenance",  # why a reviewed head changed; shipping_preflight_cli reports it (#2398)
+    "required_settings",
+    "independent_review",
+    "release",
+    "affected_tests",  # by role: the reviewer's test selection
+    "tools.cycles",  # by role: autonomous dev cycles; pairs with cycle_eligibility
+    "tools.policy_authorization",  # MCP surface over the GitHub Approval Ledger
+    "delegation_ledger_log",  # by role: written by the review pipeline only
+    "check_receipts",  # by role: merge verification routing
+    "pytest_attestation",  # by role: pre-PR test attestation
+]
+
+[[component]]
+name = "chat-bridges"
+description = "Slack and Zulip: config, outbound, gateway, chat workers, approval-in-Slack, completion return to the asking thread."
+depends_on = ["kernel", "llm", "audit", "github"]
+certifiable = false
+modules = [
+    "slack_*",
+    "zulip_chat",
+    "zulip_worker",
+    "approval_slack",
+    "tools.zulip",
+    "completion_return",  # by role: reply to the chat thread that asked
+    "tools.public_relay",  # by role: public-channel reply relay
+    "messaging.bridge_a2a",  # by role: A2A bridge, used only by the bridge CLI
+    "messaging.bridge_brain",  # by role: gbrain bridge, used only by the bridge CLI
+    "messaging.brain_format",  # by role: gbrain bridge formatting
+    "messaging.bridge_state",  # by role: bridge cursors
+]
+
+[[component]]
+name = "dev-tools"
+description = "Workspace developer tools: files, shell, git, worktrees, web, lint, export, obsidian, doctor and service probes, bug worker, demos, bootstrap and backup."
+depends_on = ["kernel", "retrieval", "audit", "github"]
+certifiable = false
+modules = [
+    "tools.files",
+    "tools.shell",
+    "tools.web",
+    "tools.lint",
+    "tools.format",
+    "tools.export",
+    "tools.obsidian",
+    "tools.dash",  # Dash/Zeal offline docs, not a dashboard
+    "bug_worker",
+    "bug_worker.*",
+    "tools.bug_worker",
+    "backup",
+    "tools.devservers",
+    "tools.repo_map",
+    "tools.red_team",
+    "tools.media",
+]
+
+[[component]]
+name = "skills"
+description = "Skill registry, sources and catalog, workflow engine and roles, the capability tool."
+depends_on = ["kernel", "telemetry", "dispatch", "audit", "dev-tools"]
+certifiable = false
+modules = [
+    "skill_catalog",
+    "skill_sources",
+    "skills_registry",
+    "tools.skills",
+    "tools.workflow",
+    "workflow_roles",
+    "tools.capability",
+    "mcp_matrix",  # by role: client capability data, read only by tools.capability
+    "tools.synthetic_workflow",  # by role: opt-in acceptance workflow
+]
+
+[[component]]
+name = "knowledge-jobs"
+description = "Background knowledge work: consolidation, sleep pass, evolve, wiki, vault sync, goals and planning, queue hygiene, lifecycle packets."
+depends_on = ["kernel", "auth", "retrieval", "llm", "dispatch", "github", "chat-bridges"]
+certifiable = false
+modules = [
+    "consolidate",
+    "sleep_pass",
+    "evolve",
+    "tools.evolve",
+    "wiki",
+    "vault_sync",
+    "planning_loop",
+    "joint_planning",
+    "queue_hygiene",
+    "queue_closure",
+    "session_capture",
+    "goals",
+]
+
+[[component]]
+name = "control-center"
+description = "The web control center and its HTTP/JSON surface, pilot app, TUI, toolsets and browser/mobile projections."
+depends_on = ["kernel", "telemetry", "retrieval", "llm", "auth", "audit", "cloud", "chat-bridges", "skills", "node", "dispatch", "github", "knowledge-jobs", "dev-tools"]
+certifiable = false
+modules = [
+    "webui",
+    "webui.*",
+    "platform_http",
+    "pilot_app",
+    "tui",
+    "projection",
+    "projection.*",
+    "zulip_automation",  # by role: Zulip digest of control-center payloads
+    "platform_readers",  # by role: object-model read models for HTTP and the web UI
+    "work_graph",  # by role: control-center projection
+    "runs_projection",  # by role: control-center projection
+    "tools.projection",  # by role: browser projection receiver
+    "tools.graph_canvas",  # by role: the Canvas tab's Excalidraw tools
+    "capability_verification",  # by role: control-center projection
+    "needs_operator",  # by role: control-center read model
+]
+
+[[component]]
+name = "mcp-adapter"
+description = "Composition root: server.py and MCP wiring, post-init hooks, CLIs and process entry points."
+depends_on = ["kernel", "telemetry", "retrieval", "llm", "auth", "audit", "cloud", "chat-bridges", "skills", "node", "dispatch", "github", "knowledge-jobs", "dev-tools", "control-center"]
+certifiable = false
+modules = [
+    "server",
+    "components",  # component manifests (K4): composition, imports every component
+    "components.*",
+    "health",  # always-on /healthz and /readyz, outside control-center (#2603)
+    "post_init",  # composition helper: registers post-init hooks for every component
+    "toolsets",  # MCP tool manifest
+    "tool_classification",
+    "tool_schema_fingerprint",
+    "elicitation",
+    "mcp_live_state",
+    "mcp_live_verification",
+    "cli",
+    "cli.*",
+    "agent_cli",  # `unified-agent agent add|remove|list` (#2453)
+    "db_cli",
+    "distro_cli",
+    "platform_cli",
+    "review_cli",
+    "routine_cli",
+    "scaffold_cli",
+    "sync_cli",
+    "messaging.bridge_cli",  # CLI
+    "tools.work_product_cli",  # CLI
+    "audit.cli",  # CLI
+    "audit.evidence_cli",  # CLI
+    "audit.ledger_cli",  # CLI
+    "cloud_bridge_cli",  # CLI
+    "dispatch.cli",  # CLI
+    "bug_worker.cli",  # CLI
+    "harness_usage",  # CLI (ua-usage)
+    "session_end",  # CLI
+    "tools.doctor",  # by role: whole-hub doctor surface; imports 58 modules
+    "tools.mcp_health",  # by role: reads the server's tool surface
+    "bootstrap",  # process entry point
+    "demo",  # process entry point
+    "demo.*",  # process entry point
+    "backup_runner",  # process entry point
+    "backup_loop",  # hosted backup schedule entry point
+]

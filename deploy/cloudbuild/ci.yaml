@@ -1,0 +1,163 @@
+# Exact-head Cloud Build CI; every check runs, then the final gate rejects failures.
+substitutions:
+  _PY_IMAGE: python:3.14-trixie
+  _NODE_IMAGE: node:26-trixie
+  _RUST_IMAGE: rust:1-trixie
+  _SOURCE_SHA: unknown
+steps:
+- id: setup
+  name: gcr.io/cloud-builders/docker
+  args:
+  - run
+  - --rm
+  - --init
+  - --privileged
+  - -e
+  - UA_CI_SOURCE_SHA=${_SOURCE_SHA}
+  - -v
+  - /workspace:/workspace
+  - -w
+  - /workspace
+  - ${_PY_IMAGE}
+  - bash
+  - ci-step.sh
+  - setup
+- id: gates
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  args:
+  - -c
+  - |
+    set +e
+    docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/gates:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace '${_PY_IMAGE}' bash ci-step.sh gates
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/gates.exit
+    exit "$$result"
+  entrypoint: bash
+- id: shard-0
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  args:
+  - -c
+  - |
+    set +e
+    docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/shard-0:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace '${_PY_IMAGE}' bash ci-step.sh shard 0
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/shard-0.exit
+    exit "$$result"
+  entrypoint: bash
+- id: shard-1
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  args:
+  - -c
+  - |
+    set +e
+    docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/shard-1:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace '${_PY_IMAGE}' bash ci-step.sh shard 1
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/shard-1.exit
+    exit "$$result"
+  entrypoint: bash
+- id: shard-2
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  args:
+  - -c
+  - |
+    set +e
+    docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/shard-2:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace '${_PY_IMAGE}' bash ci-step.sh shard 2
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/shard-2.exit
+    exit "$$result"
+  entrypoint: bash
+- id: shard-3
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  args:
+  - -c
+  - |
+    set +e
+    docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/shard-3:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace '${_PY_IMAGE}' bash ci-step.sh shard 3
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/shard-3.exit
+    exit "$$result"
+  entrypoint: bash
+- id: js
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    set +e
+    if grep -qx 'js=false' /workspace/.ci/classification; then echo 0 > /workspace/.ci/js.exit; exit 0; fi
+    docker build -t ua-ci-js - <<'DOCKERFILE' && docker run --rm --init --privileged -v /workspace:/workspace -v /workspace/.ci/checkouts/js:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace ua-ci-js bash ci-step.sh js
+    FROM ${_NODE_IMAGE} AS node
+    FROM ${_PY_IMAGE}
+    COPY --from=node /usr/local/bin/node /usr/local/bin/node
+    COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+    RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+    DOCKERFILE
+
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/js.exit
+    exit "$$result"
+- id: native
+  waitFor:
+  - setup
+  allowFailure: true
+  name: gcr.io/cloud-builders/docker
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    if grep -qx 'native=false' /workspace/.ci/classification; then echo 0 > /workspace/.ci/native.exit; exit 0; fi
+    set +e
+    docker run --rm --init -v /workspace:/workspace -v /workspace/.ci/checkouts/native:/workspace/repo -v /workspace/repo/.venv:/workspace/repo/.venv:ro -w /workspace "${_RUST_IMAGE}" bash ci-step.sh native
+    result=$$?
+    printf '%s\n' "$$result" > /workspace/.ci/native.exit
+    exit "$$result"
+- id: full-verification
+  waitFor:
+  - gates
+  - shard-0
+  - shard-1
+  - shard-2
+  - shard-3
+  - js
+  - native
+  name: gcr.io/cloud-builders/docker
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    set -eu
+    for job in gates shard-0 shard-1 shard-2 shard-3 js native; do
+      test -f "/workspace/.ci/$$job.exit"
+      test "$$(cat "/workspace/.ci/$$job.exit")" = 0
+    done
+tags:
+- ua-ci
+- sha-${_SOURCE_SHA}
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+# A change that sets UA_TEST_EXHAUSTIVE (scripts/ci_changes.py EXHAUSTIVE, e.g.
+# pyproject.toml) runs every matrix case; its slowest shard needs ~135 min on
+# the shared 8-vCPU runner (#2599). Ordinary runs finish in ~70 min.
+timeout: 10800s
+# Builds run one at a time; a batch can wait behind another (#2189), so the
+# queue must outlast one whole build at the timeout above (#2600).
+queueTtl: 14400s

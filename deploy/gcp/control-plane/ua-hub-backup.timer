@@ -1,0 +1,15 @@
+# Daily at 02:30 UTC plus at most 5 minutes of jitter. ua-hub-backup.service
+# is capped at 20 minutes (TimeoutStartSec), so the backup always ends by
+# 02:55 UTC, before the 03:00 UTC disk snapshot, and each daily snapshot also
+# holds that day's verified memory.db copy. (Persistent= only matters after
+# the VM was off at 02:30: the missed run then starts at boot.)
+[Unit]
+Description=Daily unified-agent hub backup
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

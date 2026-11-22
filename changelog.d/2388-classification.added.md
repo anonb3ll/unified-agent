@@ -1,0 +1,1 @@
+- **`queue_health` and the doctor report stuck ownership (#2388).** Unfinished tasks are classified as sleeping, zombie, dead, shelved or void from the stored owner, claim, hold and last run. Report only: nothing is unblocked or dispatched.

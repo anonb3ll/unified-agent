@@ -1,0 +1,63 @@
+name: Dependency audit
+
+# Manual only (`gh workflow run dependency-audit.yml`). It has never carried an
+# automatic trigger: it landed while Depot quota was exhausted, and GitHub
+# Actions now runs on a fixed minute budget (task #1787). Adding a trigger is a
+# deliberate budget decision; tests/test_ci_workflow_parity.py pins it.
+# .depot/workflows/dependency-audit.yml is the Depot copy.
+on:
+  workflow_dispatch:
+
+concurrency:
+  # PR runs share a group so a superseded push cancels its predecessor.
+  # Every other event gets a run-specific group.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.5"
+          enable-cache: true
+      - name: Audit locked Python dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --locked fails when uv.lock would change. --frozen would still
+          # export a stale lock (uv 0.12.5). Audit that export, not a floating install.
+          uv export --locked -o "$RUNNER_TEMP/requirements.txt" >/dev/null
+          DEPENDENCY_AUDIT_MODE=audit \
+          IGNORE_FILE=".github/dependency-audit-ignores.yml" \
+          REQUIREMENTS="$RUNNER_TEMP/requirements.txt" \
+            uv run --no-project --with 'pip-audit==2.10.1' --with 'pyyaml==6.0.2' \
+            python .github/dependency-audit-check.py
+
+  npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.5"
+          enable-cache: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+      - name: Check the reviewed ignore list
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEPENDENCY_AUDIT_MODE=validate \
+          IGNORE_FILE=".github/dependency-audit-ignores.yml" \
+            uv run --no-project --with 'pyyaml==6.0.2' \
+            python .github/dependency-audit-check.py
+      - name: Audit production npm dependencies
+        shell: bash
+        working-directory: packages/web
+        run: npm audit --omit=dev --audit-level=high

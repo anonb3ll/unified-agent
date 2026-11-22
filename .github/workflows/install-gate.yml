@@ -1,0 +1,263 @@
+name: Install Gate
+
+# Proves a machine nobody has touched can install unified-agent, pass doctor,
+# serve over HTTP with auth enforced, execute exactly one human-resolved gated
+# action, and render evidence — the release gate for "handable" (task #1195).
+#
+# The curl|bash leg is exercised honestly on the private repo: install.sh is
+# served over a localhost HTTP server and fetched with curl + sha256
+# verification rather than read from the checkout directly. raw.githubusercontent
+# on a private repo needs a token, so the download path is identical in shape
+# but same-origin; the integrity property (fetch bytes -> verify hash -> run)
+# is what is gated here.
+
+# DISPATCH-ONLY since task #2533 (2026-11-12): Depot CI owns this workflow's
+# automatic runs (.depot/workflows/install-gate.yml) while GitHub-hosted
+# Actions refuses jobs on billing.
+#
+# Minute economy ("Lean" policy, task #1787): never on a PR. UI source is not a
+# trigger either: CI's protocol, client and web jobs build and test it on every
+# ready PR (task #1628). What this gate uniquely proves is that a cold machine
+# can install the declared dependencies, so it runs after merge when the
+# installer, its gate policy, or a manifest or lockfile moved, and by hand.
+# docs/installation.md is not a trigger: the gate never reads it. Dispatch it on
+# a v* tag before a release (`gh workflow run install-gate.yml --ref v<version>`).
+on:
+  workflow_dispatch:
+
+# One run per ref (#581, #1787): a newer push to main or a newer dispatch on
+# the same ref supersedes the older run, whose tree it contains.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-gate:
+    # Installs into $HOME, starts a hub on fixed ports and needs a cold
+    # machine: it runs on GitHub-hosted runners unless a dedicated isolated
+    # runner is named (UA_CI_ISOLATED_RUNNER), never on the shared CI slots.
+    runs-on: ${{ vars.UA_CI_ISOLATED_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Fetch install.sh over HTTP (checksum-verified) and run it
+        run: |
+          set -euo pipefail
+          mkdir -p gate-artifacts
+          python3 -m http.server 8923 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" &
+          SRV=$!
+          trap 'kill $SRV 2>/dev/null || true' EXIT
+          sleep 1
+          expected="$(sha256sum install.sh | awk '{print $1}')"
+          curl -fsSL http://127.0.0.1:8923/install.sh -o "$RUNNER_TEMP/install.sh"
+          actual="$(sha256sum "$RUNNER_TEMP/install.sh" | awk '{print $1}')"
+          if [ "$expected" != "$actual" ]; then
+            echo "install.sh checksum mismatch: $actual != $expected" >&2
+            exit 1
+          fi
+          echo "install.sh fetched over HTTP and checksum-verified ($actual)"
+          bash "$RUNNER_TEMP/install.sh" --local "$GITHUB_WORKSPACE" | tee gate-artifacts/install.log
+
+      - name: Initialize state and configure the gated hub
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          UA_HOME="${UA_HOME:-$HOME/.unified_agent}"
+          # install.sh already ran init; its service.env owns the token
+          # (init never rewrites it). Read label/token from the env, never print.
+          set -a; . "$UA_HOME/service.env"; set +a
+          # init writes "<host>_agent:<tok>,<operator-label>:<tok>": the first
+          # pair is the agent, the operator pair is the human (settings.toml).
+          first="${UA_AGENT_TOKENS%%,*}"
+          label="${first%%:*}"
+          token="${first#*:}"
+          if [ -z "$label" ] || [ -z "$token" ] || [ "$label" = "$token" ]; then
+            echo "could not parse label:token from UA_AGENT_TOKENS" >&2
+            exit 1
+          fi
+          printf %s "$token" > "$RUNNER_TEMP/gate-token"
+          chmod 600 "$RUNNER_TEMP/gate-token"
+          echo "GATE_LABEL=$label" >> "$GITHUB_ENV"
+          echo "captured token for label '$label' (not printed)"
+          # Approving a gated call needs a verified human who is not the
+          # requester (#869): the init label is an agent, and an agent may not
+          # approve or activate a more privileged profile. init also minted a
+          # bearer for the human operator (settings.toml operator.label), whose
+          # default profile is operator. Never printed (task #1637).
+          human_label="$(unified-agent settings get operator.label)"
+          human_token="$(printf '%s' "$UA_AGENT_TOKENS" | tr ',' '\n' \
+            | awk -F: -v l="$human_label" '$1 == l { print $2 }')"
+          if [ -z "$human_label" ] || [ -z "$human_token" ]; then
+            echo "init did not mint an operator token" >&2
+            exit 1
+          fi
+          printf %s "$human_token" > "$RUNNER_TEMP/gate-human-token"
+          chmod 600 "$RUNNER_TEMP/gate-human-token"
+          echo "GATE_HUMAN_LABEL=$human_label" >> "$GITHUB_ENV"
+          echo "captured the operator bearer for human label '$human_label' (not printed)"
+          {
+            echo "UA_TRANSPORT=http"
+            echo "UA_HTTP_HOST=127.0.0.1"
+            echo "UA_HTTP_PORT=8765"
+            echo "UA_ENFORCE_AUTH=1"
+            echo "UA_POLICY_FILE=$GITHUB_WORKSPACE/deploy/install-gate/policy.yaml"
+          } >> "$UA_HOME/service.env"
+          echo "service.env extended with http + auth + gate policy (secrets untouched)"
+
+      - name: Build Control Center assets for the installed HTTP hub
+        run: |
+          set -euo pipefail
+          npm --prefix packages/protocol ci
+          npm --prefix packages/protocol run build
+          npm --prefix packages/client install
+          npm --prefix packages/client run build
+          npm --prefix packages/web ci
+          npm --prefix packages/web run build
+          test -s packages/web/dist/index.html
+          echo "UA_WEB_DIST_DIR=$GITHUB_WORKSPACE/packages/web/dist" >> "${UA_HOME:-$HOME/.unified_agent}/service.env"
+
+      - name: Doctor passes before the hub starts
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          set -a; . "${UA_HOME:-$HOME/.unified_agent}/service.env"; set +a
+          unified-agent doctor | tee gate-artifacts/doctor.txt
+
+      - name: Start hub over HTTP and wait for /healthz
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          set -a; . "${UA_HOME:-$HOME/.unified_agent}/service.env"; set +a
+          nohup unified-agent > "$RUNNER_TEMP/hub.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/hub.pid"
+          ok=""
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/healthz || true)"
+            if [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "healthz never returned 200" >&2
+            cat "$RUNNER_TEMP/hub.log" >&2
+            exit 1
+          fi
+          echo "healthz OK after ${i}s"
+          # Auth is enforced: a bearer-less tool call must be refused, not served.
+          unauth="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8765/mcp \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' || true)"
+          echo "unauthenticated tools/list -> HTTP $unauth"
+          if [ "$unauth" != "401" ] && [ "$unauth" != "403" ]; then
+            echo "expected 401/403 without a bearer token, got $unauth" >&2
+            exit 1
+          fi
+
+      - name: Execute exactly one gated action through the approval queue
+        env:
+          GATE_TOKEN_FILE: ${{ runner.temp }}/gate-token
+          GATE_HUMAN_TOKEN_FILE: ${{ runner.temp }}/gate-human-token
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          UA_PY="$(dirname "$(readlink -f "$(command -v unified-agent)")")/python"
+          GATE_TOKEN="$(cat "$GATE_TOKEN_FILE")" GATE_HUMAN_TOKEN="$(cat "$GATE_HUMAN_TOKEN_FILE")" \
+            "$UA_PY" - <<'PY' | tee gate-artifacts/gated-action.log
+          import os, re, sys
+          from unified_agent.executor.daemon import HubClient
+
+          # Two verified identities, mirroring the real split (#869): the agent
+          # leg stays on its developer default and requests; a different human
+          # resolves on its own operator default (the control-center path).
+          # Neither leg activates a profile.
+          hub = dict(hub_url="http://127.0.0.1:8765/mcp", allow_fallback=False)
+          agent = HubClient(
+              agent_label=os.environ["GATE_LABEL"],
+              bearer_token=os.environ["GATE_TOKEN"],
+              **hub,
+          )
+          human = HubClient(
+              agent_label=os.environ["GATE_HUMAN_LABEL"],
+              bearer_token=os.environ["GATE_HUMAN_TOKEN"],
+              **hub,
+          )
+
+          # 0. The evidence report traces task rows — a fresh install has none,
+          # and the PDF endpoint honestly 422s on an empty record set. One
+          # claimed/completed task is the record this run proves (not a gated
+          # action; the only gated call below is system_doctor).
+          task = agent.call_tool(
+              "task_add",
+              {"title": "install-gate proof action",
+               "notes": "A2 gate: one parked->resolved->consumed call on a fresh machine"},
+          )
+          task_id = task["id"]
+          agent.call_tool("task_update", {"id": task_id, "status": "doing", "worktree": False})
+          print(f"PASS: proof task {task_id} created and claimed")
+
+          # 1. The gated call must park, not execute (developer profile = the agent leg).
+          try:
+              agent.call_tool("system_doctor", {})
+              print("FAIL: system_doctor ran without approval")
+              sys.exit(1)
+          except Exception as exc:
+              m = re.search(r"request (\d+) is queued", str(exc))
+              if not m:
+                  print(f"FAIL: unexpected error: {exc}")
+                  sys.exit(1)
+              approval_id = int(m.group(1))
+              print(f"PASS: gated call parked as approval {approval_id}")
+
+          # 2. A different verified human resolves it over HTTP.
+          row = human.call_tool(
+              "approval_resolve",
+              {"id": approval_id, "decision": "approve", "reason": "install-gate CI"},
+          )
+          print(f"PASS: approval {approval_id} resolved: {row!r}"[:400])
+
+          # 3. The identical retry on the agent leg consumes the one-shot pass.
+          result = agent.call_tool("system_doctor", {})
+          if not isinstance(result, dict) or "checks" not in result:
+              print(f"FAIL: consumed pass did not return a doctor report: {result!r}"[:400])
+              sys.exit(1)
+          summary = result.get("summary", {})
+          print(
+              "PASS: retried call consumed the pass; doctor summary "
+              f"{summary.get('live')} live / {summary.get('misconfigured')} misconfigured"
+          )
+
+          # 4. Close the proof task so the evidence report carries a
+          # claimed->completed record with its approval trail.
+          agent.call_tool("task_update", {"id": task_id, "status": "done"})
+          print(f"PASS: proof task {task_id} completed")
+          PY
+
+      - name: Render evidence (markdown via CLI, PDF via HTTP) and verify the chain
+        env:
+          GATE_TOKEN_FILE: ${{ runner.temp }}/gate-token
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          set -a; . "${UA_HOME:-$HOME/.unified_agent}/service.env"; set +a
+          unified-agent-audit verify | tee gate-artifacts/audit-verify.txt
+          unified-agent-audit evidence --markdown -o gate-artifacts/evidence.md
+          curl -fsSL -H "Authorization: Bearer $(cat "$GATE_TOKEN_FILE")" \
+            "http://127.0.0.1:8765/api/evidence?format=pdf" -o gate-artifacts/evidence.pdf
+          test -s gate-artifacts/evidence.pdf
+          head -c 5 gate-artifacts/evidence.pdf | grep -q '%PDF'
+          echo "evidence.md + evidence.pdf rendered; chain verified"
+
+      - name: Stop the hub
+        if: always()
+        run: |
+          mkdir -p gate-artifacts
+          kill "$(cat "$RUNNER_TEMP/hub.pid" 2>/dev/null)" 2>/dev/null || true
+          cp "$RUNNER_TEMP/hub.log" gate-artifacts/hub.log 2>/dev/null || true
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: install-gate-${{ github.run_id }}
+          path: gate-artifacts/
+          retention-days: 30

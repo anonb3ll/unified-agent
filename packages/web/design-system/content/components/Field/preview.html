@@ -1,0 +1,15 @@
+<!-- @dsCard group="Forms" height=140 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Field — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;max-width:28rem;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var App = h('div',{className:'stack'},[h(U.Field,{key:1,label:'Title',hint:'One line.',required:true},h(U.Input,{defaultValue:'Build the foundation'})),h(U.Field,{key:2,label:'Due date',error:'Pick a date after today.'},h(U.Input,{type:'date'}))]);
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

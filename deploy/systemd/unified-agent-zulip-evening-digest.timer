@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for unified-agent Zulip evening work handoff
+
+[Timer]
+OnCalendar=*-*-* 17:00:00
+Persistent=true
+Unit=unified-agent-zulip-evening-digest.service
+
+[Install]
+WantedBy=timers.target
+

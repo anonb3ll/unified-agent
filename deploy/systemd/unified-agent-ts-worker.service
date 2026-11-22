@@ -1,0 +1,35 @@
+# Supervised task-space (Discord/Telegram) chat worker (task #770).
+#
+# Install explicitly; this task does not install, enable, restart, or deploy it:
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/systemd/unified-agent-ts-worker.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now unified-agent-ts-worker
+#
+# Logs: journalctl --user -u unified-agent-ts-worker -f
+#
+# Tokens + allowlists live in ~/.unified_agent/service.env (env-only, never in
+# chat, never in SQLite): UA_TS_DISCORD_TOKEN, UA_TS_DISCORD_ALLOWED_USER_IDS,
+# UA_TS_DISCORD_CHANNELS, UA_TS_TELEGRAM_TOKEN, UA_TS_TELEGRAM_ALLOWED_USER_IDS.
+# With no tokens both surfaces report "disabled" and the loop idles.
+
+[Unit]
+Description=unified-agent task-space (Discord/Telegram) chat worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/unified_agent
+Environment=UA_WORKSPACE=%h/dev/agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Optional file may provide UA_HOME and the UA_TS_* tokens/allowlists. Tokens
+# are env-only; they are never written to SQLite or logged.
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/.venv/bin/unified-agent-ts-worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Hermes daily chief-of-staff briefing -> vault inbox + iMessage
+
+[Service]
+Type=oneshot
+# briefing-cron.sh shells out to a bare `uv run` for the hub-perf footer, and
+# invokes the hermes-agent runtime which may in turn reach for bun-based
+# tooling (imessage-bridge etc). Neither ~/.local/bin nor ~/.bun/bin are on
+# the systemd user manager's default PATH, so add them explicitly.
+Environment=PATH=%h/.local/bin:%h/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+ExecStart=%h/dev/agent/projects/cluster-health/briefing-cron.sh

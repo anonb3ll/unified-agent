@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly export of tasks and memory to vault (disaster recovery)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/deploy/weekly-export-cron.sh

@@ -1,0 +1,178 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+workspace/*
+!workspace/.gitkeep
+.DS_Store
+
+# Local environment files and deployment overrides. Track example templates.
+# Keep live deployment files outside the repo.
+.env*
+*.env
+*.env.*
+!*.env.example
+!*.env.sample
+!*.env.template
+!*.env.dist
+.direnv/
+/.unified_agent/
+/settings.toml
+/org.yaml
+
+# Agent scratch, generated indexes, and checkout-specific instructions.
+.hermes/
+.gbrain-source
+.gstack/
+.code-review-graph/
+/AGENTS.local.md
+AGENTS.override.md
+/CLAUDE.local.md
+/GEMINI.local.md
+/IDEA.md
+
+# Antigravity lifecycle-hook debug logs (written to repo root)
+hook_*_debug.log
+
+# unified-agent-sync context, worker scratch, and local-only instructions.
+# Matches the contents so Git can include the shared hook configuration.
+/.agents/*
+!/.agents/hooks.json
+
+# VS Code settings
+.vscode/
+*.code-workspace
+*.sublime-workspace
+
+# Claude Code local dev-server launch config (machine-specific)
+.claude/launch.json
+
+# Claude Code per-machine local settings and runtime locks (never shared).
+# `.claude/settings.json` IS tracked (shared hooks/permissions); these are not.
+.claude/settings.local.json
+.claude/CLAUDE.local.md
+.claude/scheduled_tasks.lock
+/.codex/config.toml
+/.devin/config.local.json
+
+# JetBrains and editor backup files
+.idea/
+.history/
+
+# Cursor hook runtime state (local only, matches cockpit's .gitignore)
+.cursor/hooks/state/
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
+
+# Security, Credentials, and Cloud Configuration Caches
+*.pem
+*.key
+*.pub
+*.cert
+.aws/
+.gcloud/
+.azure/
+.netrc
+.npmrc
+.yarnrc
+
+# Session end card
+RESUME.md
+
+# Task worktrees and agent session backups. These live inside the repo's own
+# `.worktrees/` by design, so without this every active worktree —
+# plus the session-backup dir — shows up as thousands of untracked lines and
+# `git status` stops being a usable signal in the one repo where drift matters most.
+.worktrees/
+
+# Claude Code harness-managed isolation worktrees for background subagents
+# (Agent tool, isolation: "worktree"). Harness-internal scaffolding, not repo content.
+.claude/worktrees/
+
+# Dispatch sidecar (legacy cwd-local path; current writes use data_home/dispatch-runs/)
+.ua-dispatch.json
+
+# Mac hub token staging; values must never enter Git.
+deploy/mac-hub/.token-staging/
+
+# --- Python tooling beyond the pytest/ruff caches above ---
+*.pyo
+*.pyd
+.mypy_cache/
+.pytype/
+.hypothesis/
+.tox/
+.nox/
+*.egg-info/
+build/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Node/TypeScript build, cache and test artifacts ---
+node_modules/
+*.tsbuildinfo
+.vite/
+.turbo/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Local runtime state: logs and SQLite sidecars never enter Git ---
+*.log
+logs/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+
+# --- OS/editor droppings not covered by the lines above ---
+Thumbs.db
+Desktop.ini
+._*
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+
+# --- Additional credential shapes (the security block above covers *.pem, *.key, .env*) ---
+*.p12
+*.pfx
+.secrets/
+credentials.json
+
+# Local test attestations (task #2259 / #1355). `pytest_attestation sign` writes
+# `attestation/local-tests.intoto.json`, which is per-run evidence signed with a
+# developer-held key — not repo content. Committing one would also turn CI red
+# for every clone without the verifying public key configured.
+attestation/
+
+# T3 Code worktrees created in the repo root
+/t3-*/
+
+# Local OpenCode configuration and fleet-only instructions
+/opencode.json
+/opencode.jsonc
+/ethos.md

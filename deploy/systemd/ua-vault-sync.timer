@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for ua-vault-sync.service (default 10 min — matches UA_VAULT_SYNC_INTERVAL_MINUTES)
+
+[Timer]
+OnCalendar=*:0/10
+Persistent=false
+
+[Install]
+WantedBy=timers.target

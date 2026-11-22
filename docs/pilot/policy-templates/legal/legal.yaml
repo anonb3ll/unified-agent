@@ -1,0 +1,38 @@
+# Pilot policy template: legal, task #1280 (H4). Synthetic starting point —
+# no real matter or client data belongs here. This is the pilot-facing
+# counterpart to the shipped synthetic fixture at
+# src/unified_agent/templates/work_product/legal.yaml (same id, richer
+# description and an optional two-person rule); a pilot deployment points
+# UA_WORK_PRODUCT_TEMPLATE_DIR at a copy of this directory's YAML instead of
+# (or to override) the shipped fixture — see README.md. This file loads
+# through the same unified_agent.tools.work_product schema — see
+# docs/work-product-release.md.
+id: legal
+title: Legal work product
+description: >-
+  A document an agent prepares for a legal matter — a memo, a filing
+  draft, contract markup, or correspondence — with a named supervising
+  attorney as the intended reviewer before release. The pack does not
+  enforce the named role. Not a substitute for the
+  attorney's own professional judgment or for jurisdiction-specific
+  ethics rules on AI-assisted work product; those remain the firm's
+  responsibility.
+reviewer_role: supervising_attorney
+required_tags:
+  - matter
+  - client
+release_subfolder: legal
+
+# Optional two-person rule (descriptive metadata only — see README.md).
+# This pack ships it enabled by default (supervising attorney plus a
+# reviewing partner) as a common firm control for client-facing work
+# product, but — exactly as in the other packs — the platform does not yet
+# structurally enforce a second distinct approver; see the
+# professional-services pack's comment for what is and is not enforced
+# today, and the reviewer quick guide for the current limitation. A pilot enforces it
+# operationally: only the named reviewer_role and second_reviewer_role
+# holders should be able to reach approval_resolve, and the reviewing partner's sign-off is recorded externally before
+# the platform approval is granted.
+two_person_rule:
+  enabled: true
+  second_reviewer_role: reviewing_partner

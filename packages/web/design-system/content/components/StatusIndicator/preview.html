@@ -1,0 +1,21 @@
+<!-- @dsCard group="Status" height=96 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>StatusIndicator — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var S = ['running','done','doing','pending','blocked','idle'];
+var App = h('div', {className:'stack'},
+  h('div', {className:'row'}, S.map(function(s){return h(U.StatusIndicator, {key:s, status:s});})),
+  h('div', {className:'row'},
+    h(U.StatusIndicator, {status:'LIVE', pulse:true, size:'lg'}),
+    h(U.StatusIndicator, {status:'approved', label:'Approved by Operator', size:'sm'}),
+    h(U.StatusIndicator, {status:'MISCONFIGURED'})));
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

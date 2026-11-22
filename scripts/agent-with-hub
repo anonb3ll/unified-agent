@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Run the Cursor Agent CLI (`agent` / `cursor-agent`) with this machine's
+# Desktop_Agent4 hub bearer token. Default executor binary for the cursor
+# backend (DEFAULT_CURSOR_BIN / UA_CURSOR_BIN). Isolates the child from whatever
+# UA_AGENT_BEARER_TOKEN the parent shell carries. Never prints the token.
+# Installed by scripts/install-with-hub-wrappers.sh.
+set -euo pipefail
+
+me="agent-with-hub"
+TOKEN_FILE="${UA_CURSOR_TOKEN_FILE:-$HOME/.cursor/unified-agent-token}"
+AGENT_LINK="${CURSOR_AGENT_LINK:-$HOME/.local/bin/agent}"
+GBRAIN_TOKEN_FILE="${GBRAIN_TOKEN_FILE:-$HOME/.codex/gbrain-token}"
+
+if [[ ! -r "$TOKEN_FILE" ]]; then
+  echo "$me: token file is unavailable: $TOKEN_FILE" >&2
+  echo "$me: run scripts/sync-agent-tokens.sh from the unified_agent checkout" >&2
+  exit 1
+fi
+
+AGENT_BIN=""
+if [[ -L "$AGENT_LINK" ]]; then
+  # Older macOS readlink lacks -f; fall back to the link itself.
+  AGENT_BIN="$(readlink -f "$AGENT_LINK" 2>/dev/null || printf '%s' "$AGENT_LINK")"
+elif [[ -x "$AGENT_LINK" ]]; then
+  AGENT_BIN="$AGENT_LINK"
+elif command -v cursor-agent >/dev/null 2>&1; then
+  AGENT_BIN="$(command -v cursor-agent)"
+fi
+if [[ -z "$AGENT_BIN" || ! -x "$AGENT_BIN" ]]; then
+  echo "$me: cursor-agent binary not found (expected at $AGENT_LINK or cursor-agent on PATH)" >&2
+  exit 1
+fi
+
+token="$(tr -d '\r\n' < "$TOKEN_FILE")"
+if [[ -z "$token" ]]; then
+  echo "$me: token file is empty: $TOKEN_FILE" >&2
+  exit 1
+fi
+export UA_CURSOR_HUB_TOKEN="$token"
+export UA_AGENT_BEARER_TOKEN="$token"
+
+# gbrain bearer is optional: a UA-only launch still works without it.
+# Drop any gbrain bearer inherited from the parent shell so the child never
+# authenticates to gbrain as another agent; re-export only this agent's own.
+unset GBRAIN_BEARER_TOKEN GBRAIN_TOKEN
+if [[ -r "$GBRAIN_TOKEN_FILE" ]]; then
+  gbrain_token="$(tr -d '\r\n' < "$GBRAIN_TOKEN_FILE")"
+  if [[ -n "$gbrain_token" ]]; then
+    export GBRAIN_BEARER_TOKEN="$gbrain_token"
+  fi
+fi
+
+exec "$AGENT_BIN" "$@"

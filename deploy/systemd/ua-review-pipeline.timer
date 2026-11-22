@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for ua-review-pipeline.service
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=false
+
+[Install]
+WantedBy=timers.target

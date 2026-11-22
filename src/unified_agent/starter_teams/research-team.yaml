@@ -1,0 +1,67 @@
+id: research-team
+version: 1
+description: Parallel research with cited synthesis.
+guidance: Confirm identity and read team edges. Use existing task, policy, profile
+  and approval gates; a template grants no authority. Preserve task/artifact references
+  and explicit closure reasons. Human release approvals remain required.
+roles:
+  lead: Create both research tasks for concurrent work on complementary questions.
+    Require both result references and cited sources before synthesis. Distinguish
+    facts, inference, uncertainty and disagreement.
+  researcher_a: Research independently. Cite primary sources with URLs, dates and
+    supporting context. Deliver bounded result artifact and task reference.
+  researcher_b: Research complementary questions in parallel. Cite URLs, dates and
+    context; distinguish inference and conflicting evidence.
+independent_roles: []
+steps:
+- name: step-1-lead
+  actor_role: lead
+  objective: Create both research tasks for concurrent work on complementary questions.
+    Require both result references and cited sources before synthesis. Distinguish
+    facts, inference, uncertainty and disagreement.
+  tool: task_add
+  args:
+    title: '{{ inputs.objective }}'
+    notes: 'Independent assignment: {{ inputs.objective }}. Follow starter seat guidance;
+      return cited evidence and exact task/artifact references to lead.'
+    lane: $researcher_a
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - lead
+- name: step-2-lead
+  actor_role: lead
+  objective: Create both research tasks for concurrent work on complementary questions.
+    Require both result references and cited sources before synthesis. Distinguish
+    facts, inference, uncertainty and disagreement.
+  tool: task_add
+  args:
+    title: '{{ inputs.objective }}'
+    notes: 'Independent assignment: {{ inputs.objective }}. Follow starter seat guidance;
+      return cited evidence and exact task/artifact references to lead.'
+    lane: $researcher_b
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - lead
+- name: step-3-lead
+  actor_role: lead
+  objective: Create both research tasks for concurrent work on complementary questions.
+    Require both result references and cited sources before synthesis. Distinguish
+    facts, inference, uncertainty and disagreement.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - done
+  - waiting
+  - blocked
+  - failed

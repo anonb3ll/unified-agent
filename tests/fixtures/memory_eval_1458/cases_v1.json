@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "fixture_id": "ua-memory-eval-1458-v1",
+  "description": "Synthetic, sanitized acceptance cases for native memory retrieval. No user or customer records.",
+  "notes": [
+    {"id":"m1458-fact","title":"Project Quartz retention window","content":"Project Quartz retains audit receipts for 90 days.","tags":["fact","project:quartz"],"source_host":"Desktop_Agent2","created_at":"2026-01-02T12:00:00+00:00"},
+    {"id":"m1458-temporal-old","title":"Quartz export format old","content":"Quartz export format was CSV through 2026-02-28.","tags":["decision","project:quartz"],"source_host":"Desktop_Agent2","created_at":"2026-02-01T12:00:00+00:00","superseded_by":"m1458-temporal-current"},
+    {"id":"m1458-temporal-current","title":"Quartz export format current","content":"Starting 2026-03-01, Quartz export format is JSON Lines.","tags":["decision","project:quartz"],"source_host":"Desktop_Agent2","created_at":"2026-03-01T12:00:00+00:00"},
+    {"id":"m1458-broadcast-old","title":"Beacon rollout broadcast archived","content":"Beacon rollout is paused pending review.","tags":["broadcast","project:beacon"],"source_host":"server_agent5","created_at":"2026-03-02T12:00:00+00:00","superseded_by":"m1458-broadcast-current"},
+    {"id":"m1458-broadcast-current","title":"Beacon rollout broadcast current","content":"Correction: Beacon rollout is approved for the synthetic staging environment only.","tags":["broadcast","project:beacon"],"source_host":"server_agent5","created_at":"2026-03-03T12:00:00+00:00"},
+    {"id":"m1458-provenance","title":"Nimbus checksum source","content":"Nimbus package checksum is 8f14e45fceea167a5a36dedd4bea2543.","tags":["fact","project:nimbus"],"source_host":"Laptop_Agent5","created_at":"2026-03-04T12:00:00+00:00"},
+    {"id":"m1458-other-project","title":"Quartz unrelated project boundary","content":"Quartz token budget is 17 units in the synthetic Browser project.","tags":["fact","project:browser"],"source_host":"Desktop_Agent2","created_at":"2026-03-05T12:00:00+00:00"},
+    {"id":"m1458-restart","title":"Restart checkpoint for Orion","content":"Orion checkpoint: resume at stage delta after validating manifest amber-7.","tags":["checkpoint","project:orion"],"source_host":"Desktop_Agent2","created_at":"2026-03-06T12:00:00+00:00"}
+  ],
+  "cases": [
+    {"id":"fact-recall","query":"Quartz audit receipts retention 90 days","expected_ids":["m1458-fact"],"tags":["project:quartz"]},
+    {"id":"temporal-update","query":"Quartz export format starting 2026-03-01","expected_ids":["m1458-temporal-current"],"excluded_ids":["m1458-temporal-old"],"tags":["project:quartz"]},
+    {"id":"contradictory-broadcast","query":"Beacon rollout correction approved staging","expected_ids":["m1458-broadcast-current"],"excluded_ids":["m1458-broadcast-old"],"tags":["project:beacon"]},
+    {"id":"source-provenance","query":"Nimbus package checksum","expected_ids":["m1458-provenance"],"source_host":"Laptop_Agent5","expected_source_host":"Laptop_Agent5"},
+    {"id":"project-isolation","query":"Quartz token budget 17 units","expected_ids":[],"tags":["project:quartz"],"excluded_ids":["m1458-other-project"]},
+    {"id":"restart-context","query":"Orion checkpoint resume stage delta manifest amber-7","expected_ids":["m1458-restart"],"tags":["project:orion"]}
+  ]
+}

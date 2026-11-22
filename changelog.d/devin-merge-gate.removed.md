@@ -1,0 +1,1 @@
+- **The merge preflight no longer requires Devin Review.** A head passes when its Approval Ledger row is for that exact head and every required CI check is SUCCESS there: the four test shards, `CI / gates` and `CI / full-verification`. A failing, skipped, pending or missing required check still holds the merge.

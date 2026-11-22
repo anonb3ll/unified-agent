@@ -1,0 +1,19 @@
+[Unit]
+Description=Approved-dispatch scheduler tick (unified-agent-dispatch-scheduler tick)
+Documentation=file://%h/dev/unified_agent/docs/architecture/approved-dispatch-enablement.md
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+# Share the hub's scheduler flags (UA_DISPATCH_SCHEDULER_ENABLED, etc.). Leading
+# `-` keeps the unit working on installs that have no service.env.
+EnvironmentFile=-%h/.unified_agent/service.env
+# No --force. With UA_DISPATCH_SCHEDULER_ENABLED unset or 0 the tick reports
+# "disabled" and changes nothing. Installing this unit must never be what turns
+# dispatch on — the flag is, and it is set deliberately elsewhere.
+ExecStart=%h/dev/unified_agent/deploy/dispatch-tick-cron.sh
+# A tick must not be joined by the next one. systemd will not start a second
+# instance of a oneshot unit that is still active, and the timer suppresses its
+# own scheduling while the service runs. Stated here so the guarantee is
+# deliberate rather than incidental.
+TimeoutStartSec=900

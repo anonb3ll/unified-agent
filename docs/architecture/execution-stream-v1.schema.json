@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unified-agent.example.com/schemas/execution-stream-v1.schema.json",
+  "title": "Unified-Agent governed execution stream v1",
+  "description": "Bounded events emitted by a governed LangGraph or agent-provider run.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/stepStart" },
+    { "$ref": "#/$defs/gateWaiting" },
+    { "$ref": "#/$defs/toolExecuted" },
+    { "$ref": "#/$defs/done" }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "common": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "event_id",
+        "run_id",
+        "sequence",
+        "occurred_at",
+        "type"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "ua.execution-stream.v1"
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "trace_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "device_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "nodeFields": {
+      "type": "object",
+      "required": ["node_key", "operation_key", "attempt"],
+      "properties": {
+        "node_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "operation_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "stepStart": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        { "$ref": "#/$defs/nodeFields" },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "step_start" },
+            "label": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "gateWaiting": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        { "$ref": "#/$defs/nodeFields" },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "approval_id",
+            "tool_name",
+            "payload_digest"
+          ],
+          "properties": {
+            "type": { "const": "gate_waiting" },
+            "approval_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "tool_name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "payload_digest": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        }
+      ]
+    },
+    "toolExecuted": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        { "$ref": "#/$defs/nodeFields" },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "tool_name",
+            "outcome",
+            "duration_ms"
+          ],
+          "properties": {
+            "type": { "const": "tool_executed" },
+            "tool_name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "outcome": {
+              "enum": ["succeeded", "failed", "denied"]
+            },
+            "duration_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "input_digest": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "output_digest": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "error_code": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "artifact_refs": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            }
+          }
+        }
+      ]
+    },
+    "done": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "required": ["type", "outcome"],
+          "properties": {
+            "type": { "const": "done" },
+            "outcome": {
+              "enum": ["completed", "failed", "cancelled"]
+            },
+            "output_digest": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "error_code": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "artifact_refs": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

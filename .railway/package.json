@@ -1,0 +1,9 @@
+{
+  "name": "unified-agent-railway-iac",
+  "private": true,
+  "description": "Railway Infrastructure as Code for the hosted hub (task #2108). `railway config plan` evaluates railway.ts.",
+  "type": "module",
+  "devDependencies": {
+    "railway": "^3.12.0"
+  }
+}

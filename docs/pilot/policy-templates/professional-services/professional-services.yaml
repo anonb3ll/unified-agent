@@ -1,0 +1,37 @@
+# Pilot policy template: professional services (general), task #1280 (H4).
+# Synthetic starting point — no real client or engagement data belongs here.
+# Copy this directory, edit the values below, and point the hub's
+# UA_WORK_PRODUCT_TEMPLATE_DIR at wherever you keep the copy (see README.md).
+# This file loads through the same unified_agent.tools.work_product schema
+# the shipped fixture packs use (src/unified_agent/templates/work_product/) —
+# see docs/work-product-release.md.
+id: professional-services
+title: Professional services deliverable
+description: >-
+  A document an agent prepares for a client engagement — a report, a
+  proposal, a status memo, or another client-facing deliverable — with a
+  named reviewer expected to approve before release. The pack does not
+  enforce the named role. General-purpose
+  template: use the more specific accounting-tax, healthcare-admin, or
+  legal packs when they fit better.
+reviewer_role: engagement_lead
+required_tags:
+  - client
+  - engagement
+release_subfolder: professional-services
+
+# Optional two-person rule (descriptive metadata only — see README.md).
+# When enabled, the pilot organization's own process should require a named
+# second reviewer to independently confirm the release before it is treated
+# as final, in addition to the reviewer_role approval above. The platform
+# does not yet enforce this structurally: today exactly one named approval
+# (anyone reachable through approval_resolve other than the submitter)
+# releases the document. Binding a role to a specific identity, and
+# requiring more than one distinct approver, is tracked as future work
+# (work-product role enforcement is still pending). Until then, a pilot enforces "two people" through
+# account provisioning (only the named reviewer_role holder and the named
+# second_reviewer_role holder can reach approval_resolve) and by recording the second review in an approved external process
+# before the platform approval is granted.
+two_person_rule:
+  enabled: false
+  second_reviewer_role: engagement_partner

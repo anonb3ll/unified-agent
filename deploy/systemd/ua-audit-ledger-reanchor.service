@@ -1,0 +1,10 @@
+[Unit]
+Description=Snapshot the audit ledger chain head into a dated vault note
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/.venv/bin/python -m unified_agent.audit.reanchor

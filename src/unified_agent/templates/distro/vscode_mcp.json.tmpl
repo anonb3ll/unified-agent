@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "unified-agent": {
+      "type": "http",
+      "url": {{hub_url_json}},
+      "headers": {
+        "Authorization": "Bearer ${env:UA_AGENT_BEARER_TOKEN}"
+      }
+    }
+  }
+}

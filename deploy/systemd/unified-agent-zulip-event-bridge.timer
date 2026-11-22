@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for unified-agent high-signal Zulip event bridge
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=false
+Unit=unified-agent-zulip-event-bridge.service
+
+[Install]
+WantedBy=timers.target
+

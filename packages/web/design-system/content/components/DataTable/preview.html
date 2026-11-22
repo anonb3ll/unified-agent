@@ -1,0 +1,26 @@
+<!-- @dsCard group="Data" height=260 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DataTable — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var cols = [
+  {id:'id', header:'ID', cell:function(r){return h('span', {className:'font-mono text-xs'}, r.id);}},
+  {id:'agent', header:'Agent', cell:function(r){return h(U.AgentPersonaBadge, {label:r.agent});}},
+  {id:'title', header:'Task', accessor:'title'},
+  {id:'status', header:'Status', cell:function(r){return h(U.StatusIndicator, {status:r.status});}},
+  {id:'act', header:'Action', align:'right', cell:function(r){return h(U.Button, {size:'sm', onClick:function(e){e.stopPropagation();}}, 'Open');}}];
+var rows = [
+  {id:'#1131', agent:'agent-claude', title:'Workspace approve live run', status:'running'},
+  {id:'#1644', agent:'agent-codex', title:'Bound rehearsal timeouts', status:'done'},
+  {id:'#1662', agent:'agent-hermes', title:'UA_* settings inventory', status:'pending'},
+  {id:'#1665', agent:'agent-agy', title:'Record MCP health events', status:'blocked'}];
+var App = h(U.DataTable, {columns:cols, data:rows, getRowKey:function(r){return r.id;}, caption:'Task queue', onRowClick:function(){}});
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

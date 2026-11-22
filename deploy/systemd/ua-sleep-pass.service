@@ -1,0 +1,17 @@
+[Unit]
+Description=Nightly memory sleep pass: contradiction review, journal digest, pruning suggestions (oneshot)
+After=network.target
+
+[Service]
+Type=oneshot
+# Ensure path includes local bin where uv or python scripts may live
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# UA_VERTEX_PROJECT was set here until 2026-07-27. It armed llm_client's Vertex
+# leg on every nightly run — combined with local ADC, that was a real-money GCP
+# path with a $300 self-enforced ceiling, on the mistaken belief that the $300
+# free-trial credit covered it (it is a Cloud credit; AI bills separately).
+# The leg is gone from llm_client (task #197) and the variable is now read by
+# nothing. Removed here too so the unit does not re-arm a future re-add.
+# GEMINI_API_KEY (AI Studio leg) lives in this chmod-600 file, outside the
+# unit — same pattern as unified-agent.service's search-key.conf drop-in.
+ExecStart=/usr/bin/bash %h/dev/unified_agent/deploy/run-sleep-pass-scheduled.sh

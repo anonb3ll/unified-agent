@@ -1,0 +1,1 @@
+- Skip session mail that was already dead-lettered in the stranded sweep, so one unread message gets exactly one notice whichever sweep runs first (task #2551).

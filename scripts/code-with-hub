@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Launch VS Code as Desktop_Agent6, isolated from whatever
+# UA_AGENT_BEARER_TOKEN the parent shell carries (e.g. Cursor's). VS Code's MCP
+# config interpolates UA_AGENT_BEARER_TOKEN. Interactive launcher, not an
+# executor default. Never prints the token.
+# Installed by scripts/install-with-hub-wrappers.sh.
+set -euo pipefail
+
+me="code-with-hub"
+TOKEN_FILE="${UA_COPILOT_TOKEN_FILE:-$HOME/.copilot/unified-agent-token}"
+GBRAIN_TOKEN_FILE="${GBRAIN_TOKEN_FILE:-$HOME/.gbrain/mcp-token}"
+
+if [[ -n "${CODE_BIN:-}" ]]; then
+  bin="$CODE_BIN"
+else
+  bin=""
+  for candidate in \
+    /usr/bin/code \
+    "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"; do
+    if [[ -x "$candidate" ]]; then
+      bin="$candidate"
+      break
+    fi
+  done
+  if [[ -z "$bin" ]]; then
+    bin="$(command -v code 2>/dev/null || true)"
+  fi
+fi
+
+# A bare command name (e.g. code-insiders) resolves via PATH; paths stay paths.
+if [[ -n "$bin" && "$bin" != */* ]]; then
+  bin="$(command -v "$bin" 2>/dev/null || printf '%s' "$bin")"
+fi
+
+if [[ ! -r "$TOKEN_FILE" ]]; then
+  echo "$me: token file is unavailable: $TOKEN_FILE" >&2
+  echo "$me: run scripts/sync-agent-tokens.sh from the unified_agent checkout" >&2
+  exit 1
+fi
+if [[ -z "$bin" || ! -x "$bin" ]]; then
+  echo "$me: code binary not found: ${bin:-<none>} (set CODE_BIN)" >&2
+  exit 1
+fi
+
+token="$(tr -d '\r\n' < "$TOKEN_FILE")"
+if [[ -z "$token" ]]; then
+  echo "$me: token file is empty: $TOKEN_FILE" >&2
+  exit 1
+fi
+export UA_COPILOT_HUB_TOKEN="$token"
+export UA_AGENT_BEARER_TOKEN="$token"
+export UA_CLIENT=copilot
+
+# Drop any gbrain bearer inherited from the parent shell so the child never
+# authenticates to gbrain as another agent; re-export only this agent's own.
+unset GBRAIN_BEARER_TOKEN GBRAIN_TOKEN
+if [[ -r "$GBRAIN_TOKEN_FILE" ]]; then
+  gbrain_token="$(tr -d '\r\n' < "$GBRAIN_TOKEN_FILE")"
+  if [[ -n "$gbrain_token" ]]; then
+    export GBRAIN_TOKEN="$gbrain_token"
+  fi
+fi
+
+exec "$bin" "$@"

@@ -1,0 +1,12 @@
+# Reviewed exceptions for the dependency-audit gate.
+# Both workflow copies read this file:
+#   .github/workflows/dependency-audit.yml
+#   .depot/workflows/dependency-audit.yml
+# An entry missing id, reason, owner, or expiry fails the job.
+# An entry whose expiry is before today (UTC) fails the job.
+#
+# No pip-audit ignores. Task #852 listed the pypdf==6.14.2 exceptions here
+# (PYSEC-2026-3655/3656/3910/3911/3912/3913); task #1523 floors pypdf at
+# >=6.16.1 in pyproject.toml, so those ids must not stay here masking a
+# later vulnerable pypdf regression until expiry.
+ignores: []

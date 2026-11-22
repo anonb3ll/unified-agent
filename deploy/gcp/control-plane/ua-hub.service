@@ -1,0 +1,60 @@
+# unified-agent hub on the GCP control-plane VM (task #2148).
+# Installed by deploy/gcp/control-plane/install.sh to /etc/systemd/system/.
+#
+# Same artifact as Railway staging: the repo Dockerfile image, state on a
+# mounted disk at /data, the env contract from /etc/unified-agent/*.env.
+# Published on loopback only; Tailscale Serve is the only ingress.
+[Unit]
+Description=unified-agent hub (cloud control plane)
+Requires=docker.service
+After=docker.service network-online.target tailscaled.service
+Wants=network-online.target
+# The data disk must be mounted before the container may start.
+RequiresMountsFor=/mnt/ua-data
+
+[Service]
+Type=simple
+# UA_IMAGE=<image ref>, written by install.sh (non-secret).
+EnvironmentFile=/etc/unified-agent/unit.env
+ExecStartPre=/usr/bin/mountpoint -q /mnt/ua-data
+# Drain a container left from an earlier run (a docker CLI that died while the
+# container kept running, or one started by hand) before replacing it: SIGTERM
+# and the same 30 s grace as ExecStop, then remove what is left. `rm -f` here
+# would SIGKILL a live hub mid-request. Both may fail when no container exists.
+ExecStartPre=-/usr/bin/docker stop -t 30 ua-hub
+ExecStartPre=-/usr/bin/docker rm ua-hub
+# host.env first (derived, non-secret), hub.env second (operator, 0600), then
+# the pinned values, which no env file can override.
+ExecStart=/usr/bin/docker run --rm --name ua-hub \
+    --env-file /etc/unified-agent/host.env \
+    --env-file /etc/unified-agent/hub.env \
+    -e UA_HOSTED=1 \
+    -e UA_EXECUTION_LOCALITY=devices \
+    -e UA_STATE_MOUNT_PATH=/data \
+    -v /mnt/ua-data:/data \
+    -p 127.0.0.1:8765:8765 \
+    --log-driver=journald \
+    ${UA_IMAGE}
+# SIGTERM, then SIGKILL after 30 s. The hub's own uvicorn drain is bounded
+# below that (UA_HTTP_GRACEFUL_SHUTDOWN_S, at most 25 s). TimeoutStopSec and
+# TimeoutStartSec (which covers the ExecStartPre drain) both exceed the grace.
+ExecStop=/usr/bin/docker stop -t 30 ua-hub
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+TimeoutStopSec=45
+# Hardening. The unit's only processes are the docker CLI and mountpoint, as
+# root; the container is created by dockerd, outside these namespaces, so none
+# of this reaches the hub. /run/docker.sock and /mnt/ua-data stay writable
+# (ProtectSystem=full covers /usr, /boot, /efi and /etc only). No ProtectHome:
+# a registry credential helper (docker-credential-gcloud) writes under /root.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

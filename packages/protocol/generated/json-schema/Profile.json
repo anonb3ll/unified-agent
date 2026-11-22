@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "denied_tools": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "identity"
+  ]
+}

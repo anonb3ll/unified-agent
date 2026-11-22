@@ -1,0 +1,15 @@
+<!-- @dsCard group="Actions" height=72 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>LinkButton — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;max-width:28rem;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var App = h('div',{className:'row'},[h(U.LinkButton,{key:1,href:'#',variant:'primary'},'New task'),h(U.LinkButton,{key:2,href:'#'},'Open in classic')]);
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

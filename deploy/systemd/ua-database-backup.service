@@ -1,0 +1,16 @@
+[Unit]
+Description=Integrity-checked unified-agent SQLite database backup
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+Environment=PATH=%h/google-cloud-sdk/bin:%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Share the hub's effective state paths. Without this the backup runs against
+# whatever UA_HOME/UA_BACKUP_DIR default to, so a hub with a relocated UA_HOME
+# gets its real database silently skipped while a snapshot of the default path
+# is written and reported healthy — and a UA_BACKUP_DIR pointed at a separate
+# volume is never honoured. Leading `-` keeps the unit working on installs that
+# have no service.env.
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/.venv/bin/python -m unified_agent.backup_runner

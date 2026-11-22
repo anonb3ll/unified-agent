@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified Agent Metrics</title>
+  <!-- Outfit / Plus Jakarta Sans fonts (same pairing as kanban.html) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #09090b;
+      --bg-card: #18181b;
+      --bg-card-hover: #27272a;
+      --border-color: #27272a;
+      --border-hover: #3f3f46;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dark: #71717a;
+
+      --priority-high: #ef4444;
+      --priority-med: #f59e0b;
+      --priority-low: #71717a;
+
+      --color-open: #3b82f6;
+      --color-doing: #a855f7;
+      --color-blocked: #f43f5e;
+      --color-done: #10b981;
+
+      --font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: rgba(9, 9, 11, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #f4f4f5, #a1a1aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 0.7rem;
+      color: var(--text-dark);
+      margin-top: 0.125rem;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .status-badge:hover {
+      border-color: var(--border-hover);
+    }
+
+    .status-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: var(--text-dark);
+    }
+
+    .status-dot.connected {
+      background-color: var(--color-done);
+      box-shadow: 0 0 8px var(--color-done);
+      animation: pulse-green 2s infinite;
+    }
+
+    .status-dot.disconnected {
+      background-color: var(--color-blocked);
+      box-shadow: 0 0 8px var(--color-blocked);
+      animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+    }
+
+    .last-updated {
+      font-size: 0.7rem;
+      color: var(--text-dark);
+      white-space: nowrap;
+    }
+
+    button.btn {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    button.btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+    }
+
+    button.btn:active {
+      transform: translateY(1px);
+    }
+
+    button.btn-secondary {
+      background: #18181b;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      box-shadow: none;
+    }
+
+    button.btn-secondary:hover {
+      background: #27272a;
+      border-color: var(--border-hover);
+      box-shadow: none;
+    }
+
+    /* Window selector (1h / 24h / 7d) */
+    .window-selector {
+      display: flex;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      overflow: hidden;
+      background-color: #18181b;
+    }
+
+    .window-selector button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .window-selector button:last-child {
+      border-right: none;
+    }
+
+    .window-selector button:hover {
+      color: var(--text-main);
+      background-color: rgba(255,255,255,0.04);
+    }
+
+    .window-selector button.active {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: white;
+    }
+
+    .main-container {
+      flex: 1;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Troubleshooter (same pattern as kanban.html) */
+    .trouble-card {
+      background-color: rgba(244, 63, 94, 0.05);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .trouble-card h3 {
+      font-size: 0.95rem;
+      color: var(--priority-high);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .trouble-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .trouble-card code {
+      background-color: rgba(0,0,0,0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #f43f5e;
+      border: 1px solid rgba(244, 63, 94, 0.1);
+    }
+
+    .trouble-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-left: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .trouble-steps li {
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .trouble-steps strong {
+      color: var(--text-main);
+    }
+
+    /* Sections */
+    .section {
+      background-color: rgba(24, 24, 27, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: var(--color-open);
+    }
+
+    .section-perf .section-title::before { background-color: var(--color-open); }
+    .section-snapshot .section-title::before { background-color: var(--color-doing); }
+    .section-anomalies .section-title::before { background-color: var(--color-blocked); }
+    .section-approvals .section-title::before { background-color: var(--priority-med); }
+
+    .section-note {
+      font-size: 0.7rem;
+      color: var(--text-dark);
+      line-height: 1.4;
+    }
+
+    .section-note code {
+      font-family: monospace;
+      font-size: 0.68rem;
+      background-color: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 0.25rem;
+      padding: 0.05rem 0.3rem;
+      color: var(--text-muted);
+    }
+
+    /* Stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-hover);
+      background-color: var(--bg-card-hover);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dark);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .stat-sub {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .stat-open .stat-value { color: var(--color-open); }
+    .stat-doing .stat-value { color: var(--color-doing); }
+    .stat-blocked .stat-value { color: var(--color-blocked); }
+    .stat-done .stat-value { color: var(--color-done); }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dark);
+      border-bottom: 1px solid var(--border-color);
+      user-select: none;
+    }
+
+    th.sortable {
+      cursor: pointer;
+    }
+
+    th.sortable:hover {
+      color: var(--text-main);
+    }
+
+    th.sorted-asc::after { content: ' \25B4'; color: var(--text-muted); }
+    th.sorted-desc::after { content: ' \25BE'; color: var(--text-muted); }
+
+    td.num, th.num { text-align: right; }
+
+    tr:hover td {
+      background-color: rgba(255,255,255,0.02);
+    }
+
+    td.tool-name, td.mono {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--text-main);
+    }
+
+    td.mono {
+      color: var(--text-muted);
+      white-space: normal;
+      word-break: break-all;
+      max-width: 480px;
+    }
+
+    .error-rate-warn { color: var(--priority-med); font-weight: 600; }
+    .error-rate-bad { color: var(--priority-high); font-weight: 600; }
+    .error-rate-ok { color: var(--text-muted); }
+
+    .empty-state {
+      color: var(--text-dark);
+      font-size: 0.8rem;
+      padding: 0.75rem 0.25rem;
+    }
+
+    /* Anomalies */
+    .all-clear {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background-color: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 0.5rem;
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--color-done);
+    }
+
+    .anomaly-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      background-color: rgba(244, 63, 94, 0.05);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      border-radius: 0.5rem;
+      padding: 0.85rem 1rem;
+    }
+
+    .anomaly-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .anomaly-rule {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--priority-high);
+      background-color: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 0.25rem;
+      padding: 0.125rem 0.4rem;
+    }
+
+    .anomaly-subject {
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .anomaly-detail {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .anomaly-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .badge-count {
+      background-color: #27272a;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border-color);
+    }
+
+    .section-error {
+      color: var(--priority-high);
+      font-size: 0.75rem;
+      padding: 0.5rem 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">M</div>
+      <div>
+        <h1>Unified Agent Metrics</h1>
+        <div class="subtitle">read-only monitoring &middot; task #64</div>
+      </div>
+    </div>
+    <div class="controls">
+      <span class="last-updated" id="lastUpdated">never refreshed</span>
+      <div class="window-selector" id="windowSelector">
+        <button data-hours="1" onclick="setWindow(1)">1h</button>
+        <button data-hours="24" class="active" onclick="setWindow(24)">24h</button>
+        <button data-hours="168" onclick="setWindow(168)">7d</button>
+      </div>
+      <div class="status-badge" id="connStatus" onclick="toggleTroubleCard()">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking Connection...</span>
+      </div>
+      <button class="btn btn-secondary" onclick="refreshAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="main-container">
+
+    <!-- Troubleshooting Panel -->
+    <div class="trouble-card" id="troubleCard">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Connection Troubleshooting
+      </h3>
+      <p>Could not reach the <code>unified-agent</code> MCP hub. Since the dashboard is loaded as a local file (<code>file://</code>), browser CORS policies block connections to <code>localhost</code> by default.</p>
+      <ul class="trouble-steps">
+        <li>
+          <strong>Option A (Recommended): Serve via local HTTP</strong>
+          <p style="margin: 0.25rem 0 0.5rem 0">Start a local server in the workspace root and open that address instead:</p>
+          <pre style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem; margin-bottom: 0.5rem; overflow-x: auto;">python3 -m http.server -d ~/agent-workspace 8000</pre>
+          <p>Then open: <a href="http://localhost:8000/metrics.html" style="color: #6366f1; text-decoration: underline;">http://localhost:8000/metrics.html</a></p>
+        </li>
+        <li>
+          <strong>Option B: Use a CORS extension</strong>
+          <p style="margin: 0.25rem 0 0 0">Install a browser extension like <em>"CORS Everywhere"</em> (Firefox) or <em>"Allow CORS"</em> (Chrome/Firefox) and toggle it ON to permit local file access.</p>
+        </li>
+      </ul>
+      <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem">
+        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem" onclick="toggleTroubleCard()">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- Anomalies -->
+    <div class="section section-anomalies">
+      <div class="section-header">
+        <span class="section-title">Anomalies <span class="badge-count" id="anomalyCount">&ndash;</span></span>
+        <span class="section-note">deterministic rules from <code>check_anomalies</code> &middot; stale doing-tasks, silent agents, reassignment thrash, never-completes</span>
+      </div>
+      <div id="anomaliesBody"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
+
+    <!-- Cluster snapshot -->
+    <div class="section section-snapshot">
+      <div class="section-header">
+        <span class="section-title">Cluster Snapshot</span>
+        <span class="section-note">from <code>metrics_snapshot</code> &middot; shared state in <code>memory.db</code></span>
+      </div>
+      <div class="stat-grid" id="snapshotCards"></div>
+      <div class="section-header" style="border-bottom: none; padding-bottom: 0; margin-top: 0.25rem;">
+        <span class="section-title" style="font-size: 0.75rem;">Events by Agent (7d)</span>
+      </div>
+      <div class="table-wrap" id="eventsTable"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
+
+    <!-- Tool performance -->
+    <div class="section section-perf">
+      <div class="section-header">
+        <span class="section-title">Tool Performance <span class="badge-count" id="perfWindowLabel">24h</span></span>
+        <span class="section-note">from <code>perf_summary</code> &middot; per-tool latency &amp; error sampling (instrumented calls only) &middot; click a column to sort</span>
+      </div>
+      <div class="stat-grid" id="perfMemCards"></div>
+      <div class="table-wrap" id="perfTable"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
+
+    <!-- Approval queue -->
+    <div class="section section-approvals">
+      <div class="section-header">
+        <span class="section-title">Approval Queue <span class="badge-count" id="approvalCount">&ndash;</span></span>
+        <span class="section-note">from <code>approval_pending</code> &middot; view only &mdash; approvals are resolved via <code>approval_resolve(id, 'approve'|'deny')</code> from an agent session, not from this page</span>
+      </div>
+      <div id="approvalsBody"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
+
+  </div>
+
+  <script>
+    const MCP_URL = 'http://127.0.0.1:8765/mcp';
+    let cachedSessionId = null;
+    let perfWindowHours = 24;
+    let perfSortKey = 'calls';
+    let perfSortDir = 'desc';
+    let lastPerfByTool = {};
+
+    // READ-ONLY GUARD: this dashboard may only ever call these four tools.
+    const READ_ONLY_TOOLS = new Set([
+      'perf_summary', 'metrics_snapshot', 'check_anomalies', 'approval_pending'
+    ]);
+
+    // Helper: Call MCP Tools (handshake/session logic mirrors kanban.html)
+    async function callMcpTool(name, args = {}) {
+      if (!READ_ONLY_TOOLS.has(name)) {
+        throw new Error(`Refusing to call non-read-only tool: ${name}`);
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/event-stream'
+      };
+
+      async function initializeSession() {
+        const initRes = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: Date.now(),
+            method: 'initialize',
+            params: {
+              protocolVersion: '2024-11-05',
+              capabilities: {},
+              clientInfo: { name: 'metrics-dashboard', version: '1.0.0' }
+            }
+          })
+        });
+        if (!initRes.ok) throw new Error(`HTTP ${initRes.status} during initialization`);
+        const sessId = initRes.headers.get('mcp-session-id');
+        if (!sessId) throw new Error('mcp-session-id header missing in initialization response');
+
+        cachedSessionId = sessId;
+        headers['mcp-session-id'] = cachedSessionId;
+
+        // Send initialized notification
+        const notifRes = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'notifications/initialized'
+          })
+        });
+        if (!notifRes.ok) throw new Error(`HTTP ${notifRes.status} during initialized notification`);
+      }
+
+      if (!cachedSessionId) {
+        await initializeSession();
+      } else {
+        headers['mcp-session-id'] = cachedSessionId;
+      }
+
+      const bodyData = {
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'tools/call',
+        params: {
+          name: name,
+          arguments: args
+        }
+      };
+
+      let toolRes = await fetch(MCP_URL, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(bodyData)
+      });
+
+      if (toolRes.status === 400 || toolRes.status === 404) {
+        console.warn('Session expired. Re-initializing...');
+        await initializeSession();
+        headers['mcp-session-id'] = cachedSessionId;
+        toolRes = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(bodyData)
+        });
+      }
+
+      if (!toolRes.ok) throw new Error(`HTTP ${toolRes.status}: ${toolRes.statusText}`);
+      const text = await toolRes.text();
+
+      const lines = text.split('\n');
+      const dataLine = lines.find(l => l.startsWith('data: '));
+      if (!dataLine) throw new Error('No data block found in response');
+
+      const sseData = JSON.parse(dataLine.substring(6));
+      if (sseData.error) {
+        throw new Error(sseData.error.message || 'JSON-RPC Error');
+      }
+
+      const content = sseData.result.content[0];
+      if (!content || content.type !== 'text') {
+        throw new Error('Tool returned invalid content');
+      }
+
+      return JSON.parse(content.text);
+    }
+
+    // Connection Status
+    function updateConnectionStatus(isConnected, errorMsg = '') {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      const trouble = document.getElementById('troubleCard');
+
+      if (isConnected) {
+        dot.className = 'status-dot connected';
+        text.textContent = 'Connected to Hub';
+        trouble.style.display = 'none';
+      } else {
+        dot.className = 'status-dot disconnected';
+        text.textContent = 'Connection Offline';
+        if (window.location.protocol === 'file:') {
+          trouble.style.display = 'flex';
+        }
+        console.error('MCP Connection failed:', errorMsg);
+      }
+    }
+
+    function toggleTroubleCard() {
+      const trouble = document.getElementById('troubleCard');
+      trouble.style.display = trouble.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Helpers
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function humanBytes(n) {
+      if (n === null || n === undefined) return '–';
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      let i = 0;
+      let v = n;
+      while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+      return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
+    }
+
+    function humanAge(isoTs) {
+      if (!isoTs) return '–';
+      const then = new Date(isoTs);
+      if (isNaN(then.getTime())) return isoTs;
+      let secs = Math.max(0, (Date.now() - then.getTime()) / 1000);
+      if (secs < 60) return Math.round(secs) + 's';
+      if (secs < 3600) return Math.round(secs / 60) + 'm';
+      if (secs < 86400) return (secs / 3600).toFixed(1) + 'h';
+      return (secs / 86400).toFixed(1) + 'd';
+    }
+
+    function fmtMs(v) {
+      if (v === null || v === undefined) return '–';
+      return v >= 100 ? Math.round(v).toLocaleString() : v.toFixed(1);
+    }
+
+    // Section 1: perf_summary
+    function renderPerfTable() {
+      const el = document.getElementById('perfTable');
+      const tools = Object.keys(lastPerfByTool);
+      if (tools.length === 0) {
+        el.innerHTML = '<div class="empty-state">No instrumented tool calls in this window.</div>';
+        return;
+      }
+
+      const rows = tools.map(t => ({ tool: t, ...lastPerfByTool[t] }));
+      rows.sort((a, b) => {
+        let av = a[perfSortKey], bv = b[perfSortKey];
+        if (av === null || av === undefined) av = -Infinity;
+        if (bv === null || bv === undefined) bv = -Infinity;
+        if (typeof av === 'string') {
+          return perfSortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        }
+        return perfSortDir === 'asc' ? av - bv : bv - av;
+      });
+
+      const cols = [
+        { key: 'tool', label: 'Tool', num: false },
+        { key: 'calls', label: 'Calls', num: true },
+        { key: 'errors', label: 'Errors', num: true },
+        { key: 'error_rate', label: 'Error Rate', num: true },
+        { key: 'avg_latency_ms', label: 'Avg ms', num: true },
+        { key: 'min_latency_ms', label: 'Min ms', num: true },
+        { key: 'max_latency_ms', label: 'Max ms', num: true }
+      ];
+
+      let html = '<table><thead><tr>';
+      cols.forEach(c => {
+        const sorted = perfSortKey === c.key ? (perfSortDir === 'asc' ? ' sorted-asc' : ' sorted-desc') : '';
+        html += `<th class="sortable${c.num ? ' num' : ''}${sorted}" onclick="sortPerf('${c.key}')">${c.label}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      rows.forEach(r => {
+        const rate = r.error_rate || 0;
+        const rateCls = rate >= 0.25 ? 'error-rate-bad' : (rate > 0 ? 'error-rate-warn' : 'error-rate-ok');
+        html += `<tr>
+          <td class="tool-name">${escapeHtml(r.tool)}</td>
+          <td class="num">${r.calls.toLocaleString()}</td>
+          <td class="num">${r.errors.toLocaleString()}</td>
+          <td class="num ${rateCls}">${(rate * 100).toFixed(1)}%</td>
+          <td class="num">${fmtMs(r.avg_latency_ms)}</td>
+          <td class="num">${fmtMs(r.min_latency_ms)}</td>
+          <td class="num">${fmtMs(r.max_latency_ms)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    function sortPerf(key) {
+      if (perfSortKey === key) {
+        perfSortDir = perfSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        perfSortKey = key;
+        perfSortDir = key === 'tool' ? 'asc' : 'desc';
+      }
+      renderPerfTable();
+    }
+
+    async function loadPerf() {
+      const el = document.getElementById('perfTable');
+      const memEl = document.getElementById('perfMemCards');
+      try {
+        const result = await callMcpTool('perf_summary', { since_hours: perfWindowHours });
+        lastPerfByTool = result.by_tool || {};
+        renderPerfTable();
+
+        const mem = result.memory_rss_bytes || {};
+        if (mem.count > 0) {
+          memEl.innerHTML = `
+            <div class="stat-card">
+              <span class="stat-label">Server RSS (latest)</span>
+              <span class="stat-value" style="font-size: 1.15rem;">${humanBytes(mem.latest)}</span>
+              <span class="stat-sub">avg ${humanBytes(mem.avg)} &middot; max ${humanBytes(mem.max)} &middot; ${mem.count.toLocaleString()} samples</span>
+            </div>`;
+        } else {
+          memEl.innerHTML = '';
+        }
+      } catch (err) {
+        el.innerHTML = `<div class="section-error">Failed to load perf_summary: ${escapeHtml(err.message)}</div>`;
+        memEl.innerHTML = '';
+        throw err;
+      }
+    }
+
+    function setWindow(hours) {
+      perfWindowHours = hours;
+      document.querySelectorAll('#windowSelector button').forEach(b => {
+        b.classList.toggle('active', Number(b.dataset.hours) === hours);
+      });
+      document.getElementById('perfWindowLabel').textContent =
+        hours === 1 ? '1h' : (hours === 24 ? '24h' : '7d');
+      loadPerf().catch(() => {});
+    }
+
+    // Section 2: metrics_snapshot
+    async function loadSnapshot() {
+      const cardsEl = document.getElementById('snapshotCards');
+      const eventsEl = document.getElementById('eventsTable');
+      try {
+        const snap = await callMcpTool('metrics_snapshot', {});
+
+        const ts = snap.tasks_by_status || {};
+        const cycle = snap.done_task_cycle_days || {};
+        const cycleAvg = (cycle.avg !== null && cycle.avg !== undefined) ? cycle.avg.toFixed(2) : '–';
+        const cycleSub = cycle.count
+          ? `${cycle.count} done tasks &middot; min ${cycle.min} / max ${cycle.max} d`
+          : 'no completed tasks yet';
+
+        cardsEl.innerHTML = `
+          <div class="stat-card stat-open">
+            <span class="stat-label">Open</span>
+            <span class="stat-value">${ts.open || 0}</span>
+          </div>
+          <div class="stat-card stat-doing">
+            <span class="stat-label">Doing</span>
+            <span class="stat-value">${ts.doing || 0}</span>
+          </div>
+          <div class="stat-card stat-blocked">
+            <span class="stat-label">Blocked</span>
+            <span class="stat-value">${ts.blocked || 0}</span>
+          </div>
+          <div class="stat-card stat-done">
+            <span class="stat-label">Done</span>
+            <span class="stat-value">${ts.done || 0}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Cycle Time (avg days)</span>
+            <span class="stat-value" style="font-size: 1.25rem;">${cycleAvg}</span>
+            <span class="stat-sub">${cycleSub}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">DB Size</span>
+            <span class="stat-value" style="font-size: 1.25rem;">${humanBytes(snap.db_size_bytes)}</span>
+            <span class="stat-sub">~/.unified_agent/memory.db</span>
+          </div>`;
+
+        // Events by agent (7d) — rows: agent, columns: union of kinds.
+        const events = snap.events_last_7_days || {};
+        const agents = Object.keys(events).sort();
+        if (agents.length === 0) {
+          eventsEl.innerHTML = '<div class="empty-state">No agent events in the last 7 days.</div>';
+        } else {
+          const kinds = [...new Set(agents.flatMap(a => Object.keys(events[a])))].sort();
+          let html = '<table><thead><tr><th>Agent</th>';
+          kinds.forEach(k => { html += `<th class="num">${escapeHtml(k)}</th>`; });
+          html += '<th class="num">Total</th></tr></thead><tbody>';
+          agents.forEach(a => {
+            const counts = events[a];
+            const total = Object.values(counts).reduce((s, n) => s + n, 0);
+            html += `<tr><td class="tool-name">${escapeHtml(a)}</td>`;
+            kinds.forEach(k => { html += `<td class="num">${counts[k] || 0}</td>`; });
+            html += `<td class="num" style="font-weight: 600;">${total}</td></tr>`;
+          });
+          html += '</tbody></table>';
+          eventsEl.innerHTML = html;
+        }
+      } catch (err) {
+        cardsEl.innerHTML = `<div class="section-error">Failed to load metrics_snapshot: ${escapeHtml(err.message)}</div>`;
+        eventsEl.innerHTML = '';
+        throw err;
+      }
+    }
+
+    // Section 3: check_anomalies
+    async function loadAnomalies() {
+      const el = document.getElementById('anomaliesBody');
+      const countEl = document.getElementById('anomalyCount');
+      try {
+        const result = await callMcpTool('check_anomalies', {});
+        const anomalies = result.anomalies || [];
+        countEl.textContent = anomalies.length;
+
+        if (anomalies.length === 0) {
+          el.innerHTML = `
+            <div class="all-clear">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              All clear &mdash; no anomalies detected.
+            </div>`;
+          return;
+        }
+
+        let html = '<div class="anomaly-list">';
+        anomalies.forEach(a => {
+          html += `
+            <div class="anomaly-item">
+              <div class="anomaly-head">
+                <span class="anomaly-rule">${escapeHtml(a.rule)}</span>
+                <span class="anomaly-subject">${escapeHtml(a.subject)}</span>
+              </div>
+              <div class="anomaly-detail">${escapeHtml(a.detail)}</div>
+            </div>`;
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      } catch (err) {
+        countEl.textContent = '?';
+        el.innerHTML = `<div class="section-error">Failed to load check_anomalies: ${escapeHtml(err.message)}</div>`;
+        throw err;
+      }
+    }
+
+    // Section 4: approval_pending
+    async function loadApprovals() {
+      const el = document.getElementById('approvalsBody');
+      const countEl = document.getElementById('approvalCount');
+      try {
+        const result = await callMcpTool('approval_pending', {});
+        const pending = result.pending || [];
+        const unconsumed = result.approved_unconsumed || [];
+        const gated = result.gated_tools || [];
+        countEl.textContent = pending.length;
+
+        let html = '';
+        html += `<div class="section-note" style="margin-bottom: 0.5rem;">Gated tools: ${
+          gated.length ? gated.map(t => `<code>${escapeHtml(t)}</code>`).join(' ') : 'none (UA_APPROVAL_TOOLS unset)'
+        }</div>`;
+
+        if (pending.length === 0 && unconsumed.length === 0) {
+          html += '<div class="empty-state">No pending approval requests.</div>';
+          el.innerHTML = html;
+          return;
+        }
+
+        function approvalRows(rows) {
+          let out = '';
+          rows.forEach(r => {
+            const payload = r.payload || {};
+            const payloadText = payload.command !== undefined
+              ? payload.command
+              : JSON.stringify(payload);
+            out += `<tr>
+              <td class="tool-name">#${r.id}</td>
+              <td class="tool-name">${escapeHtml(r.tool)}</td>
+              <td class="mono">${escapeHtml(payloadText)}</td>
+              <td>${escapeHtml(r.requested_by || '–')}</td>
+              <td class="num" title="${escapeHtml(r.created_at)}">${humanAge(r.created_at)}</td>
+            </tr>`;
+          });
+          return out;
+        }
+
+        if (pending.length > 0) {
+          html += `<div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Tool</th><th>Payload</th><th>Requested By</th><th class="num">Age</th></tr></thead>
+            <tbody>${approvalRows(pending)}</tbody>
+          </table></div>`;
+        }
+
+        if (unconsumed.length > 0) {
+          html += `<div class="section-note" style="margin-top: 0.5rem;">Approved but not yet consumed (one-shot passes still live):</div>`;
+          html += `<div class="table-wrap"><table>
+            <thead><tr><th>ID</th><th>Tool</th><th>Payload</th><th>Requested By</th><th class="num">Age</th></tr></thead>
+            <tbody>${approvalRows(unconsumed)}</tbody>
+          </table></div>`;
+        }
+
+        el.innerHTML = html;
+      } catch (err) {
+        countEl.textContent = '?';
+        el.innerHTML = `<div class="section-error">Failed to load approval_pending: ${escapeHtml(err.message)}</div>`;
+        throw err;
+      }
+    }
+
+    // Orchestration
+    async function refreshAll() {
+      const results = await Promise.allSettled([
+        loadAnomalies(),
+        loadSnapshot(),
+        loadPerf(),
+        loadApprovals()
+      ]);
+      const anyOk = results.some(r => r.status === 'fulfilled');
+      const firstErr = results.find(r => r.status === 'rejected');
+      updateConnectionStatus(anyOk, firstErr ? firstErr.reason.message : '');
+      if (anyOk) {
+        document.getElementById('lastUpdated').textContent =
+          'updated ' + new Date().toLocaleTimeString();
+      }
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      refreshAll();
+      // Auto refresh every 60 seconds
+      setInterval(refreshAll, 60000);
+    });
+  </script>
+</body>
+</html>

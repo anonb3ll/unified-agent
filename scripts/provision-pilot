@@ -1,0 +1,480 @@
+#!/usr/bin/env python3
+"""Render an isolated, single-tenant pilot hub configuration bundle.
+
+This command is deliberately offline: it does not create cloud resources,
+write credentials, install/enable services, or change Tailscale Serve state.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import sys
+from pathlib import Path
+from urllib.parse import urlsplit
+
+_SLUG = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?\Z")
+_IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,127}\Z")
+_AGENT_LABEL = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
+_BUCKET = re.compile(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]\Z")
+
+
+def _identity_map(path: Path) -> dict[str, str]:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot read identity map JSON: {path}") from exc
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError("identity map must be a non-empty JSON object")
+    if any(
+        not isinstance(user_id, str)
+        or not user_id.strip()
+        or not isinstance(label, str)
+        or not _AGENT_LABEL.fullmatch(label)
+        for user_id, label in raw.items()
+    ):
+        raise ValueError("identity map keys must be user IDs and values must be agent labels")
+    return raw
+
+
+def _tailnet_origin(value: str) -> tuple[str, str]:
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or not parsed.hostname.endswith(".ts.net")
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port is not None
+        or parsed.path not in ("", "/")
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError(
+            "tailnet origin must be https://<device>.<tailnet>.ts.net with no path or port"
+        )
+    host = parsed.hostname.lower()
+    return f"https://{host}", host
+
+
+def _workos_redirect_uri(value: str) -> str:
+    """Validate a callback URL owned by the separate WorkOS auth frontend."""
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path in ("", "/")
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError(
+            "WorkOS redirect URI must be an HTTPS callback URL on the separate auth frontend"
+        )
+    _ = parsed.port
+    return value
+
+
+def _backup_bucket(value: str, slug: str) -> str:
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "gs"
+        or not _BUCKET.fullmatch(parsed.netloc)
+        or parsed.path not in ("", "/")
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("backup bucket must be a bucket root such as gs://ua-pilot-backups")
+    return f"gs://{parsed.netloc}/ua-pilots/{slug}/memory"
+
+
+def _env_line(name: str, value: str) -> str:
+    if "\n" in value or "\r" in value:
+        raise ValueError(f"{name} may not contain a newline")
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'{name}="{escaped}"'
+
+
+def _unit_quote(value: str) -> str:
+    if "\n" in value or "\r" in value:
+        raise ValueError("systemd paths may not contain a newline")
+    escaped = value.replace("%", "%%").replace("$", "$$").replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _unit_file_path(value: str) -> str:
+    """Escape a path for systemd's unquoted EnvironmentFile= value."""
+    if "\n" in value or "\r" in value:
+        raise ValueError("systemd paths may not contain a newline")
+    return (
+        value.replace("%", "%%")
+        .replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace(" ", "\\x20")
+        .replace("\t", "\\t")
+    )
+
+
+def _secret_loader() -> str:
+    return '''#!/usr/bin/env python3
+"""Load only the pilot secrets allowed for one service, then exec it."""
+import os
+import sys
+from pathlib import Path
+
+profiles = {
+    "hub": {"WORKOS_API_KEY", "WORKOS_COOKIE_PASSWORD"},
+    "replication": {"GOOGLE_APPLICATION_CREDENTIALS"},
+}
+required = {
+    "hub": {"WORKOS_API_KEY", "WORKOS_COOKIE_PASSWORD"},
+    "replication": {"GOOGLE_APPLICATION_CREDENTIALS"},
+}
+all_allowed = set().union(*profiles.values())
+if len(sys.argv) < 4 or sys.argv[1] not in profiles:
+    raise SystemExit("usage: with-secrets <hub|replication> <secrets.env> <command> [args...]")
+profile, secret_path, *command = sys.argv[1:]
+allowed = profiles[profile]
+values = {}
+try:
+    lines = Path(secret_path).read_text(encoding="utf-8").splitlines()
+except OSError as exc:
+    raise SystemExit(f"cannot read pilot secret file: {type(exc).__name__}") from exc
+for number, line in enumerate(lines, start=1):
+    if not line.strip() or line.lstrip().startswith("#"):
+        continue
+    if "=" not in line:
+        raise SystemExit(f"invalid secret assignment at line {number}")
+    key, value = line.split("=", 1)
+    if key not in all_allowed:
+        raise SystemExit(f"secret key is not allowed for {profile}: {key}")
+    if key not in allowed:
+        continue
+    if key in values or not value:
+        raise SystemExit(f"duplicate or empty secret at line {number}")
+    values[key] = value
+missing = required[profile] - values.keys()
+if missing:
+    raise SystemExit("missing required pilot secrets: " + ", ".join(sorted(missing)))
+pilot_keys = {
+    "UA_HOME", "UA_WORKSPACE", "UA_VAULT_PATH", "UA_STATE_SYNC", "UA_EVENT_BUS",
+    "UA_EDITION", "WORKOS_ORGANIZATION_ID", "UA_HUB_WORKOS_ORGANIZATION_ID",
+    "UA_HUB_WORKOS_IDENTITY_MAP", "WORKOS_CLIENT_ID", "WORKOS_ISSUER",
+    "WORKOS_REDIRECT_URI", "UA_PILOT_ORIGIN", "UA_ENFORCE_AUTH",
+    "UA_HTTP_ALLOWED_HOSTS", "UA_HTTP_ALLOWED_ORIGINS", "UA_REPLICA_GCS_URI",
+    "UA_TRANSPORT", "UA_HTTP_HOST", "UA_HTTP_PORT",
+}
+environment = {key: os.environ[key] for key in pilot_keys if key in os.environ}
+environment["PATH"] = os.environ.get("PATH", "/usr/bin:/bin")
+for key in ("USER", "LOGNAME", "LANG"):
+    if key in os.environ:
+        environment[key] = os.environ[key]
+bundle = Path(secret_path).parent
+environment["HOME"] = str(bundle / "runtime-home")
+environment["TMPDIR"] = str(bundle / "tmp")
+environment.update(values)
+os.execvpe(command[0], command, environment)
+'''
+
+
+def _unit(
+    description: str,
+    binary: Path,
+    bundle: Path,
+    *,
+    profile: str,
+    litestream: bool,
+) -> str:
+    command = [str(bundle / "with-secrets"), profile, str(bundle / "secrets.env"), str(binary)]
+    if litestream:
+        command.extend(["replicate", "-config", str(bundle / "litestream.yml")])
+    service = "ExecStart=" + " ".join(_unit_quote(part) for part in command)
+    environment = (
+        ""
+        if litestream
+        else (
+            "Environment=UA_TRANSPORT=http\n"
+            "Environment=UA_HTTP_HOST=127.0.0.1\n"
+            "Environment=UA_HTTP_PORT=8765\n"
+        )
+    )
+    return (
+        f"[Unit]\nDescription={description}\nAfter=network-online.target\nWants=network-online.target\n\n"
+        "[Service]\nType=simple\n"
+        f"EnvironmentFile={_unit_file_path(str(bundle / 'pilot.env'))}\n"
+        f"{environment}{service}\n"
+        "Restart=on-failure\nRestartSec=5\n\n"
+        "[Install]\nWantedBy=default.target\n"
+    )
+
+
+def _render(args: argparse.Namespace) -> tuple[Path, dict[str, tuple[str, int]]]:
+    slug = args.pilot_slug
+    if not _SLUG.fullmatch(slug):
+        raise ValueError("pilot slug must be lowercase letters, digits, and internal hyphens")
+    for field, value in (
+        ("WorkOS organization ID", args.workos_organization_id),
+        ("WorkOS client ID", args.workos_client_id),
+    ):
+        if not _IDENTIFIER.fullmatch(value):
+            raise ValueError(f"{field} has an invalid shape")
+
+    origin, host = _tailnet_origin(args.tailnet_origin)
+    workos_redirect_uri = _workos_redirect_uri(args.workos_redirect_uri)
+    replica_uri = _backup_bucket(args.backup_bucket, slug)
+    identities = _identity_map(args.identity_map_file)
+    output_root = args.output_root.expanduser().resolve()
+    private_home = args.private_home.expanduser().resolve()
+    bundle = (output_root / slug).resolve()
+    if (
+        bundle == private_home
+        or bundle.is_relative_to(private_home)
+        or private_home.is_relative_to(bundle)
+    ):
+        raise ValueError(
+            "pilot bundle and private hub home must be separate, non-overlapping paths"
+        )
+
+    state = bundle / "state"
+    workspace = bundle / "workspace"
+    env_values = {
+        "UA_HOME": str(state),
+        "UA_WORKSPACE": str(workspace),
+        "UA_VAULT_PATH": "",
+        "UA_STATE_SYNC": "0",
+        "UA_EVENT_BUS": "0",
+        "UA_EDITION": "enterprise",
+        "WORKOS_ORGANIZATION_ID": args.workos_organization_id,
+        "UA_HUB_WORKOS_ORGANIZATION_ID": args.workos_organization_id,
+        "UA_HUB_WORKOS_IDENTITY_MAP": json.dumps(identities, separators=(",", ":")),
+        "WORKOS_CLIENT_ID": args.workos_client_id,
+        "WORKOS_ISSUER": f"https://api.workos.com/user_management/{args.workos_client_id}",
+        "WORKOS_REDIRECT_URI": workos_redirect_uri,
+        "UA_PILOT_ORIGIN": origin,
+        "UA_ENFORCE_AUTH": "1",
+        "UA_HTTP_ALLOWED_HOSTS": f"127.0.0.1:*,localhost:*,{host}:*",
+        "UA_HTTP_ALLOWED_ORIGINS": origin,
+        "UA_REPLICA_GCS_URI": replica_uri,
+    }
+    env_text = (
+        "# Generated by scripts/provision-pilot; mode 0600.\n"
+        + "\n".join(_env_line(name, value) for name, value in env_values.items())
+        + "\n"
+    )
+    secret_text = (
+        "# Add values using a protected editor; this file is mode 0600.\n"
+        "# Required for hub session verification: WORKOS_API_KEY, WORKOS_COOKIE_PASSWORD.\n"
+        "# Required for replication: GOOGLE_APPLICATION_CREDENTIALS=/absolute/pilot/credential.json.\n"
+    )
+    hub_unit_name = f"unified-agent-{slug}.service"
+    litestream_unit_name = f"unified-agent-{slug}-litestream.service"
+    litestream_text = (
+        "# Dedicated pilot replica. Credentials come from the pilot service environment.\n"
+        "# Retention lists the L0 prefix on every check, and GCS bills each listing.\n"
+        "# Without storage.objects.delete nothing prunes and the prefix grows without\n"
+        "# bound (the Sept 2026 incident, docs/database-operations.md section 4).\n"
+        "dbs:\n"
+        "  - path: ${UA_HOME}/memory.db\n"
+        "    replica:\n"
+        "      url: ${UA_REPLICA_GCS_URI}\n"
+        "      sync-interval: 30s\n"
+        "levels:\n"
+        "  - interval: 5m\n"
+        "  - interval: 1h\n"
+        "  - interval: 24h\n"
+        "snapshot:\n"
+        "  interval: 24h\n"
+        "  retention: 24h\n"
+        "l0-retention: 5m\n"
+        "l0-retention-check-interval: 5m\n"
+    )
+    readme = f"""# Pilot appliance bundle: {slug}
+
+This bundle was rendered locally by `scripts/provision-pilot`. It creates no
+cloud resources and does not install or start services or configure Tailscale.
+
+1. Review `pilot.env`. Confirm every identity-map label exists in the pilot's
+   intended roster and `WORKOS_REDIRECT_URI` names a separately hosted,
+   functioning HTTPS auth callback. The main hub does not serve
+   `/pilot/login` or `/pilot/callback`; it only accepts sessions issued
+   elsewhere.
+2. Use a protected editor to add the required WorkOS secrets and
+   `GOOGLE_APPLICATION_CREDENTIALS=/absolute/pilot/credential.json` to
+   `secrets.env`. The credential file must be readable by this service user
+   and scoped to the pilot's GCS prefix `{replica_uri}`. Do not put credential
+   contents in command arguments or shell history.
+3. Install the two units from `systemd/` into `~/.config/systemd/user/`, then run:
+
+   ```sh
+   systemctl --user daemon-reload
+   ```
+
+4. Start only the hub first with `systemctl --user enable --now {hub_unit_name}`.
+   Verify `/healthz`, the tenant organization, and that a session from the
+   separate auth frontend is accepted. This offline bundle does not install or
+   verify that frontend.
+5. Before starting replication, prove all four, or leave it off. This bundle
+   runs no separate nightly backup job (litestream's 24 h snapshot level
+   exists only while litestream runs), so with replication off the pilot has
+   no off-host copy until you arrange one. A missing delete grant is what
+   cost about $65 a day in September 2026: litestream could not prune, so it
+   re-listed a 250,631-object prefix, and GCS billed every listing
+   (docs/database-operations.md section 4).
+   - The credential can DELETE under `{replica_uri}`, not only create: upload
+     a probe object there with that credential, then delete it with the same
+     credential. `storage.objectCreator` alone is not enough.
+   - The bucket has a lifecycle rule scoped to that prefix (for example,
+     delete objects older than 3 days), so a stalled prune cannot accumulate.
+   - The bucket is in the pilot host's GCP region. Listings from outside
+     Google Cloud are billed as internet egress.
+   - The project's egress alert covers this bucket
+     (deploy/gcp/cost-guards/egress_policy.json).
+   Then start it with
+   `systemctl --user enable --now {litestream_unit_name}`. Verify its logs and
+   a fresh snapshot in the dedicated GCS prefix. Count the prefix's objects 30
+   minutes later and again the next day; a count that keeps growing means
+   pruning is failing, so stop the unit.
+6. After verifying the hub and replication, expose only the tailnet HTTPS
+   endpoint with `tailscale serve --bg --https=443 http://127.0.0.1:8765`.
+   Do not use Tailscale Funnel or bind the hub to `0.0.0.0`.
+7. Verify `tailscale serve status`, the HTTPS origin `{origin}`, pilot-scoped
+   `UA_HOME`, and a fresh replica before an outsider follows the dress-rehearsal
+   runbook in `docs/pilot/appliance-bundle.md`.
+
+Rollback: stop and disable these two units, remove only this pilot's Serve
+mapping (`tailscale serve --https=443 off`), then export/retain data according
+to the pilot agreement before deleting this bundle. The script did not create
+the WorkOS application, organization, bucket, or Tailscale node; clean those up
+through their owning operators separately.
+"""
+    files = {
+        "pilot.env": (env_text, 0o600),
+        "secrets.env": (secret_text, 0o600),
+        "litestream.yml": (litestream_text, 0o600),
+        f"systemd/{hub_unit_name}": (
+            _unit(
+                f"unified-agent pilot hub ({slug})",
+                args.unified_agent_binary.expanduser().resolve(),
+                bundle,
+                profile="hub",
+                litestream=False,
+            ),
+            0o644,
+        ),
+        f"systemd/{litestream_unit_name}": (
+            _unit(
+                f"unified-agent pilot replication ({slug})",
+                args.litestream_binary.expanduser().resolve(),
+                bundle,
+                profile="replication",
+                litestream=True,
+            ),
+            0o644,
+        ),
+        "with-secrets": (_secret_loader(), 0o700),
+        "README.md": (readme, 0o644),
+    }
+    return bundle, files
+
+
+def _write_bundle(bundle: Path, files: dict[str, tuple[str, int]]) -> None:
+    bundle.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        bundle.mkdir(mode=0o700)
+    except FileExistsError as exc:
+        raise ValueError(f"pilot bundle already exists; refusing to overwrite: {bundle}") from exc
+    created: list[Path] = []
+    try:
+        os.chmod(bundle, 0o700)
+        for directory in (
+            bundle / "state",
+            bundle / "workspace",
+            bundle / "runtime-home",
+            bundle / "tmp",
+            bundle / "systemd",
+        ):
+            directory.mkdir(mode=0o700)
+        for relative, (content, mode) in files.items():
+            path = bundle / relative
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+            created.append(path)
+            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                stream.write(content)
+            os.chmod(path, mode)
+    except Exception:
+        for path in reversed(created):
+            path.unlink(missing_ok=True)
+        shutil.rmtree(bundle, ignore_errors=True)
+        raise
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("pilot_slug", help="stable lowercase pilot identifier")
+    parser.add_argument("--workos-organization-id", required=True)
+    parser.add_argument("--workos-client-id", required=True)
+    parser.add_argument(
+        "--workos-redirect-uri",
+        required=True,
+        help="HTTPS callback on a separate auth frontend; this generated hub does not serve it",
+    )
+    parser.add_argument(
+        "--identity-map-file",
+        type=Path,
+        required=True,
+        help=(
+            "JSON mapping WorkOS user IDs to pilot UA agent labels; "
+            "roster membership is not checked offline"
+        ),
+    )
+    parser.add_argument(
+        "--tailnet-origin",
+        required=True,
+        help="HTTPS MagicDNS origin, e.g. https://pilot.example.ts.net",
+    )
+    parser.add_argument(
+        "--backup-bucket",
+        required=True,
+        help="dedicated GCS bucket root; a pilot-specific prefix is derived",
+    )
+    parser.add_argument(
+        "--output-root", type=Path, default=Path("~/.local/share/unified-agent/pilots")
+    )
+    parser.add_argument(
+        "--private-home",
+        type=Path,
+        default=Path(
+            os.environ.get("UA_PILOT_PRIVATE_HOME")
+            or os.environ.get("UA_HOME")
+            or "~/.unified_agent"
+        ),
+        help="actual private hub UA_HOME, used only for an overlap check",
+    )
+    parser.add_argument(
+        "--unified-agent-binary", type=Path, default=Path("~/.local/bin/unified-agent")
+    )
+    parser.add_argument("--litestream-binary", type=Path, default=Path("~/.local/bin/litestream"))
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        bundle, files = _render(args)
+        _write_bundle(bundle, files)
+    except (OSError, ValueError) as exc:
+        print(f"provision-pilot: {exc}", file=sys.stderr)
+        return 2
+    print(f"pilot bundle rendered: {bundle}")
+    print(
+        "No cloud resources or services were changed; complete the generated README before activation."
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

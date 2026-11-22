@@ -1,0 +1,8 @@
+name: audit-triage-file-tasks
+description: "Runs a security audit and files one structured triage task per group of high findings. Files nothing when the audit is clean."
+inputs: []
+steps:
+  - name: triage
+    tool: audit_triage_tasks
+    args:
+      min_severity: "high"

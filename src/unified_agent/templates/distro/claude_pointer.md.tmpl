@@ -1,0 +1,12 @@
+# CLAUDE.md
+
+@AGENTS.md
+
+Claude Code reads this file. The rules for every harness are in `AGENTS.md`,
+imported above; this file adds only what is specific to Claude Code.
+
+- Register the hub once per machine with `.unified-agent/bin/ua-register-claude`.
+  It registers at user scope. Do not add a hub entry to a project `.mcp.json`:
+  project scope takes precedence over user scope and would replace the
+  authenticated hub connection.
+- Skills for this project are in `.claude/skills/`.

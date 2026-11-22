@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Run GitHub Copilot CLI with this machine's Desktop_Agent6 hub bearer token.
+# Default executor binary for the copilot backend (DEFAULT_COPILOT_BIN /
+# UA_COPILOT_BIN). Isolates the child from whatever UA_AGENT_BEARER_TOKEN the
+# parent shell carries (dispatch/executor parents often hold a different
+# agent's token). Never prints the token.
+# Installed by scripts/install-with-hub-wrappers.sh.
+set -euo pipefail
+
+TOKEN_FILE="${UA_COPILOT_TOKEN_FILE:-$HOME/.copilot/unified-agent-token}"
+GBRAIN_TOKEN_FILE="${GBRAIN_TOKEN_FILE:-$HOME/.gbrain/mcp-token}"
+COPILOT_BIN="${COPILOT_BIN:-copilot}"
+
+if [[ ! -r "$TOKEN_FILE" ]]; then
+  echo "Copilot token file is unavailable: $TOKEN_FILE" >&2
+  exit 1
+fi
+token="$(tr -d '\r\n' < "$TOKEN_FILE")"
+if [[ -z "$token" ]]; then
+  echo "Copilot token file is empty: $TOKEN_FILE" >&2
+  exit 1
+fi
+export UA_COPILOT_HUB_TOKEN="$token"
+export UA_AGENT_BEARER_TOKEN="$token"
+export UA_CLIENT=copilot
+export COPILOT_CLI=1
+
+# Drop any gbrain bearer inherited from the parent shell so the child never
+# authenticates to gbrain as another agent; re-export only this agent's own.
+unset GBRAIN_BEARER_TOKEN GBRAIN_TOKEN
+if [[ -r "$GBRAIN_TOKEN_FILE" ]]; then
+  gbrain_token="$(tr -d '\r\n' < "$GBRAIN_TOKEN_FILE")"
+  if [[ -n "$gbrain_token" ]]; then
+    export GBRAIN_TOKEN="$gbrain_token"
+  fi
+fi
+
+exec "$COPILOT_BIN" "$@"

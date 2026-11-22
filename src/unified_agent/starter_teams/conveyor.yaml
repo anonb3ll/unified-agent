@@ -1,0 +1,75 @@
+id: conveyor
+version: 1
+description: Intake, plan, build and review with explicit closure reasons.
+guidance: Confirm identity and read team edges. Use existing task, policy, profile
+  and approval gates; a template grants no authority. Preserve task/artifact references
+  and explicit closure reasons. Human release approvals remain required.
+roles:
+  intake: 'Validate scope, evidence and acceptance criteria. Record explicit closure:
+    handed_off_to, blocked_on, denied, cancelled, no_follow_on or escalation.'
+  planner: Plan bounded implementation and meaningful checks; preserve dependencies
+    in handoff.
+  builder: Claim work before edits. Implement and verify the plan; hand off exact
+    commit and focused checks.
+  reviewer: Read full exact-head diff and verify acceptance. Record explicit closure
+    and unresolved findings. Existing human release approval applies.
+independent_roles: []
+steps:
+- name: step-1-intake
+  actor_role: intake
+  objective: 'Validate scope, evidence and acceptance criteria. Record explicit closure:
+    handed_off_to, blocked_on, denied, cancelled, no_follow_on or escalation.'
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - planner
+- name: step-2-planner
+  actor_role: planner
+  objective: Plan bounded implementation and meaningful checks; preserve dependencies
+    in handoff.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - builder
+- name: step-3-builder
+  handoff_commit: true
+  actor_role: builder
+  objective: Claim work before edits. Implement and verify the plan; hand off exact
+    commit and focused checks.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - reviewer
+- name: step-4-reviewer
+  actor_role: reviewer
+  objective: Read full exact-head diff and verify acceptance. Record explicit closure
+    and unresolved findings. Existing human release approval applies.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - done
+  - waiting
+  - blocked
+  - failed

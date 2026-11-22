@@ -1,0 +1,30 @@
+# Repo-reviewed illustration. Does not launch a harness or change team policy.
+# These named teams are prerequisites supplied by an installation; each must
+# contain a seat advertising the corresponding skill.
+name: build-review-example
+description: "Two-role build/review handoff using the normal task queue."
+inputs: [command]
+roles:
+  builder:
+    team: builders
+    skills: [build]
+  reviewer:
+    team: reviewers
+    skills: [review]
+steps:
+  - name: build
+    actor_role: builder
+    objective: "Vet the requested build command."
+    tool: run_cmd_check
+    args:
+      command: "{{ inputs.command }}"
+    allowed_exits: [handoff, blocked, waiting, failed]
+    next_hop:
+      require: [reviewer]
+  - name: review
+    actor_role: reviewer
+    objective: "Independently vet the command from the builder's receipt."
+    tool: run_cmd_check
+    args:
+      command: "{{ inputs.command }}"
+    allowed_exits: [done, blocked, waiting, failed]

@@ -1,0 +1,48 @@
+{
+  "displayName": "GCP runaway egress - ua-worker storage (would have caught the Sep 2026 litestream bleed)",
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "Backups bucket egress over 5 GiB/hour",
+      "conditionThreshold": {
+        "filter": "metric.type=\"storage.googleapis.com/network/sent_bytes_count\" AND resource.type=\"gcs_bucket\" AND resource.label.bucket_name=\"ua-worker-backups-000000000000\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "3600s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 5368709120,
+        "duration": "0s",
+        "trigger": { "count": 1 }
+      }
+    },
+    {
+      "displayName": "Any bucket in the project egress over 10 GiB/hour",
+      "conditionThreshold": {
+        "filter": "metric.type=\"storage.googleapis.com/network/sent_bytes_count\" AND resource.type=\"gcs_bucket\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "3600s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 10737418240,
+        "duration": "0s",
+        "trigger": { "count": 1 }
+      }
+    }
+  ],
+  "alertStrategy": { "autoClose": "604800s" },
+  "notificationChannels": [
+    "projects/ua-worker/notificationChannels/6099557691555972470"
+  ],
+  "documentation": {
+    "mimeType": "text/markdown",
+    "content": "Runaway Cloud Storage egress detected in project ua-worker.\n\nBaseline is 0 GiB/hour for these buckets. This alert fires when a bucket sends more than 5 GiB/hour (backups bucket) or 10 GiB/hour (any bucket).\n\nKnown cause to check first: an un-pruned litestream replica. The L0 retention loop paginates the whole object prefix and the listing RESPONSE PAYLOAD is billed internet egress. In Sep 2026 this produced ~600 GiB/day (~$65/day) for six days.\n\nFirst checks:\n  gcloud storage ls gs://ua-worker-backups-000000000000/litestream/\n  pgrep -fl 'litestream replicate'   (on the Mac hub)\n\nResponse: stop the listing process first (any credential restored will re-arm the loop), then investigate."
+  }
+}

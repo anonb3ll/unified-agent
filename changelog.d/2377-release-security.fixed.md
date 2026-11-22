@@ -1,0 +1,1 @@
+- Sync the protocol and client SDK mirror from canonical SDK #42 (Zod 4.6.7 security fix), and use supported Node 26 for the Docker web build stage instead of EOL Node 25. The Node image is pinned to a verified multi-architecture digest.

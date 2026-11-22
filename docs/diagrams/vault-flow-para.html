@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault Flow (PARA)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --paper:#1e1e2e; --ink:#cdd6f4; --muted:#a6adc8; --accent:#fab387; }
+    body { font-family:'Geist', system-ui, sans-serif; background:var(--paper); color:var(--ink);
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:3rem 2rem; }
+    .frame { max-width:1200px; width:100%; }
+    .eyebrow { font-family:'Geist Mono', monospace; font-size:0.66rem; font-weight:500;
+      letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; }
+    h1 { font-family:'Instrument Serif', serif; font-size:clamp(1.5rem,2.4vw + 0.75rem,2rem);
+      font-weight:400; letter-spacing:-0.02em; line-height:1.15; margin-bottom:1.5rem; }
+    svg { width:100%; min-width:900px; display:block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Flowchart · Diagram Design</p>
+    <h1>Vault flow — where does this note go?</h1>
+
+    <svg viewBox="0 0 1200 824" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="vault-title vault-desc">
+      <title id="vault-title">Vault flow through PARA</title>
+      <desc id="vault-desc">A capture lands in the Inbox, is routed by what it is to the Wiki, Projects, or Archive, then every processed item is indexed in Wiki/Filed/Inbox-Archive and its inbox original is swept to a dated archive folder so the note stays findable.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a6adc8"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#fab387"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#1e1e2e"/>
+
+      <!-- ===== ARROWS ===== -->
+      <line x1="600" y1="76" x2="600" y2="108" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="600" y1="164" x2="600" y2="188" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- diamond -> Wiki (accent) -->
+      <path d="M508,240 H312 Q304,240 304,248 V352" fill="none" stroke="#fab387" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <rect x="352" y="220" width="96" height="14" rx="2" fill="#1e1e2e"/>
+      <text x="400" y="230" fill="#fab387" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">KNOWLEDGE</text>
+      <!-- diamond -> Projects -->
+      <line x1="600" y1="292" x2="600" y2="352" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="606" y="308" width="90" height="14" rx="2" fill="#1e1e2e"/>
+      <text x="610" y="318" fill="#a6adc8" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.04em">ACTIVE WORK</text>
+      <!-- diamond -> Archive -->
+      <path d="M692,240 H888 Q896,240 896,248 V352" fill="none" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="748" y="220" width="118" height="14" rx="2" fill="#1e1e2e"/>
+      <text x="807" y="230" fill="#a6adc8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">DONE / SUPERSEDED</text>
+
+      <!-- Wiki -> merge (accent) -->
+      <path d="M304,432 V468 Q304,476 312,476 H591" fill="none" stroke="#fab387" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <rect x="352" y="452" width="200" height="14" rx="2" fill="#1e1e2e"/>
+      <text x="452" y="462" fill="#fab387" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">synthesize · link · processed →</text>
+      <!-- Projects -> merge -->
+      <line x1="600" y1="432" x2="600" y2="467" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Archive -> merge -->
+      <path d="M896,432 V468 Q896,476 888,476 H609" fill="none" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <line x1="600" y1="484" x2="600" y2="510" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="600" y1="576" x2="600" y2="600" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="600" y1="672" x2="600" y2="696" stroke="#a6adc8" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ===== NODES ===== -->
+      <!-- start oval -->
+      <rect x="480" y="36" width="240" height="40" rx="20" fill="#1e1e2e"/>
+      <rect x="480" y="36" width="240" height="40" rx="20" fill="rgba(205,214,244,0.1)" stroke="#7f849c" stroke-width="1"/>
+      <text x="600" y="61" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">A capture lands</text>
+
+      <!-- inbox -->
+      <rect x="452" y="108" width="296" height="56" rx="6" fill="#1e1e2e"/>
+      <rect x="452" y="108" width="296" height="56" rx="6" fill="#262636" stroke="#cdd6f4" stroke-width="1"/>
+      <text x="600" y="132" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">00 - Inbox/</text>
+      <text x="600" y="150" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">capture queue — anyone writes · holds only what is pending</text>
+
+      <!-- diamond -->
+      <path d="M600,188 L692,240 L600,292 L508,240 Z" fill="#262636" stroke="#cdd6f4" stroke-width="1"/>
+      <text x="600" y="236" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">what is</text>
+      <text x="600" y="252" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">it?</text>
+
+      <!-- Wiki (accent) -->
+      <rect x="180" y="352" width="248" height="80" rx="6" fill="#1e1e2e"/>
+      <rect x="180" y="352" width="248" height="80" rx="6" fill="rgba(250,179,135,0.12)" stroke="#fab387" stroke-width="1.2"/>
+      <text x="304" y="378" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Wiki/</text>
+      <text x="304" y="396" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">durable knowledge base</text>
+      <text x="304" y="410" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">one concept per page</text>
+      <text x="304" y="424" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">steward curates · in Wiki/Index</text>
+
+      <!-- Projects -->
+      <rect x="476" y="352" width="248" height="80" rx="6" fill="#1e1e2e"/>
+      <rect x="476" y="352" width="248" height="80" rx="6" fill="#262636" stroke="#cdd6f4" stroke-width="1"/>
+      <text x="600" y="378" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">01 - Projects/</text>
+      <text x="600" y="398" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">active work · task briefs</text>
+      <text x="600" y="416" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">→ Archive when done</text>
+
+      <!-- Archive -->
+      <rect x="772" y="352" width="248" height="80" rx="6" fill="#1e1e2e"/>
+      <rect x="772" y="352" width="248" height="80" rx="6" fill="#262636" stroke="#cdd6f4" stroke-width="1"/>
+      <text x="896" y="378" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">04 - Archive/</text>
+      <text x="896" y="398" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">done · superseded · historical</text>
+      <text x="896" y="416" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">incl. dated inbox-sweep batches</text>
+
+      <!-- merge dot -->
+      <circle cx="600" cy="476" r="5" fill="#a6adc8"/>
+
+      <!-- index -->
+      <rect x="420" y="510" width="360" height="66" rx="6" fill="#1e1e2e"/>
+      <rect x="420" y="510" width="360" height="66" rx="6" fill="rgba(205,214,244,0.05)" stroke="#a6adc8" stroke-width="1"/>
+      <text x="600" y="536" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Index it — Wiki/Filed/Inbox-Archive</text>
+      <text x="600" y="556" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">source link + what it fed + topic tags</text>
+      <text x="600" y="570" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">keeps it findable after the original moves</text>
+
+      <!-- sweep -->
+      <rect x="368" y="600" width="464" height="72" rx="6" fill="#1e1e2e"/>
+      <rect x="368" y="600" width="464" height="72" rx="6" fill="rgba(205,214,244,0.02)" stroke="rgba(205,214,244,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="600" y="624" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Sweep it — original → 04 - Archive/inbox-sweep-&lt;date&gt;/</text>
+      <text x="600" y="644" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">direct host filesystem move · agents have no vault-delete</text>
+      <text x="600" y="660" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">not automatic — steward's judgement, or on the operator's request</text>
+
+      <!-- end oval -->
+      <rect x="420" y="696" width="360" height="40" rx="20" fill="#1e1e2e"/>
+      <rect x="420" y="696" width="360" height="40" rx="20" fill="rgba(205,214,244,0.1)" stroke="#7f849c" stroke-width="1"/>
+      <text x="600" y="721" fill="#cdd6f4" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">stays findable — tags · backlinks · graph</text>
+
+      <!-- LEGEND -->
+      <line x1="140" y1="760" x2="1060" y2="760" stroke="rgba(205,214,244,0.12)" stroke-width="0.8"/>
+      <text x="140" y="778" fill="#a6adc8" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+      <path d="M232,775 h28" fill="none" stroke="#fab387" stroke-width="1.4"/>
+      <text x="268" y="778" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace">the knowledge path — synthesize, link, index</text>
+      <rect x="616" y="770" width="12" height="12" rx="2" fill="rgba(205,214,244,0.02)" stroke="rgba(205,214,244,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="636" y="778" fill="#a6adc8" font-size="9" font-family="'Geist Mono', monospace">manual — host filesystem, not a vault_ tool</text>
+      <text x="140" y="796" fill="#7f849c" font-size="9" font-family="'Geist Mono', monospace">Outside this flow: 02 - Areas · 03 - Resources (Operator-curated) · Logs/ (append-only agent journals + state snapshots)</text>
+    </svg>
+  </div>
+</body>
+</html>

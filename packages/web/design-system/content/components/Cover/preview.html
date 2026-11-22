@@ -1,0 +1,90 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Unified Agent</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--ua-bg); color:var(--ua-fg); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .accent { fill:var(--ua-accent); }
+  .ink { fill:var(--ua-fg); }
+  .muted { fill:var(--ua-muted); }
+  .cut { fill:var(--ua-bg); }
+  .ok { fill:var(--ua-ok); }
+  .danger { fill:var(--ua-danger); }
+  .blk { rx:var(--radius-sm); }
+  .words { position:absolute; left:var(--space-6); bottom:var(--space-6); max-width:440px; }
+  .name { margin:0; font-size:96px; line-height:.95; font-weight:600; letter-spacing:-.02em; color:var(--ua-fg); }
+  .tag { margin:var(--space-2) 0 0 4px; font-size:14px; line-height:20px; color:var(--ua-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      ua-accent 160×264 bled off the top (the one action colour, largest) · ua-fg 320×176 bled off the right (the ink slab) · ua-muted 112×72 off the top (relief) — about 40% of 960×288
+  arrangement one tall accent slab with an ink slab and a muted satellite, bottoms on one line space-8 above the edge, space-4 gutters, like the header bar over the pane panel
+  pattern     status dots, from "state is never colour alone": 44 discs the size of a StatusIndicator dot (12px) on a space-6 pitch, cut into the ink slab in ua-bg; one lit ua-ok, one ua-danger
+  scales      gutters space-4; pitch space-6; disc radius-full (r = 6); block corners radius-sm
+-->
+<rect class="accent blk" x="0" y="-8" width="160" height="264" rx="4"/>
+<rect class="muted blk" x="176" y="-8" width="112" height="72" rx="4"/>
+<rect class="ink blk" x="176" y="80" width="320" height="176" rx="4"/>
+<circle class="cut" cx="200" cy="128" r="6"/>
+<circle class="cut" cx="224" cy="128" r="6"/>
+<circle class="cut" cx="248" cy="128" r="6"/>
+<circle class="cut" cx="272" cy="128" r="6"/>
+<circle class="cut" cx="296" cy="128" r="6"/>
+<circle class="cut" cx="320" cy="128" r="6"/>
+<circle class="cut" cx="344" cy="128" r="6"/>
+<circle class="cut" cx="368" cy="128" r="6"/>
+<circle class="cut" cx="392" cy="128" r="6"/>
+<circle class="cut" cx="416" cy="128" r="6"/>
+<circle class="cut" cx="440" cy="128" r="6"/>
+<circle class="ok" cx="200" cy="152" r="6"/>
+<circle class="cut" cx="224" cy="152" r="6"/>
+<circle class="cut" cx="248" cy="152" r="6"/>
+<circle class="cut" cx="272" cy="152" r="6"/>
+<circle class="cut" cx="296" cy="152" r="6"/>
+<circle class="cut" cx="320" cy="152" r="6"/>
+<circle class="cut" cx="344" cy="152" r="6"/>
+<circle class="cut" cx="368" cy="152" r="6"/>
+<circle class="cut" cx="392" cy="152" r="6"/>
+<circle class="cut" cx="416" cy="152" r="6"/>
+<circle class="cut" cx="440" cy="152" r="6"/>
+<circle class="cut" cx="200" cy="176" r="6"/>
+<circle class="cut" cx="224" cy="176" r="6"/>
+<circle class="cut" cx="248" cy="176" r="6"/>
+<circle class="cut" cx="272" cy="176" r="6"/>
+<circle class="cut" cx="296" cy="176" r="6"/>
+<circle class="cut" cx="320" cy="176" r="6"/>
+<circle class="danger" cx="344" cy="176" r="6"/>
+<circle class="cut" cx="368" cy="176" r="6"/>
+<circle class="cut" cx="392" cy="176" r="6"/>
+<circle class="cut" cx="416" cy="176" r="6"/>
+<circle class="cut" cx="440" cy="176" r="6"/>
+<circle class="cut" cx="200" cy="200" r="6"/>
+<circle class="cut" cx="224" cy="200" r="6"/>
+<circle class="cut" cx="248" cy="200" r="6"/>
+<circle class="cut" cx="272" cy="200" r="6"/>
+<circle class="cut" cx="296" cy="200" r="6"/>
+<circle class="cut" cx="320" cy="200" r="6"/>
+<circle class="cut" cx="344" cy="200" r="6"/>
+<circle class="cut" cx="368" cy="200" r="6"/>
+<circle class="cut" cx="392" cy="200" r="6"/>
+<circle class="cut" cx="416" cy="200" r="6"/>
+<circle class="cut" cx="440" cy="200" r="6"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Unified Agent</h1>
+<p class="tag">One console for a fleet of coding agents.</p>
+</div>
+</div>
+</body>
+</html>

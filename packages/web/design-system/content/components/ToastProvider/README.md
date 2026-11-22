@@ -1,0 +1,1 @@
+ToastProvider hosts toasts in one polite live region; components call `useToast().show(...)`. Success and info leave after a few seconds; errors stay until dismissed. An action is a link or a button ("Retry").

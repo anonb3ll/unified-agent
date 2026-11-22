@@ -1,0 +1,150 @@
+[project]
+name = "unified-agent"
+version = "0.3.2"
+description = "Agent-operations platform: authority, approvals, evidence ledger, and control center for developer agents and their operator"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+dependencies = [
+    # mcp 2.x renamed mcp.server.fastmcp (→ mcp.server.mcpserver) back when
+    # 1.x was current; unified-agent is now migrated to 2.x. `uv tool install .`
+    # ignores uv.lock, so the bounds live here. See tests/test_dependency_bounds.py.
+    "mcp[cli]>=2,<3",
+    "ddgs>=9",
+    "httpx>=0.27",
+    # Validate the hub's live CLI input schemas without coercion or remote refs.
+    "jsonschema>=4.26",
+    "referencing>=0.37",
+    "trafilatura>=2.0",
+    "fastembed>=0.9,<0.10",
+    "pyyaml>=6",
+    "textual>=8,<9",
+    # Skill-package references use canonical CommonMark context. Already locked
+    # transitively through rich/textual; promote the imported parser directly.
+    "markdown-it-py>=4.2,<5",
+    "sqlite-vec>=0.1.6,<0.2",
+    "tree-sitter-language-pack>=1.13.1",
+    "google-genai>=2.18.1",
+    "langgraph>=1.0,<2",
+    "langgraph-checkpoint-sqlite>=3.0,<4",
+    "langsmith>=0.11,<1",
+    "workos>=10,<11",
+    # PTY driver for the agy-interactive executor backend (task #1177).
+    "pexpect>=4.9,<5",
+    # RFC-3161 TSA anchor backend (task #1265, audit/anchor_tsa.py): CMS
+    # SignedData/TSTInfo parsing (pyasn1-modules) and the actual
+    # signature/cert verification (cryptography). Both were already
+    # transitive (google-genai -> google-auth -> pyasn1-modules; workos and
+    # pyjwt[crypto] -> cryptography) at the exact versions pinned below;
+    # promoted to direct since audit/anchor_tsa.py imports them by name.
+    "cryptography>=42",
+    "pyasn1-modules>=0.4",
+    # Imported directly; previously only arrived transitively. Floors match
+    # the versions already pinned in uv.lock.
+    "numpy>=2.4.6",
+    "anyio>=4.14.1",
+    "pydantic>=2.13.4",
+    "sse-starlette>=3.4.5",
+    "uvicorn>=0.51.0",
+    "starlette>=1.3.1",
+]
+
+[project.optional-dependencies]
+# PDF fetch/export is optional in production. The dev group includes these
+# packages because the full documented pytest suite covers both behaviors.
+# 6.21.4 closes pypdf DoS advisories (memory, CPU, infinite loop) that
+# web_fetch's confined worker (pdf_worker.py, task #1523) hits when it
+# extracts an untrusted PDF; the .github/dependency-audit-ignores.yml
+# temporary exceptions for pypdf==6.14.2 (task #852) are removed accordingly.
+pdf = ["pypdf>=6.21.4", "fpdf2>=2.7,<3"]
+
+[project.scripts]
+ua = "unified_agent.cli:entrypoint"
+unified-agent = "unified_agent.server:main"
+unified-agent-init = "unified_agent.bootstrap:init_cli"
+unified-agent-doctor = "unified_agent.bootstrap:doctor_cli"
+unified-agent-backup-loop = "unified_agent.backup_loop:main"
+unified-agent-audit = "unified_agent.audit.cli:main"
+unified-agent-review = "unified_agent.review_cli:main"
+unified-agent-tool-classification = "unified_agent.tool_classification:main"
+unified-agent-tui = "unified_agent.tui:main"
+unified-agent-merge = "unified_agent.merge:main"
+unified-agent-wiki = "unified_agent.wiki:main"
+unified-agent-sync = "unified_agent.sync_cli:main"
+unified-agent-new-project = "unified_agent.scaffold_cli:main"
+unified-agent-distro = "unified_agent.distro_cli:main"
+unified-agent-consolidate = "unified_agent.consolidate:main"
+unified-agent-sleep-pass = "unified_agent.sleep_pass:main"
+unified-agent-planning-loop = "unified_agent.planning_loop:main"
+unified-agent-evolve = "unified_agent.evolve:main"
+unified-agent-executor = "unified_agent.executor.daemon:main"
+unified-agent-bug-worker = "unified_agent.bug_worker.cli:main"
+unified-agent-dispatch-scheduler = "unified_agent.dispatch.cli:main"
+unified-agent-routines = "unified_agent.routine_cli:main"
+unified-agent-bridge = "unified_agent.messaging.bridge_cli:main"
+unified-agent-slack-slots = "unified_agent.slack_outbound:slots_main"
+unified-agent-eventbus = "unified_agent.events:main"
+unified-agent-zulip-worker = "unified_agent.zulip_worker:main"
+unified-agent-ts-worker = "unified_agent.ts_worker.worker:main"
+unified-agent-pr-watch = "unified_agent.pr_watch:main"
+unified-agent-lane-reaper = "unified_agent.lane_reaper:main"
+unified-agent-supervisor = "unified_agent.supervisor_loop:main"
+unified-agent-zulip-automation = "unified_agent.zulip_automation:main"
+unified-agent-session-end = "unified_agent.session_end:main"
+ua-session-end = "unified_agent.session_end:main"
+ua-usage = "unified_agent.harness_usage:main"
+unified-agent-audit-ledger = "unified_agent.audit.ledger_cli:main"
+unified-agent-vault-sync = "unified_agent.vault_sync:main"
+unified-agent-evidence-export = "unified_agent.audit.evidence_export_sink:main"
+
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-xdist>=3.8", "ruff>=0.8", "pypdf>=6.21.4", "fpdf2>=2.7,<3"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+path = "src/unified_agent/webui/_build_hook.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/unified_agent"]
+exclude = ["src/unified_agent/webui/_build_hook.py"]
+
+[tool.hatch.build.targets.sdist]
+# A release source archive is not a checkout export. Include the Python build
+# inputs; prepared UI/catalog assets are added explicitly by the hook. Local
+# node_modules, venvs, service files and developer scratch never belong here.
+include = [
+    "/src/unified_agent",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+    "/docs/adopter-package-build.md",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# Keep only a failing test's tmp_path. The desktop's /tmp is a quota'd tmpfs that
+# also holds Claude Code's output files, and one 1,500-test run kept 2.9 GB (#2401).
+tmp_path_retention_policy = "failed"
+filterwarnings = [
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+]
+markers = [
+    "smoke: bounded post-merge / merge-critical suite (see post-merge-verify workflow)",
+]
+
+[tool.pyright]
+include = ["**/*.py"]
+exclude = ["**/node_modules", "**/.git", "**/__pycache__", "**/.venv", "**/venv", "**/site-packages"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Default pycodestyle/pyflakes subset plus import sorting, pyupgrade, bugbear.
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]

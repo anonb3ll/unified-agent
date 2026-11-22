@@ -1,0 +1,221 @@
+name: Docker
+
+# DISPATCH-ONLY since task #2533 (2026-11-12): Depot CI owns this workflow's
+# automatic runs (.depot/workflows/docker.yml) while GitHub-hosted Actions
+# refuses jobs on billing.
+#
+# Minute economy ("Lean" policy, task #1787): the image build never runs on a
+# PR. CI's web/client/protocol jobs already build and test UI source on every
+# ready PR; what this build uniquely proves is that the Dockerfile assembles
+# the declared dependencies, so it runs after merge when a manifest, lockfile
+# or Docker asset moved, and by hand. Before cutting a v* release tag, dispatch
+# it on the tag (`gh workflow run docker.yml --ref v<version>`); a dispatch on
+# a tag also runs the GHCR publish job below.
+on:
+  workflow_dispatch:
+
+# One run per ref (#581, #1787): a newer push to main or a newer dispatch on
+# the same ref supersedes the older run, whose tree it contains.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Docker access is root on the host, so image jobs never run on the shared
+    # CI slots: GitHub-hosted unless a dedicated isolated runner is named.
+    runs-on: ${{ vars.UA_CI_ISOLATED_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    # Per-run names and a random loopback port, so parallel jobs on one
+    # self-hosted machine never share a container, volume, tag or port (#1787).
+    env:
+      UA_CTR: ua-${{ github.run_id }}-${{ github.run_attempt }}
+      UA_VOL: ua-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+      UA_IMG: unified-agent:smoke-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ${{ env.UA_IMG }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke — first boot prints the token once and serves /healthz
+        run: |
+          docker run -d --name "$UA_CTR" -v "$UA_VOL:/data" -p 127.0.0.1::8765 "$UA_IMG"
+          ok=""
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$(docker port "$UA_CTR" 8765/tcp | head -n1 | sed 's/.*://')/healthz || true)"
+            if [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "healthz never returned 200" >&2
+            docker logs "$UA_CTR"
+            exit 1
+          fi
+          echo "healthz OK after ${i}s"
+
+      - name: Smoke — doctor is clean (DORMANT allowed, MISCONFIGURED forbidden)
+        run: |
+          # Run doctor through the entrypoint so it inherits service.env +
+          # the container overrides — bare `docker exec` would see only the
+          # Dockerfile ENV (auth on, no tokens) and could read MISCONFIGURED.
+          if ! docker exec "$UA_CTR" /app/deploy/docker/entrypoint.sh unified-agent doctor > doctor.out 2>&1; then
+            # The image workspace is empty /data/workspace. That one row is
+            # DEGRADED on purpose. A missing report, any other DEGRADED row,
+            # or MISCONFIGURED still fails the image.
+            if ! grep -Eq '^ +DEGRADED +hosted_local_dependencies ' doctor.out \
+              || grep -q MISCONFIGURED doctor.out \
+              || grep -E '^ +DEGRADED +' doctor.out | grep -v hosted_local_dependencies | grep -q .; then
+              cat doctor.out
+              docker logs "$UA_CTR"
+              exit 1
+            fi
+          fi
+          cat doctor.out
+          if grep -q MISCONFIGURED doctor.out; then
+            echo "doctor reported MISCONFIGURED" >&2
+            exit 1
+          fi
+
+      - name: Smoke — token block appears exactly once, never on restart
+        run: |
+          docker logs "$UA_CTR" > first-boot.log
+          if [ "$(grep -c 'unified-agent bootstrap token' first-boot.log)" -ne 1 ]; then
+            echo "expected exactly one token block on first boot" >&2
+            docker logs "$UA_CTR"
+            exit 1
+          fi
+          echo "token block printed once on first boot: OK"
+          docker restart "$UA_CTR"
+          ok=""
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$(docker port "$UA_CTR" 8765/tcp | head -n1 | sed 's/.*://')/healthz || true)"
+            if [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 1
+          done
+          [ -n "$ok" ] || { docker logs "$UA_CTR"; exit 1; }
+          # logs persist across restarts, so the cumulative count must still be 1
+          # — the marker must not appear again after the restart line.
+          if [ "$(docker logs "$UA_CTR" | grep -c 'unified-agent bootstrap token')" -ne 1 ]; then
+            echo "token block re-printed after restart — must never happen" >&2
+            docker logs "$UA_CTR"
+            exit 1
+          fi
+          echo "token block absent after restart: OK"
+
+      - name: Smoke — hosted start (Railway shape) drops root, hides the token, serves the healthcheck host
+        # Task #2108. Railway mounts a root-owned volume and runs the image as
+        # root (RAILWAY_RUN_UID=0). The entrypoint must take ownership of /data,
+        # drop to uid 10001, never print the bootstrap token, and accept
+        # Railway's healthcheck Host header.
+        run: |
+          docker run -d --name "$UA_CTR-hosted" --user 0 \
+            -v "$UA_VOL-hosted:/data" -p 127.0.0.1::9000 \
+            -e RAILWAY_ENVIRONMENT_ID=smoke -e RAILWAY_VOLUME_MOUNT_PATH=/data \
+            -e RAILWAY_PUBLIC_DOMAIN=ua-smoke.up.railway.app -e PORT=9000 \
+            "$UA_IMG"
+          port="$(docker port "$UA_CTR-hosted" 9000/tcp | head -n1 | sed 's/.*://')"
+          ok=""
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: healthcheck.railway.app' "http://127.0.0.1:$port/healthz" || true)"
+            if [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "hosted healthz (Host: healthcheck.railway.app) never returned 200" >&2
+            docker logs "$UA_CTR-hosted"
+            exit 1
+          fi
+          uid="$(docker exec "$UA_CTR-hosted" awk '/^Uid:/{print $2}' /proc/1/status)"
+          if [ "$uid" != "10001" ]; then
+            echo "hub runs as uid $uid, expected 10001" >&2
+            exit 1
+          fi
+          docker logs "$UA_CTR-hosted" > hosted-boot.log 2>&1
+          if grep -q 'unified-agent bootstrap token' hosted-boot.log; then
+            echo "hosted start printed the bootstrap token block" >&2
+            exit 1
+          fi
+          # Compare without echoing: each generated token must be absent from the log.
+          docker exec "$UA_CTR-hosted" sh -c '. /data/service.env; printf "%s" "$UA_AGENT_TOKENS"' \
+            | tr ',' '\n' | cut -d: -f2- > hosted-tokens.txt
+          [ -s hosted-tokens.txt ] || { echo "no tokens provisioned in /data/service.env" >&2; exit 1; }
+          if grep -qFf hosted-tokens.txt hosted-boot.log; then
+            echo "a bootstrap token value appeared in the hosted log" >&2
+            exit 1
+          fi
+          rm -f hosted-tokens.txt
+          code="$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Host: ua-smoke.up.railway.app' "http://127.0.0.1:$port/mcp" || true)"
+          if [ "$code" != "401" ]; then
+            echo "unauthenticated /mcp returned $code, expected 401" >&2
+            exit 1
+          fi
+          echo "hosted start OK: uid 10001, token not logged, healthcheck host accepted, /mcp 401"
+
+      - name: Record image size
+        if: always()
+        run: |
+          size="$(docker image inspect "$UA_IMG" --format '{{.Size}}')"
+          echo "image size: $size bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "image size: $size bytes"
+        # Cleanup is best-effort; the runner is ephemeral anyway.
+      - name: Cleanup
+        if: always()
+        run: |
+          docker rm -f "$UA_CTR" "$UA_CTR-hosted" || true
+          docker volume rm "$UA_VOL" "$UA_VOL-hosted" || true
+          docker image rm "$UA_IMG" || true
+
+  publish:
+    needs: build
+    # Release images publish to Artifact Registry via scripts/publish-image.sh
+    # (Cloud Build). This GHCR publish runs only when dispatched by hand on a
+    # v* tag (task #1257).
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'workflow_dispatch'
+    runs-on: ${{ vars.UA_CI_ISOLATED_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # On GitHub-hosted runners the job token authenticates to ghcr.io with
+          # the packages: write permission above. The Depot copy cannot use it
+          # and needs a GHCR_TOKEN PAT instead.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          # Tag the release only — deliberately no floating latest tag.
+          tags: ghcr.io/anonb3ll/unified-agent:${{ github.ref_name }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/anonb3ll/unified-agent
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          cache-from: type=gha

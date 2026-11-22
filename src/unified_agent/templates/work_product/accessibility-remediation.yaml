@@ -1,0 +1,14 @@
+# Synthetic template pack (task #1278, H2). No real customer system or audit
+# data belongs here — a pilot supplies its own pack via
+# UA_WORK_PRODUCT_TEMPLATE_DIR.
+id: accessibility-remediation
+title: Accessibility remediation
+description: >-
+  An agent-produced accessibility fix or remediation report against a named
+  WCAG success criterion that an accessibility lead must approve before
+  release.
+reviewer_role: accessibility_lead
+required_tags:
+  - wcag_criterion
+  - target_system
+release_subfolder: accessibility-remediation

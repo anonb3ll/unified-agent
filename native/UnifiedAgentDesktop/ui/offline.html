@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bundled page. No inline script or style; it may only probe the hub. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src http: https:; img-src 'self'">
+  <title>Hub unreachable</title>
+  <link rel="stylesheet" href="offline.css">
+</head>
+<body>
+  <main>
+    <h1>Hub unreachable</h1>
+    <p>Unified Agent cannot reach <code id="hub">the hub</code>.</p>
+    <p class="reason" id="reason" hidden></p>
+    <p id="status" role="status" aria-live="polite">Retrying every 5 seconds.</p>
+    <button id="retry" type="button">Retry now</button>
+    <details>
+      <summary>Things to check</summary>
+      <ul>
+        <li>The Mac hub is running: <code>systemctl --user status unified-agent</code> (Linux) or its launchd job (Mac).</li>
+        <li>This machine is on the tailnet and can reach the hub's host.</li>
+        <li>The hub URL is right. Set it with <code>--hub</code>, <code>UA_DESKTOP_HUB_URL</code>, or <code>hub_url</code> in <code>~/.config/unified-agent-desktop/config.json</code>.</li>
+      </ul>
+    </details>
+  </main>
+  <script src="offline.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+name: review-and-PR
+description: "Scans for tasks annotated [waiting-for: review], executes the review pipeline via review_and_notify, and annotates completed tasks."
+inputs:
+  - task_id
+steps:
+  - name: run_review
+    tool: review_and_notify
+    args:
+      task_id: "{{ inputs.task_id }}"

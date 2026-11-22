@@ -1,0 +1,24 @@
+name: post-merge-verify
+description: "Executed post-merge to run a bounded pytest slice, security_audit, and system_doctor to verify system health. Full-suite regression stays with GitHub CI."
+inputs: []
+steps:
+  # Bounded slice: tests marked `@pytest.mark.smoke` (merge orchestration,
+  # workflow engine, git/worktree plumbing, doctor). run_cmd caps at 120s and
+  # the full suite is ~3.9k tests, so a merge-time full run is not viable —
+  # GitHub CI owns full regression. Prefer `-m smoke` over a path list so the
+  # slice stays declarative as modules gain/lose merge-critical coverage.
+  - name: run_tests
+    tool: run_cmd
+    args:
+      command: "pytest -q -p no:cacheprovider -m smoke"
+      timeout_s: 120
+  - name: audit
+    tool: security_audit
+    args:
+      remediate: false
+  # refresh: the shared doctor report can be minutes old (UA_DOCTOR_MAX_STALE_S);
+  # a post-merge check must read the system as it is after the merge (#1897).
+  - name: doctor
+    tool: system_doctor
+    args:
+      refresh: true

@@ -1,0 +1,6 @@
+[Unit]
+Description=Steward daily security audit (unified-agent-audit over workspace/config roots)
+
+[Service]
+Type=oneshot
+ExecStart=%h/dev/unified_agent/deploy/mac-hub/run-steward-audit.sh

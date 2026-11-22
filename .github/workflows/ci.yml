@@ -1,0 +1,670 @@
+name: CI
+
+# DISPATCH-ONLY since task #2533 (2026-11-12): Depot CI owns automatic runs
+# (.depot/workflows/ci.yml) while GitHub-hosted Actions refuses jobs on
+# billing. This copy keeps the same pipeline for `gh workflow run ci.yml`;
+# switching back is a trigger swap between the two copies (see
+# tests/test_ci_workflow_parity.py). The trigger notes below describe the
+# automatic provider's copy.
+#
+# Batch-only CI (docs/ci-batch-verify.md). GitHub bills every job rounded up
+# to a whole minute:
+#   - a pull request runs the cheap gates only (lint, smoke, security,
+#     changelog). It does not run the pytest shards;
+#   - merge_group (GitHub merge queue) and a Mergify merge-queue pull request
+#     run the affected tests from scripts/ci_changes.py affected, plus the
+#     JS and desktop jobs the classifier enables;
+#   - schedule (08:00 UTC) and workflow_dispatch run the full suite;
+#   - there is no push trigger. The already-tested skip in scripts/ci_changes.py
+#     stays for a restored one;
+#   - markdown-only PRs never start a run (the paths filter mirrors
+#     scripts/ci_changes.py is_markdown_doc).
+#
+# Runner: every job runs on `vars.UA_CI_RUNNER` when that repo variable is
+# set, and on GitHub-hosted `ubuntu-latest` when it is unset. A pull request
+# from a fork always gets `ubuntu-latest`: the runner pool is not a trust
+# boundary. Blacksmith is not an option here: runner groups are org-scoped
+# and this repository is owned by a user account, so its jobs would queue
+# forever with no runner (see task #2291).
+on:
+  workflow_dispatch:
+    inputs:
+      pytest_workers:
+        description: "pytest-xdist workers per shard (0 = serial; default 2). Overrides vars.UA_CI_PYTEST_WORKERS."
+        required: false
+        default: ""
+
+# One group per PR, one per merge-queue ref, one per ref for a dispatch or
+# the nightly run. Anything else gets its own run-id group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || (github.event_name == 'merge_group' && github.event.merge_group.head_ref) || ((github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && github.ref) || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Ordinary PR checks must not mask same-head full-run results (#2536).
+  # Keep the queue-admission gates name and full/batch names; Mergify PRs run affected tests.
+  # Depot supports job-name expressions: https://depot.dev/docs/ci/compatibility
+  # Classifier, held-PR rule, and the cheap Python gates in one job: every job
+  # pays its own checkout and setup and bills at least a minute, so the
+  # sub-minute `changes`, `held-pr-regression-test` and
+  # `connector-conformance` jobs are steps here (task #1787).
+  gates:
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    # pull-requests: read lists a PR's files without git history; checks and
+    # actions: read let a (restored) main push prove its tree already passed CI.
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      pull-requests: read
+    outputs:
+      full: ${{ steps.classify.outputs.full }}
+      affected: ${{ steps.classify.outputs.affected }}
+      python: ${{ steps.classify.outputs.python }}
+      python_scope: ${{ steps.classify.outputs.python_scope }}
+      shards: ${{ steps.classify.outputs.shards }}
+      affected_all: ${{ steps.classify.outputs.affected_all }}
+      js: ${{ steps.classify.outputs.js }}
+      sdk: ${{ steps.classify.outputs.sdk }}
+      web: ${{ steps.classify.outputs.web }}
+      connectors: ${{ steps.classify.outputs.connectors }}
+      native: ${{ steps.classify.outputs.native }}
+      exhaustive: ${{ steps.classify.outputs.exhaustive }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Classify changed paths
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.event.merge_group.head_sha || github.sha }}
+          BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          changed=""
+
+          case "${HEAD_REF:-}" in
+            mergify/merge-queue/*) MERGIFY_BATCH=true ;;
+            *) MERGIFY_BATCH=false ;;
+          esac
+
+          # Ordinary pull requests, drafts included, run the cheap gates only.
+          # merge_group and a Mergify batch run affected tests. A dispatch or
+          # the nightly schedule runs the full suite.
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$PR_DRAFT" = "true" ] && [ "$MERGIFY_BATCH" != "true" ]; then
+            echo "full=false" >> "$GITHUB_OUTPUT"
+            echo "affected=false" >> "$GITHUB_OUTPUT"
+            python3 scripts/ci_changes.py classify < /dev/null >> "$GITHUB_OUTPUT"
+            python3 scripts/ci_changes.py js-components < /dev/null >> "$GITHUB_OUTPUT"
+            echo "### Pull request: cheap gates only" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ "$EVENT_NAME" = "merge_group" ] || [ "$MERGIFY_BATCH" = "true" ]; then
+            echo "full=false" >> "$GITHUB_OUTPUT"
+            echo "affected=true" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "full=false" >> "$GITHUB_OUTPUT"
+            echo "affected=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "affected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # A push to main whose tree is byte-identical to a PR head that
+          # already passed CI cannot give a different answer. Push is not a
+          # trigger today (batch verification); this keeps a restored one cheap.
+          if [ "$EVENT_NAME" = "push" ] && python3 scripts/ci_changes.py already-tested --sha "$HEAD_SHA" --repo "$REPO"; then
+            echo "### Tests skipped: this exact tree already passed CI on its PR head" >> "$GITHUB_STEP_SUMMARY"
+            python3 scripts/ci_changes.py skip >> "$GITHUB_OUTPUT"
+            python3 scripts/ci_changes.py js-components --skip >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A PR's files come from the API, so the checkout stays shallow. The
+          # API lists at most 3000 files; at that size, run everything.
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            if files="$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')"; then
+              if [ "$(printf '%s\n' "$files" | sed '/^$/d' | wc -l)" -lt 3000 ]; then
+                changed="$files"
+              fi
+            fi
+          elif [ "$EVENT_NAME" = "push" ] && [ -n "$BEFORE_SHA" ] \
+            && git fetch --no-tags --quiet --depth=1 origin "$BEFORE_SHA" 2>/dev/null; then
+            changed="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" || true)"
+          elif [ "$EVENT_NAME" = "merge_group" ] && [ -n "${BASE_SHA:-}" ] && [ -n "${HEAD_SHA:-}" ] \
+            && git fetch --no-tags --quiet --depth=1 origin "$BASE_SHA" 2>/dev/null; then
+            changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)"
+          fi
+
+          # workflow_dispatch (batch verification) never narrows: an empty
+          # path list classifies as "run everything", as does any lookup failure.
+          if [ -z "$changed" ]; then
+            echo "No narrowed path list ($EVENT_NAME) — running every job."
+          else
+            echo "Changed paths:"
+            printf '%s\n' "$changed" | sed '/^$/d;s/^/  /'
+          fi
+
+          # Rules and their tests: scripts/ci_changes.py, tests/test_ci_changes.py.
+          printf '%s\n' "$changed" | python3 scripts/ci_changes.py classify | tee -a "$GITHUB_OUTPUT"
+          printf '%s\n' "$changed" | python3 scripts/ci_changes.py js-components | tee -a "$GITHUB_OUTPUT"
+          # Pairwise-sampled matrices run in full when this change can alter them (#2230).
+          echo "exhaustive=$(printf '%s\n' "$changed" | python3 scripts/ci_changes.py exhaustive)" | tee -a "$GITHUB_OUTPUT"
+          if [ "$EVENT_NAME" = "merge_group" ] || [ "$MERGIFY_BATCH" = "true" ]; then
+            # The same diff the test job selects from (--name-status keeps
+            # deletions and renames), so the shard count and selection agree.
+            sel="$(python3 scripts/ci_changes.py affected --base "$BASE_SHA" --head "$HEAD_SHA")"
+            if [ "$sel" != "ALL" ]; then
+              echo "shards=[0]" >> "$GITHUB_OUTPUT"
+              echo "affected_all=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "affected_all=true" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      # Task #1260 / Epic C #1188: "A PR held back despite green CI gets a
+      # regression test the same day." Passes cleanly for a PR without the
+      # `held` label; only a held PR needs history for the base...head diff.
+      - name: Fetch history for a held PR
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'held')
+        run: git fetch --no-tags --quiet --unshallow origin || git fetch --no-tags --quiet --deepen=500 origin
+      - name: Check held-despite-green PR has a regression test
+        if: github.event_name == 'pull_request'
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # When the 'held' label was applied, for the same-day LATE warning.
+          # Best-effort: no token or no API access just skips the lateness note.
+          HELD_AT=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/events" \
+            --jq '[.[] | select(.event=="labeled" and .label.name=="held")] | last | .created_at // empty' \
+            2>/dev/null || true)
+          python3 scripts/check_held_pr_regression_test.py \
+            --event-path "$EVENT_PATH" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            ${HELD_AT:+--held-at "$HELD_AT"} \
+            --repo-root .
+
+      - name: Check held PRs merged into this batch
+        # A dispatch has no pull_request event to read the label from: apply the
+        # same rule to every open `held` PR whose head this batch contains
+        # (#1260, #1787). The steward can run the same command locally.
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.sha }}
+        run: python3 scripts/check_batch_held_prs.py --repo "$GITHUB_REPOSITORY" --sha "$HEAD_SHA"
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        if: steps.classify.outputs.python == 'true'
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Install dependencies
+        if: steps.classify.outputs.python == 'true'
+        run: uv sync --locked --all-extras
+      - name: Test budget (net new test functions)
+        # Task #2233: a PR adds at most 60 test functions unless one of its
+        # commits ends in a `Test-Budget: <reason>` trailer. Task #2430: the
+        # base is the parent of the pull-request merge commit this job checks
+        # out, never pull_request.base.sha — that SHA is the base tip at the
+        # PR's last synchronize, so counting from it credits the PR with every
+        # commit the base branch gained since (a 3-file, +31-test PR read as
+        # 20 files, +73). Any fetch, API or parse failure fails the step. A
+        # batch dispatch sums several PRs, so only pull_request events count.
+        # Rules: scripts/test_budget.py.
+        if: github.event_name == 'pull_request' && steps.classify.outputs.affected != 'true' && steps.classify.outputs.python == 'true'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BASE_TIP="$(uv run --frozen python -I scripts/test_budget.py merge-parent --pr-head "$HEAD_SHA")"
+          git fetch --no-tags --quiet --depth=1 origin "$BASE_TIP"
+          gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/commits" \
+            --jq '.[].commit.message | tojson' > "$RUNNER_TEMP/commit-messages.jsonl"
+          uv run --frozen python -I scripts/test_budget.py count --base "$BASE_TIP" --head HEAD \
+            --messages "$RUNNER_TEMP/commit-messages.jsonl" --messages-format jsonl
+      - name: Lint
+        if: steps.classify.outputs.python == 'true'
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Layer check (import direction, docs/architecture/layers.md)
+        if: steps.classify.outputs.python == 'true'
+        run: uv run python scripts/check_layers.py
+      - name: Changelog fragments (changelog.d, task #1808)
+        # Stdlib only, about a second: a pending fragment must have a valid name, type and body.
+        if: steps.classify.outputs.python == 'true'
+        run: python3 scripts/changelog_assemble.py --check
+      - name: Inventory tier (central registries, tests/pr_inventory_tier.txt)
+        # Task #2440 (K5a): a one-line miss in a central registry (TABLE_TENANCY,
+        # the export import references, layers.toml) used to fail only the merge
+        # batch. Pull requests only: batch and nightly shards run these files.
+        # The list and its budget: docs/ci-batch-verify.md#inventory-tier.
+        if: github.event_name == 'pull_request' && steps.classify.outputs.affected != 'true' && steps.classify.outputs.python == 'true'
+        run: |
+          set -euo pipefail
+          mapfile -t tier < <(sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' tests/pr_inventory_tier.txt)
+          if [ "${#tier[@]}" -eq 0 ]; then
+            echo "tests/pr_inventory_tier.txt lists no tests" >&2
+            exit 1
+          fi
+          uv run pytest "${tier[@]}" -q -m "not embeddings" -p no:cacheprovider
+          # Component boundaries (task #2439) join this tier once the checker lands.
+          if [ -f scripts/check_components.py ]; then
+            uv run python scripts/check_components.py
+          fi
+      - name: Verify local test attestation
+        # Signature check is cheap. A ready PR also re-runs a sample of the
+        # attested tests. No file skips unless UA_TEST_ATTESTATION_REQUIRED.
+        if: steps.classify.outputs.python == 'true'
+        env:
+          UA_TEST_ATTESTATION_PUBLIC_KEY: ${{ secrets.UA_TEST_ATTESTATION_PUBLIC_KEY }}
+          UA_TEST_ATTESTATION_REQUIRED: ${{ vars.UA_TEST_ATTESTATION_REQUIRED }}
+          ATTESTATION_SEED: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_SAMPLE: ${{ steps.classify.outputs.full }}
+        run: |
+          set -euo pipefail
+          args=(ci --seed "$ATTESTATION_SEED")
+          if [ "$RUN_SAMPLE" = "true" ]; then
+            args+=(--run)
+          fi
+          uv run python -m unified_agent.pytest_attestation "${args[@]}"
+      - name: Smoke (unmocked real-dependency checks)
+        if: steps.classify.outputs.python == 'true'
+        run: make smoke
+      - name: Security audit gate
+        if: steps.classify.outputs.python == 'true'
+        run: uv run unified-agent-audit . --fail-on high
+      - name: Named gates (attribution coverage + audit ledger tamper)
+        # Both gates are re-asserted by name; the module-level collection cost
+        # is paid once instead of twice.
+        if: steps.classify.outputs.python == 'true'
+        run: |
+          uv run pytest tests/test_attribution_coverage.py -q
+          uv run pytest tests/test_audit_ledger_chain.py::test_cli_verify_rejects_tampered_fixture -q
+      - name: Connector conformance harness
+        # Task #1204: a named step for connector contract and runtime sources
+        # (about 30 s). The full pytest shards run the same files.
+        if: steps.classify.outputs.full == 'true' && steps.classify.outputs.connectors == 'true'
+        run: uv run pytest tests/connectors -q
+
+  test:
+    # Fail cheap lint/smoke/security checks before starting four test runners.
+    needs: gates
+    if: (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true') && needs.gates.outputs.python == 'true'
+    # An explicit name keeps the check "test (shard=N)" — the same job name
+    # Depot CI reports — so the review gate matches either provider
+    # (config.DEFAULT_REVIEW_CI_REQUIRED_CHECKS, task #1787).
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}test (shard=${{ matrix.shard }})
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    strategy:
+      # One shard's failure must not cancel (and hide) the others' results.
+      fail-fast: false
+      matrix:
+        # [0, 1, 2, 3] for code changes; [0] for markdown-only changes, whose
+        # candidate list is the test files that can read documentation.
+        shard: ${{ fromJSON(needs.gates.outputs.shards) }}
+    # Depot shards took 2-5 minutes. On a 2-vCPU GitHub runner the heaviest
+    # shard took 17-20 minutes and was cancelled at 20 (run 41233854377).
+    # 35 was still too tight: run 43168990681 cancelled shard 3 at 35:00 while
+    # it was at 95%, after a 23:39 run on the same suite. 45 leaves headroom
+    # for a slower hosted runner without hiding a genuine hang.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Install dependencies
+        # The dev group includes PDF test dependencies, so documented local
+        # `uv sync` works; CI also covers optional runtime extras.
+        run: uv sync --locked --all-extras
+      - name: Resolve the fastembed version
+        id: fastembed
+        run: echo "version=$(grep -A1 '^name = "fastembed"$' uv.lock | sed -n 's/^version = "\(.*\)"/\1/p')" >> "$GITHUB_OUTPUT"
+      - name: Cache fastembed model
+        # Keyed on the fastembed version (which pins the model), not on all of
+        # uv.lock, so an unrelated lock bump does not re-download the model.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/huggingface
+          key: fastembed-${{ runner.os }}-${{ steps.fastembed.outputs.version }}
+      - name: Install bubblewrap
+        # Linux PDF extraction and CLI child spawns run under bwrap and fail
+        # closed without it (#876). The runner image does not ship it (task
+        # #1628). Ubuntu 24.04+ images can restrict unprivileged user
+        # namespaces through AppArmor, which makes bwrap fail at uid mapping;
+        # lift that on this throwaway VM and say so if bwrap still cannot run.
+        # `sudo -n` never prompts: a self-hosted runner without sudo
+        # (deploy/ci-runner) preinstalls bubblewrap and sets the sysctl.
+        run: |
+          command -v bwrap || { sudo -n apt-get update -qq && sudo -n apt-get install -y -qq bubblewrap; }
+          sudo -n sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
+          bwrap --ro-bind / / true || echo "::warning title=bwrap unusable::sandboxed tests will fail closed"
+      - name: Put pytest temp dirs on an exec-capable tmpfs
+        # Most tests build a SQLite home under tmp_path, and fsync dominates
+        # their wall time: the same 192 tests took 17s on tmpfs vs 190s on
+        # disk (task #1628). /dev/shm is not usable: tests execute fixture
+        # scripts they write under tmp_path, which a noexec mount refuses
+        # (task #1638). A self-hosted slot provides its own tmpfs
+        # (UA_CI_TMPFS, deploy/ci-runner). Otherwise mount one under this
+        # job's RUNNER_TEMP, so parallel jobs on one host never share it; if
+        # that fails, stay on the default TMPDIR.
+        run: |
+          if [ -n "${UA_CI_TMPFS:-}" ] && [ -d "$UA_CI_TMPFS" ] && [ -w "$UA_CI_TMPFS" ]; then
+            echo "TMPDIR=$UA_CI_TMPFS" >> "$GITHUB_ENV"
+          elif mkdir -p "$RUNNER_TEMP/pytest-tmpfs" \
+            && sudo -n mount -t tmpfs -o size=4g,mode=1777 tmpfs "$RUNNER_TEMP/pytest-tmpfs"; then
+            echo "TMPDIR=$RUNNER_TEMP/pytest-tmpfs" >> "$GITHUB_ENV"
+            findmnt -no TARGET,FSTYPE,OPTIONS "$RUNNER_TEMP/pytest-tmpfs"
+          else
+            echo "::warning title=pytest tmpfs unavailable::running on the default TMPDIR"
+          fi
+      - name: Run balanced test shard
+        # scripts/ci_changes.py splits the candidate files across shards by
+        # test count (GitHub has no timing-aware splitter). An empty shard
+        # fails rather than passing on zero tests. tmp_path_retention_policy
+        # keeps the tmpfs small; --tb=short keeps a many-failure shard's
+        # summary inside the log (task #1638).
+        #
+        # pytest-xdist (locked in the dev group) runs two workers per shard by
+        # default (task #2230); the dispatch input pytest_workers or the repo
+        # variable UA_CI_PYTEST_WORKERS overrides it, and 0 runs serially.
+        # --dist loadfile keeps each file's fixtures in one worker. Large
+        # parametrize matrices run a pairwise sample unless the classifier
+        # says this change can alter them; anything but "false" runs them all.
+        env:
+          SCOPE: ${{ needs.gates.outputs.python_scope }}
+          SHARD: ${{ matrix.shard }}
+          TOTAL: ${{ needs.gates.outputs.python_scope == 'docs' && 1 || 4 }}
+          WORKERS: ${{ inputs.pytest_workers || vars.UA_CI_PYTEST_WORKERS || '2' }}
+          UA_TEST_EXHAUSTIVE: ${{ needs.gates.outputs.exhaustive == 'false' && '0' || '1' }}
+          AFFECTED: ${{ needs.gates.outputs.affected }}
+          AFFECTED_ALL: ${{ needs.gates.outputs.affected_all }}
+          BASE_SHA: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.merge_group.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          if [ "$AFFECTED" = "true" ]; then
+            python3 scripts/ci_changes.py affected --base "$BASE_SHA" --head "$HEAD_SHA" > reports/candidates.txt
+            if [ "$(cat reports/candidates.txt)" = "ALL" ]; then
+              # gates sized the matrix from its own selection; a narrowed matrix
+              # cannot run the full suite, so a disagreement fails closed.
+              if [ "$AFFECTED_ALL" != "true" ]; then
+                echo "::error title=affected selection mismatch::gates narrowed this batch but the test job selected ALL"
+                exit 1
+              fi
+              python3 scripts/ci_changes.py candidates --scope "$SCOPE" --shard "$SHARD" --total "$TOTAL" > reports/candidates.txt
+            fi
+          else
+            python3 scripts/ci_changes.py candidates --scope "$SCOPE" --shard "$SHARD" --total "$TOTAL" > reports/candidates.txt
+          fi
+          echo "shard $SHARD/$TOTAL ($SCOPE): $(wc -l < reports/candidates.txt) test files"
+          if [ ! -s reports/candidates.txt ]; then
+            if [ "$AFFECTED" = "true" ]; then
+              echo "no affected tests"
+              exit 0
+            fi
+            echo "::error title=empty test shard::no candidate test files for shard $SHARD of $TOTAL"
+            exit 1
+          fi
+          pytest_args=(-q --tb=short --durations=25 -o tmp_path_retention_policy=failed -o junit_family=xunit1 --junitxml=reports/junit.xml)
+          if [[ "$WORKERS" =~ ^[1-9][0-9]*$ ]]; then
+            echo "pytest-xdist: $WORKERS workers"
+            pytest_args+=(-n "$WORKERS" --dist loadfile)
+          fi
+          echo "exhaustive matrices: $UA_TEST_EXHAUSTIVE"
+          xargs -r -a reports/candidates.txt uv run pytest "${pytest_args[@]}"
+      - name: Unmount the pytest tmpfs
+        if: always()
+        run: |
+          if mountpoint -q "$RUNNER_TEMP/pytest-tmpfs"; then
+            sudo -n umount "$RUNNER_TEMP/pytest-tmpfs" || true
+          fi
+
+  desktop-core:
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}desktop-core
+    # The Tauri desktop shell's engine-independent crate (task #1648). It needs
+    # no WebKitGTK, so it runs on a plain runner; the Tauri binary itself is
+    # built and smoke-tested on the operator's machine (README, scripts/smoke.sh).
+    needs: gates
+    # A draft gets light checks only, like the other integration jobs.
+    if: (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true') && needs.gates.outputs.native == 'true'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: native/UnifiedAgentDesktop
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Toolchain
+        run: rustup component add rustfmt clippy && cargo --version
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: native/UnifiedAgentDesktop
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Lint
+        run: cargo clippy --locked -p ua-desktop-core --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --locked -p ua-desktop-core
+
+  # Independent SDK and frontend legs; both remain behind the batch/label gate.
+  sdk:
+    needs: gates
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}sdk
+    if: (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true') && needs.gates.outputs.sdk == 'true'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: |
+            packages/protocol/package-lock.json
+            packages/client/package-lock.json
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Install Python codegen tooling
+        run: uv sync --group dev --locked
+      - name: Protocol package tests, build and codegen check
+        working-directory: packages/protocol
+        run: |
+          npm ci
+          npm test
+          npm run build
+          npm run codegen:check
+      - name: Verify Pydantic models import
+        # The project environment (synced above) already carries pydantic v2,
+        # so pydantic needs no system pip; that also works on a runner
+        # whose system Python refuses pip (PEP 668).
+        working-directory: packages/protocol
+        run: |
+          uv run --project ../.. --group dev --locked npm run test:python
+          uv run --project ../.. --group dev --locked python3 - <<'PY2'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path("generated/python").resolve()))
+          from models import Task, DispatchRequest, PolicyDecision
+          Task.model_validate(
+              {
+                  "id": 1,
+                  "title": "smoke",
+                  "status": "open",
+                  "created_at": "2026-01-01T00:00:00Z",
+                  "updated_at": "2026-01-01T00:00:00Z",
+              }
+          )
+          print("pydantic import ok", DispatchRequest.__name__, PolicyDecision.__name__)
+          PY2
+      - name: Client package tests and build
+        # npm install (not ci): a `npm ci` trial failed on CI with exit code 1
+        # while passing locally on npm 12 and npm 10, so the strict lockfile
+        # path is not proven here yet.
+        working-directory: packages/client
+        run: |
+          npm install
+          npm test
+          npm run build
+
+  web:
+    needs: gates
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}web
+    if: (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true') && needs.gates.outputs.web == 'true'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    # 20 was too small once the Control Center v2 slices landed. Typecheck,
+    # 1,646 unit tests and build take ~7.5 min on a 2-core runner; the
+    # accessibility gate then runs 692 Playwright tests, three page loads and
+    # three axe scans each, at about 13 tests a minute — roughly 53 min. The
+    # gate audits the built app so it cannot leave this job. Runs 43157133910
+    # and 43164340492 were cut mid-gate at 20:17 and 30:17. Sharding the gate
+    # across parallel jobs is the follow-up; until then this budget carries it.
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: |
+            packages/protocol/package-lock.json
+            packages/client/package-lock.json
+            packages/web/package-lock.json
+      - name: Build SDK prerequisites for the frontend
+        run: |
+          (cd packages/protocol && npm ci && npm run build)
+          (cd packages/client && npm install && npm run build)
+      - name: Install web package
+        # npm ci (task #1293): package-lock.json is regenerated with npm's
+        # default peer-dependency resolution so clean CI installs do not rely
+        # on machine-level legacy-peer-deps settings.
+        working-directory: packages/web
+        run: npm ci
+      - name: Typecheck, test and build the web package
+        working-directory: packages/web
+        run: |
+          npm run typecheck
+          npm test
+          npm run build
+      - name: Cache Playwright Chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('packages/web/package-lock.json') }}
+      - name: Install Playwright Chromium
+        # System libraries need root; a self-hosted runner without root has
+        # them preinstalled (deploy/ci-runner).
+        working-directory: packages/web
+        run: |
+          if sudo -n true 2>/dev/null; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install chromium
+          fi
+      - name: Web accessibility gate
+        working-directory: packages/web
+        run: npm run test:a11y
+
+  # Preserve the external CI / js check.
+  js:
+    needs: [gates, sdk, web]
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}js
+    if: always() && needs.gates.result != 'skipped' && (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true') && needs.gates.outputs.js == 'true'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Require enabled SDK and frontend verification
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci_changes.py verify-js
+
+  # Cheap identity gate. It runs on draft pull requests too: the content
+  # ratchet and the commit-identity check are not the test suite.
+  commit-identity:
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}commit-identity
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Content anonymity ratchet
+        # The export drops scripts/public_release/ (it names what it scrubs), so a
+        # public tree skips a gate that cannot run there instead of failing the job.
+        if: hashFiles('scripts/public_release/check_anonymity.py') != ''
+        run: python3 scripts/public_release/check_anonymity.py
+      - name: Commit identity
+        if: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && hashFiles('scripts/public_release/check_commit_identity.py') != '' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+        run: python3 scripts/public_release/check_commit_identity.py --base "$BASE_SHA" --head "$HEAD_SHA"
+
+  full-verification:
+    name: ${{ github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'mergify/merge-queue/') && 'PR / ' || '' }}full-verification
+    # Matrix result is success only when every enabled shard succeeded. Never
+    # equate a skipped required job with full integration evidence. A pull
+    # request's cheap gates do not run this job.
+    needs: [gates, test, desktop-core, sdk, web, js, commit-identity]
+    if: always() && needs.gates.result != 'skipped' && (needs.gates.outputs.full == 'true' || needs.gates.outputs.affected == 'true')
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.UA_CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          sparse-checkout: scripts/ci_changes.py
+          sparse-checkout-cone-mode: false
+      - name: Require complete verification for this revision
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+          CI_EVENT: ${{ github.event_name }}
+          CI_DRAFT: ${{ github.event.pull_request.draft }}
+        run: python3 scripts/ci_changes.py verify

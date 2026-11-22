@@ -1,0 +1,53 @@
+# Release image build on Google Cloud Build -> Artifact Registry.
+# Run through scripts/publish-image.sh <tag>, which fills the substitutions
+# from the release tag. No GitHub Actions minutes are used.
+#
+# Cloud Build pushes `images:` only after every step succeeds, so the smoke
+# step gates publication: an image that never serves /healthz is not pushed.
+steps:
+  - id: configuration
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - 'test -n "${_IMAGE}" && test -n "${_TAG}"'
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - VERSION=${_VERSION}
+      - --build-arg
+      - VCS_REF=${_VCS_REF}
+      - --build-arg
+      - SOURCE_URL=${_SOURCE_URL}
+      - -t
+      - ${_IMAGE}:${_TAG}
+      - .
+  # Detached, so the first-boot bearer token stays in the container log and
+  # never reaches the build log.
+  - id: start
+    name: gcr.io/cloud-builders/docker
+    args: [run, -d, --name, ua-smoke, --network, cloudbuild, "${_IMAGE}:${_TAG}"]
+  - id: smoke
+    name: gcr.io/cloud-builders/curl
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        for i in $$(seq 1 60); do
+          code="$$(curl -s -o /dev/null -w '%{http_code}' http://ua-smoke:8765/healthz || true)"
+          if [ "$$code" = "200" ]; then echo "healthz OK after $${i}x2s"; exit 0; fi
+          sleep 2
+        done
+        echo "healthz never returned 200" >&2
+        exit 1
+images:
+  - ${_IMAGE}:${_TAG}
+substitutions:
+  _IMAGE: ""
+  _SOURCE_URL: ""
+  _TAG: ""
+  _VERSION: ""
+  _VCS_REF: ""
+timeout: 2400s

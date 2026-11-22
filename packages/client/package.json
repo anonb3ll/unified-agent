@@ -1,0 +1,41 @@
+{
+  "name": "@unified-agent/client",
+  "version": "0.2.1",
+  "description": "Typed Unified Agent hub client — MCP streamable-HTTP caller; policy stays on the Python hub",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test tests/*.test.ts tests/conformance/mock.conformance.test.ts",
+    "test:conformance": "tsx --test tests/conformance/mock.conformance.test.ts",
+    "test:conformance:live": "tsx --test tests/conformance/live.conformance.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@unified-agent/protocol": "file:../protocol",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  },
+  "bin": {
+    "unified-agent-work-product-sdk": "./bin/work-product.mjs"
+  }
+}

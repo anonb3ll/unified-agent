@@ -1,0 +1,57 @@
+# ua-node (task #1327, I1): this device's outbound connection to the hub.
+#
+# The node dials OUT to the hub over the tailnet — it opens no listening port.
+# It authenticates with the device token `unified-agent login` saved, so sign
+# the device in first:
+#
+#   ~/dev/unified_agent/.venv/bin/unified-agent login --hub http://<hub>:8765 --agent <Label>
+#
+# The node runs only through the release link ~/.unified_agent/release/current
+# (task #2298), which scripts/node-release-roll.sh moves; see
+# docs/deploy/node-release-roll.md. deploy/desktop-bootstrap.sh --apply seeds a
+# missing link with the checkout before it installs this unit.
+#
+# Install (seed the link first on a host that has none):
+#   mkdir -p ~/.unified_agent/release ~/.config/systemd/user
+#   [ -e ~/.unified_agent/release/current ] || ln -s ~/dev/unified_agent ~/.unified_agent/release/current
+#   cp deploy/systemd/ua-node.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now ua-node
+#
+# Logs:  journalctl --user -u ua-node -f
+# Stop:  systemctl --user stop ua-node   (SIGTERM: the running item is killed
+#        through its backend's kill_check and its receipt is posted first)
+
+[Unit]
+Description=unified-agent node (outbound hub connection, dispatch worker)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Hub base URL. Optional when the saved sign-in already names the hub.
+# Environment=UA_HUB_URL=http://100.64.0.10:8765
+# Only these backends run here, and only when their binary is on PATH.
+# pi is opt-in: its backend cannot yet be interrupted by kill_check.
+Environment=UA_NODE_BACKENDS=codex,agy
+# Dispatched items must run inside one of these roots (os.pathsep-separated).
+Environment=UA_NODE_WORKTREE_ROOTS=%h/dev
+# Optional overrides (UA_NODE_NAME, UA_CODEX_BIN, ...). Never put tokens here:
+# the device token lives in ~/.unified_agent/oauth-token.json (mode 600).
+EnvironmentFile=-%h/.config/unified-agent/node.env
+ExecStart=%h/.unified_agent/release/current/.venv/bin/unified-agent node
+Restart=on-failure
+RestartSec=10
+# Child memory ceiling: the cgroup covers the node AND every agent CLI it
+# spawns, so a runaway child is reclaimed/killed without taking the host down.
+MemoryHigh=6G
+MemoryMax=8G
+# SIGTERM the node only; it stops its own child through kill_check and posts
+# the receipt. Anything still alive after the timeout is SIGKILLed.
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

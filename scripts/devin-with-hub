@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Run the Devin CLI with this machine's Desktop_Agent7 hub bearer token.
+# Isolates the child from whatever UA_AGENT_BEARER_TOKEN the parent shell carries
+# (dispatch/executor parents often hold a different agent's token).
+set -euo pipefail
+
+TOKEN_FILE="${UA_DEVIN_TOKEN_FILE:-$HOME/.devin/unified-agent-token}"
+if [[ ! -r "$TOKEN_FILE" ]]; then
+  echo "Devin token file is unavailable: $TOKEN_FILE" >&2
+  exit 1
+fi
+token="$(tr -d '\r\n' < "$TOKEN_FILE")"
+if [[ -z "$token" ]]; then
+  echo "Devin token file is empty: $TOKEN_FILE" >&2
+  exit 1
+fi
+export UA_AGENT_BEARER_TOKEN="$token"
+
+exec devin "$@"

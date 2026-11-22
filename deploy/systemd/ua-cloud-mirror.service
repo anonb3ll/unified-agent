@@ -1,0 +1,10 @@
+[Unit]
+Description=Cloud mirror shipper — ship allowlisted event_log metadata to a remote read-only receiver (task #1285)
+After=network.target
+
+# Template only: replace __UNIFIED_AGENT_ROOT__ with the checkout path before use.
+[Service]
+Type=oneshot
+WorkingDirectory=__UNIFIED_AGENT_ROOT__
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=__UNIFIED_AGENT_ROOT__/.venv/bin/python -m unified_agent.cloud_mirror

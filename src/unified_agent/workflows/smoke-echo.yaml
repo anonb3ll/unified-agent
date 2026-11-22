@@ -1,0 +1,26 @@
+# Minimal example workflow (task #62 · B). Workflow definitions are CODE:
+# they live in the repo, are PR-reviewed and CI-validated, and may only call
+# tools in the curated registry (see tools/workflow.py) — never a raw shell.
+#
+# Format:
+#   name:        must match the file stem
+#   description: shown by workflow_list
+#   inputs:      list of required input names (data passing is explicit)
+#   steps:       ordered; each = {name, tool, args, retries?}
+#     args support {{ inputs.<name> }} and {{ steps.<step>.<field> }}
+name: smoke-echo
+description: >-
+  Smoke-test workflow: echoes an input via run_cmd (allowlist + approval gate
+  apply) and reports the captured stdout through explicit step data passing.
+inputs:
+  - message
+steps:
+  - name: echo
+    tool: run_cmd
+    args:
+      command: "echo {{ inputs.message }}"
+    retries: 1
+  - name: vet
+    tool: run_cmd_check
+    args:
+      command: "echo {{ steps.echo.stdout }}"

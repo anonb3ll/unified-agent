@@ -1,0 +1,14 @@
+name: weekly-export
+description: "Weekly automated export of tasks and memory to vault for disaster recovery and offline access."
+inputs: []
+steps:
+  - name: export_tasks
+    tool: export_tasks
+    args:
+      format: "json"
+      write_to_vault: true
+  - name: export_memory
+    tool: export_memory
+    args:
+      format: "json"
+      write_to_vault: true

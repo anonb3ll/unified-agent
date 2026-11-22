@@ -1,0 +1,13 @@
+# Synthetic template pack (task #1278, H2). No real client, matter, or firm
+# data belongs here — a pilot supplies its own pack via
+# UA_WORK_PRODUCT_TEMPLATE_DIR.
+id: legal
+title: Legal work product
+description: >-
+  A document prepared by an agent for a legal matter (memo, filing draft,
+  contract markup) that a supervising attorney must approve before release.
+reviewer_role: supervising_attorney
+required_tags:
+  - matter
+  - client
+release_subfolder: legal

@@ -1,0 +1,478 @@
+{
+  "$comment": "Everything in tokens.json except values the code owns. Colour values come from src/index.css (themes) and persona hues from src/lib/ui/AgentPersonaBadge.tsx; build.mjs fails if a name here has no value there or the reverse.",
+  "name": "Unified Agent",
+  "themes": [
+    {
+      "id": "dark",
+      "name": "Dark"
+    },
+    {
+      "id": "light",
+      "name": "Light"
+    },
+    {
+      "id": "high-contrast",
+      "name": "High contrast"
+    }
+  ],
+  "colors": [
+    {
+      "name": "ua-bg",
+      "usage": "Page canvas behind the shell and regions; inset fields and the sunken Card variant."
+    },
+    {
+      "name": "ua-surface",
+      "usage": "Regions: sidebar, header bar, pane panel, cards, tables, badges, secondary buttons."
+    },
+    {
+      "name": "ua-raised",
+      "usage": "Overlays that sit above the page: inspector, command palette, popovers, dialogs. In light it equals ua-surface and the overlay shadow separates it."
+    },
+    {
+      "name": "ua-sunken",
+      "usage": "Inputs and wells inside a surface (scope switcher, search field)."
+    },
+    {
+      "name": "ua-hover",
+      "usage": "Hover fill for rows, nav items, secondary and ghost buttons. ua-fg on it 10.7:1 dark, 6.7:1 light."
+    },
+    {
+      "name": "ua-selected",
+      "usage": "Selected row or nav item (with an inset ua-accent edge), track of the proof rail. ua-fg on it 8.7:1 dark, 6.0:1 light."
+    },
+    {
+      "name": "ua-border",
+      "usage": "Hairline separation between regions and rows. Separation only, below the 3:1 control floor; controls use ua-border-strong."
+    },
+    {
+      "name": "ua-border-strong",
+      "usage": "Control boundaries (secondary buttons, inputs, checkboxes): 3.6:1 dark, 4.0:1 light on ua-surface, meeting the 3:1 non-text floor."
+    },
+    {
+      "name": "ua-fg",
+      "usage": "Primary text and icons. On ua-surface 12.1:1 dark, 8.0:1 light, 21.0:1 high contrast."
+    },
+    {
+      "name": "ua-muted",
+      "usage": "Secondary text: descriptions, metadata, empty states. On ua-surface 7.9:1 dark, 6.3:1 light; on ua-hover 6.9:1 dark, 5.3:1 light."
+    },
+    {
+      "name": "ua-faint",
+      "usage": "Captions, labels, table heads, timestamps. On ua-surface 6.2:1 dark, 4.9:1 light. Keep it on a surface: on ua-bg in light it is 4.4:1."
+    },
+    {
+      "name": "ua-accent",
+      "usage": "The one action colour: primary button fill, selected tab underline, selection edge, focus ring. Never a state. On ua-surface 8.6:1 dark, 7.1:1 light."
+    },
+    {
+      "name": "ua-accent-fg",
+      "usage": "Text and icons on a ua-accent fill: 9.2:1 dark, 7.1:1 light, 19.6:1 high contrast."
+    },
+    {
+      "name": "ua-accent-surface",
+      "usage": "Tinted ground for a selected chip or the active palette option; ua-accent text on it 6.9:1 dark, 6.1:1 light."
+    },
+    {
+      "name": "ua-link",
+      "usage": "Inline links and metric strokes (sparklines). On ua-surface 8.3:1 dark, 7.0:1 light."
+    },
+    {
+      "name": "ua-brand",
+      "usage": "The logo mark only (a gradient into ua-accent). Shares danger's hue, so it never appears on a control or a status."
+    },
+    {
+      "name": "ua-ok",
+      "usage": "Done, verified, healthy, approved. On ua-surface 11.8:1 dark, 5.2:1 light; pair with ✓ and a word."
+    },
+    {
+      "name": "ua-ok-surface",
+      "usage": "Tinted ground for an ok pill or callout; ua-ok text on it 9.0:1 dark, 4.5:1 light."
+    },
+    {
+      "name": "ua-live",
+      "usage": "Running, in progress, live presence. On ua-surface 8.3:1 dark, 7.0:1 light; pair with ◐ and a word."
+    },
+    {
+      "name": "ua-live-surface",
+      "usage": "Tinted ground for a running pill; ua-live text on it 6.7:1 dark, 6.0:1 light."
+    },
+    {
+      "name": "ua-warn",
+      "usage": "Waiting, pending, stale, needs a look. On ua-surface 13.8:1 dark, 5.9:1 light; pair with a glyph and a word."
+    },
+    {
+      "name": "ua-warn-surface",
+      "usage": "Tinted ground for a waiting or stale pill; ua-warn text on it 10.2:1 dark, 5.1:1 light."
+    },
+    {
+      "name": "ua-decision",
+      "usage": "A human must decide before work moves: decision pills, the Decisions count, the consequence callout. On ua-surface 9.9:1 dark, 5.4:1 light; pair with ◆ and a word."
+    },
+    {
+      "name": "ua-decision-surface",
+      "usage": "Tinted ground for a decision pill or callout; ua-decision text on it 7.8:1 dark, 4.7:1 light."
+    },
+    {
+      "name": "ua-danger",
+      "usage": "Blocked, failed, denied, destructive intent. On ua-surface 7.6:1 dark, 5.4:1 light; pair with ▲ and a word."
+    },
+    {
+      "name": "ua-danger-fg",
+      "usage": "Text on a solid ua-danger fill: 8.1:1 dark, 5.4:1 light, 19.6:1 high contrast."
+    },
+    {
+      "name": "ua-danger-surface",
+      "usage": "Danger button hover and tinted ground for error pills and callouts; ua-danger text on it 6.1:1 dark, 4.7:1 light."
+    },
+    {
+      "name": "ua-info",
+      "usage": "Monitoring context that is neither state nor action (observability, diagnostics). On ua-surface 11.8:1 dark, 5.9:1 light."
+    },
+    {
+      "name": "ua-unknown",
+      "usage": "Unknown or unavailable data, always with a hatch pattern and a word so it is never read as zero or as idle."
+    },
+    {
+      "name": "ua-line",
+      "usage": "Alias of ua-border for code that names hairlines \"line\". Same value in every theme; prefer ua-border in new code."
+    },
+    {
+      "name": "ua-success",
+      "usage": "Alias of ua-ok for code that names the done state \"success\". Same value in every theme; prefer ua-ok in new code."
+    }
+  ],
+  "personas": [
+    {
+      "name": "persona-hermes",
+      "agent": "Desktop_Agent5",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Hermes · CTO (all hosts). A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-claude",
+      "agent": "Desktop_Agent1",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Claude Code (all hosts). A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-codex",
+      "agent": "Desktop_Agent2",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Codex (all hosts). A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-agy",
+      "agent": "Desktop_agent3",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Antigravity (Agy). A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-cursor",
+      "agent": "Desktop_Agent4",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Cursor. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-devin",
+      "agent": "Desktop_Agent7",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Devin. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-copilot",
+      "agent": "Desktop_Agent6",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Copilot. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-omp",
+      "agent": "Desktop_agent10",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for Omp. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-opencode",
+      "agent": "Desktop_agent12",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for OpenCode. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-cloud",
+      "agent": "gcp_agent20",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for gcp_agent20 · Cloud Worker. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-ea",
+      "agent": "gcp_agent18",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for gcp_agent18 · Executive Assistant. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-librarian",
+      "agent": "gcp_agent19",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for gcp_agent19 · Librarian. A mark, never text; one Catppuccin Latte hue for every theme."
+    },
+    {
+      "name": "persona-legacy",
+      "agent": "server_agent8",
+      "usage": "Identity stripe (3px left border) on AgentPersonaBadge for server_agent8 · Grok (Legacy). A mark, never text; one Catppuccin Latte hue for every theme."
+    }
+  ],
+  "type": {
+    "fonts": [],
+    "families": {
+      "sans": "\"Geist Variable\", \"Geist\", \"Inter\", \"IBM Plex Sans\", system-ui, sans-serif",
+      "mono": "\"Geist Mono Variable\", \"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    },
+    "groups": [
+      {
+        "name": "Chrome",
+        "family": "sans",
+        "styles": [
+          {
+            "name": "eyebrow",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 400,
+            "letterSpacing": "0.14em",
+            "sample": "UNIFIED AGENT",
+            "usage": "Product kicker above the app title, uppercase, ua-muted."
+          },
+          {
+            "name": "app-title",
+            "fontSize": "20px",
+            "lineHeight": "28px",
+            "fontWeight": 600,
+            "sample": "Control Center",
+            "usage": "The one h1 in the header bar."
+          },
+          {
+            "name": "page-title",
+            "fontSize": "24px",
+            "lineHeight": "32px",
+            "fontWeight": 700,
+            "sample": "Sign In",
+            "usage": "Standalone page h1 (sign-in)."
+          },
+          {
+            "name": "pane-title",
+            "fontSize": "18px",
+            "lineHeight": "28px",
+            "fontWeight": 600,
+            "sample": "Task Queue",
+            "usage": "The h2 mode label atop every pane."
+          },
+          {
+            "name": "stat-value",
+            "fontSize": "24px",
+            "lineHeight": "32px",
+            "fontWeight": 600,
+            "sample": "12",
+            "usage": "Home tiles: in-flight, urgent, pending approvals. Tabular numerals."
+          }
+        ]
+      },
+      {
+        "name": "Text",
+        "family": "sans",
+        "styles": [
+          {
+            "name": "card-title",
+            "fontSize": "16px",
+            "lineHeight": "24px",
+            "fontWeight": 600,
+            "sample": "Static Information Card",
+            "usage": "Card.Title (h3)."
+          },
+          {
+            "name": "body",
+            "fontSize": "14px",
+            "lineHeight": "20px",
+            "fontWeight": 400,
+            "sample": "No open sessions.",
+            "usage": "Default UI copy, table cells, descriptions. The most used size."
+          },
+          {
+            "name": "body-medium",
+            "fontSize": "14px",
+            "lineHeight": "20px",
+            "fontWeight": 500,
+            "sample": "Review and publish",
+            "usage": "Button labels (md), chips, emphasised values."
+          },
+          {
+            "name": "caption",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 400,
+            "sample": "Footer metadata",
+            "usage": "Card footers, helper text, field labels, in ua-muted."
+          }
+        ]
+      },
+      {
+        "name": "Labels",
+        "family": "sans",
+        "styles": [
+          {
+            "name": "section-label",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 600,
+            "letterSpacing": "0.08em",
+            "sample": "THEME",
+            "usage": "Uppercase group labels (theme toggle, filter groups), ua-muted."
+          },
+          {
+            "name": "status-label",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 600,
+            "letterSpacing": "0.06em",
+            "sample": "RUNNING",
+            "usage": "StatusIndicator word, uppercase, ua-fg."
+          },
+          {
+            "name": "table-head",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 500,
+            "letterSpacing": "0.05em",
+            "sample": "STATUS",
+            "usage": "DataTable column headers and Badge text, uppercase."
+          }
+        ]
+      },
+      {
+        "name": "Code",
+        "family": "mono",
+        "styles": [
+          {
+            "name": "mono",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 400,
+            "sample": "Desktop_Agent1 · #1131 · 01J9Z…",
+            "usage": "Agent labels, task ids, ULIDs, hashes, paths: anything an operator copies."
+          }
+        ]
+      }
+    ]
+  },
+  "spacing": {
+    "tokens": [
+      {
+        "name": "space-0.5",
+        "value": "2px",
+        "usage": "Badge (sm) and chip vertical padding."
+      },
+      {
+        "name": "space-1",
+        "value": "4px",
+        "usage": "Tight gaps: icon to label in small controls, label to field."
+      },
+      {
+        "name": "space-1.5",
+        "value": "6px",
+        "usage": "Button md vertical padding; badge sm horizontal padding; status dot to word."
+      },
+      {
+        "name": "space-2",
+        "value": "8px",
+        "usage": "The workhorse: button padding, small gaps, table header padding."
+      },
+      {
+        "name": "space-2.5",
+        "value": "10px",
+        "usage": "Button md / chip md horizontal padding; table cell vertical padding; Card padding sm."
+      },
+      {
+        "name": "space-3",
+        "value": "12px",
+        "usage": "Header bar vertical padding; table cell horizontal padding; gap between header controls."
+      },
+      {
+        "name": "space-4",
+        "value": "16px",
+        "usage": "Card padding md; pane panel padding; page gutters."
+      },
+      {
+        "name": "space-6",
+        "value": "24px",
+        "usage": "Card padding lg; empty-state padding; section spacing."
+      },
+      {
+        "name": "space-8",
+        "value": "32px",
+        "usage": "Page-level padding on showcase and sign-in."
+      }
+    ]
+  },
+  "radius": {
+    "tokens": [
+      {
+        "name": "radius-sm",
+        "value": "4px",
+        "usage": "Controls: buttons, badges, chips, inputs, the user tag, skip link."
+      },
+      {
+        "name": "radius-md",
+        "value": "6px",
+        "usage": "Containers: the pane panel and DataTable wrapper."
+      },
+      {
+        "name": "radius-lg",
+        "value": "8px",
+        "usage": "Cards."
+      },
+      {
+        "name": "radius-full",
+        "value": "9999px",
+        "usage": "Status dots and the AgentPersonaBadge pill only."
+      }
+    ]
+  },
+  "size": {
+    "tokens": [
+      {
+        "name": "control-sm",
+        "value": "28px",
+        "usage": "Min height of Button sm."
+      },
+      {
+        "name": "control-md",
+        "value": "36px",
+        "usage": "Min height of Button md (default)."
+      },
+      {
+        "name": "control-lg",
+        "value": "44px",
+        "usage": "Min height of Button lg; the touch-target size."
+      },
+      {
+        "name": "focus-ring-width",
+        "value": "3px",
+        "usage": "Width of the solid ua-accent focus outline on every focusable element."
+      },
+      {
+        "name": "focus-ring-offset",
+        "value": "2px",
+        "usage": "Gap between the focus outline and the element (inset -2px on table rows)."
+      },
+      {
+        "name": "persona-stripe",
+        "value": "3px",
+        "usage": "Left border width carrying an agent's persona colour."
+      },
+      {
+        "name": "content-max",
+        "value": "1152px",
+        "usage": "Max width of header, nav and main (max-w-6xl), centred."
+      }
+    ]
+  },
+  "opacity": {
+    "tokens": [
+      {
+        "name": "disabled-opacity",
+        "value": "0.5",
+        "usage": "Disabled and busy controls."
+      },
+      {
+        "name": "primary-hover-opacity",
+        "value": "0.9",
+        "usage": "Primary button hover (fill dims instead of changing hue)."
+      }
+    ]
+  }
+}

@@ -1,0 +1,3405 @@
+{
+ "schema_version": 1,
+ "fixture_id": "ua-memory-eval-1913-v1",
+ "description": "Synthetic ranking fixture for memory_search (task #1913). Invented notes and queries; no user or production memory. Frozen: change by adding a new version.",
+ "notes": [
+  {
+   "id": "t01",
+   "kind": "target",
+   "title": "SQLite WAL checkpoint starvation on the hub",
+   "content": "memory.db grew to 4 GB because a long-lived reader connection in the web UI kept the write-ahead log from checkpointing. Fix: close the dashboard cursor after each poll and run PRAGMA wal_checkpoint(TRUNCATE) nightly.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 40,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t02",
+   "kind": "target",
+   "title": "Tailscale MagicDNS stopped resolving on the laptop",
+   "content": "After a macOS update the laptop could not reach the hub by hostname: the MagicDNS resolver was disabled. Register the MCP server with the raw tailnet IP 100.64.0.10 instead of the hostname.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 55,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t03",
+   "kind": "target",
+   "title": "Codex CLI ignores the env table for stdio MCP children",
+   "content": "Codex does not pass the env block from config.toml to stdio MCP servers, so UA_AGENT_TOKEN never arrived and every call was unauthenticated. Export the bearer token in the shell profile before launching codex.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 20,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t04",
+   "kind": "target",
+   "title": "fastembed model fetch fails behind a captive portal",
+   "content": "On hotel wifi the ONNX model download from Hugging Face returned an HTML login page and fastembed raised a protobuf decode error. Prefetch the model at home; the embedding-marked pytest tier then skips with 'embedding model unavailable'.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 70,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t05",
+   "kind": "target",
+   "title": "Ruff is not on PATH on the Linux desktop desktop",
+   "content": "mise does not shim ruff globally. Use ~/dev/unified_agent/.venv/bin/ruff or uvx ruff for lint and format.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 15,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t06",
+   "kind": "target",
+   "title": "Task #1234 rate limiter design",
+   "content": "Token bucket per agent label: 60 requests per minute with a burst of 20. Buckets live in process memory and reset when the hub restarts.",
+   "tags": [
+    "project:unified-agent",
+    "decision",
+    "task:1234"
+   ],
+   "age_days": 90,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t07",
+   "kind": "target",
+   "title": "Follow-up: persist the request buckets",
+   "content": "For task #1234 the token buckets now persist to SQLite so a restart no longer hands every agent a fresh burst.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 60,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t08",
+   "kind": "target",
+   "title": "Rebase conflict on task/1702-vault-sync",
+   "content": "Rebasing task/1702-vault-sync onto main conflicted in sync.py because #1690 renamed the snapshot helpers. Resolved by keeping the new names and re-running test_sync.py.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 33,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t09",
+   "kind": "target",
+   "title": "Executor daemon wedges after the Mac sleeps",
+   "content": "The headless executor stops claiming dispatches after the lid is closed overnight. launchd does not restart it because the process is alive while its asyncio loop waits on a dead socket. Workaround: KeepAlive plus a five-minute watchdog ping.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 25,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t10",
+   "kind": "target",
+   "title": "Obsidian Sync conflicted copies of daily notes",
+   "content": "Two machines creating Logs/YYYY-MM-DD.md at midnight produced 'conflicted copy' files. Only the hub writes the daily journal note now.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 80,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t11",
+   "kind": "target",
+   "title": "Approval queue is hub configuration",
+   "content": "UA_APPROVAL_TOOLS is empty unless set in service.env on the hub. Agents cannot opt in or out; only the operator edits it.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 110,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t12",
+   "kind": "target",
+   "title": "pytest-xdist makes state-sync tests flaky",
+   "content": "Running with -n auto broke test_sync.py intermittently because state snapshots shared one vault tmpdir across workers. The sync tests stay in a serial shard.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 45,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t13",
+   "kind": "target",
+   "title": "GitHub Actions runs only with the ci:full label",
+   "content": "Ordinary pushes to a PR run nothing. Add the ci:full label or dispatch the batch verification workflow to get a full run.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 12,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t14",
+   "kind": "target",
+   "title": "Depot uv cache key collision",
+   "content": "Two workflows shared one uv cache key and restored a venv built for Python 3.12 into a 3.13 job. The key now includes the interpreter version.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 38,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t15",
+   "kind": "target",
+   "title": "server_agent5 ran out of disk",
+   "content": "journald logs filled /var on server_agent5. Set SystemMaxUse=500M in journald.conf and vacuum to 200M.",
+   "tags": [
+    "project:hermes",
+    "fact"
+   ],
+   "age_days": 50,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t16",
+   "kind": "target",
+   "title": "Cursor ignores .cursorrules",
+   "content": "Since 0.45 Cursor reads .cursor/rules/*.mdc files; the legacy .cursorrules file is silently skipped.",
+   "tags": [
+    "project:cursor",
+    "fact"
+   ],
+   "age_days": 65,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t17",
+   "kind": "target",
+   "title": "Antigravity MCP entry needs serverUrl",
+   "content": "Antigravity's mcp_config.json requires serverUrl. url or httpUrl silently disables the server entry.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 30,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t18",
+   "kind": "target",
+   "title": "Antigravity post-write hook runs ruff",
+   "content": "Antigravity hooks in .agents/hooks.json call scripts/hook_post_write.py, which runs ruff fix after each write, and hook_pre_push.py before git push.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 28,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t19",
+   "kind": "target",
+   "title": "bge-small cosine scores for unrelated text",
+   "content": "bge-small-en-v1.5 gives cosine 0.55 to 0.60 between unrelated short texts, so that range is not evidence of a semantic match. Real paraphrases score higher.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 18,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t20",
+   "kind": "target",
+   "title": "memory_fts tokenizer stems words",
+   "content": "memory_fts uses tokenize='porter unicode61', so 'deploying' matches 'deploy' and 'notes' matches 'note'.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 95,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t21",
+   "kind": "target",
+   "title": "Web UI sign-in loop on Safari",
+   "content": "Safari drops the SameSite=Strict session cookie on the redirect from the tailnet IP, so the control center keeps showing the login page on iPhone. Use SameSite=Lax.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 22,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t22",
+   "kind": "target",
+   "title": "Stripe webhook secret rotation",
+   "content": "Rotate the webhook signing secret in two phases: add the new secret, deploy, then remove the old one after an hour of clean deliveries.",
+   "tags": [
+    "project:ledger",
+    "decision"
+   ],
+   "age_days": 140,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t23",
+   "kind": "target",
+   "title": "Laptop_Agent2 bearer token expired",
+   "content": "Per-agent bearer tokens expire after 90 days. Laptop_Agent2 started getting 401s; regenerate with unified-agent-token issue Laptop_Agent2 and update its config.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 8,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t24",
+   "kind": "target",
+   "title": "PR #1588 reverted",
+   "content": "PR #1588 (vectorized memory scan) was reverted because sqlite-vec was missing from the hub build; it re-landed as #1601 with a UDF fallback.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 48,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t25",
+   "kind": "target",
+   "title": "uv lock drift fails CI",
+   "content": "uv sync --locked fails when pyproject.toml changed without uv lock. Run uv lock and commit uv.lock alongside the dependency change.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 36,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t26",
+   "kind": "target",
+   "title": "Tool list is cached at connect",
+   "content": "A hub restart does not refresh a live session's tool list. After a tool change deploys, reconnect the host before assuming the tool exists.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 27,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t27",
+   "kind": "target",
+   "title": "Gemini free tier returns 429",
+   "content": "gemini_ask hits HTTP 429 after about 50 requests a day on a free AI Studio key; the llm_client falls back to the next provider.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 17,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t28",
+   "kind": "target",
+   "title": "Review cron schedule",
+   "content": "deploy/systemd/ua-review.timer fires every 15 minutes; read its logs with journalctl -u ua-review.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 60,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t29",
+   "kind": "target",
+   "title": "Shared stash stack across worktrees",
+   "content": "All worktrees share one git stash stack. A bare git stash pop in one worktree restored another agent's half-finished changes. Use WIP commits instead.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 75,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t30",
+   "kind": "target",
+   "title": "Vault write directories",
+   "content": "UA_VAULT_WRITE_DIRS defaults to 00 - Inbox, Logs and Wiki; resolve_in_vault refuses writes anywhere else.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 100,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t31",
+   "kind": "target",
+   "title": "Prism thumbnails moved to libvips",
+   "content": "Thumbnail generation switched from Pillow to pyvips: six times faster and half the memory on large TIFF uploads.",
+   "tags": [
+    "project:prism",
+    "decision"
+   ],
+   "age_days": 120,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t32",
+   "kind": "target",
+   "title": "Orbit APNs uses a .p8 auth key",
+   "content": "Orbit push notifications authenticate with an APNs .p8 auth key instead of a yearly certificate. The key id lives in 1Password.",
+   "tags": [
+    "project:orbit",
+    "fact"
+   ],
+   "age_days": 85,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t33",
+   "kind": "target",
+   "title": "Atlas Postgres connection pool exhaustion",
+   "content": "Atlas ran out of Postgres connections at peak. Fix: pgbouncer in transaction mode, SQLAlchemy pool_size 5, max_client_conn 200.",
+   "tags": [
+    "project:atlas",
+    "fact"
+   ],
+   "age_days": 130,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t34",
+   "kind": "target",
+   "title": "Harbor docker image slimmed",
+   "content": "A multi-stage build cut the harbor image from 1.2 GB to 180 MB using python:3.13-slim and uv export.",
+   "tags": [
+    "project:harbor",
+    "fact"
+   ],
+   "age_days": 66,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t35",
+   "kind": "target",
+   "title": "task_update doing does not take the claim lock",
+   "content": "task_update(status='doing') leaves claimed_by empty; only task_claim takes the lock. Never use either to clear another agent's claim.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 44,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t36",
+   "kind": "target",
+   "title": "Broadcast tag is human-only",
+   "content": "Saving a note tagged broadcast, or with salience above 0.8, requires the verified human operator identity. Agents get a ToolError.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 52,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t37",
+   "kind": "target",
+   "title": "run_cmd has no shell",
+   "content": "run_cmd executes allowlisted programs directly without a shell: pipes, redirects and globbing do not work. Run long builds on the host.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 58,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t38",
+   "kind": "target",
+   "title": "Juniper feature flags via Unleash",
+   "content": "Juniper toggles features through a self-hosted Unleash server; flags default off in staging.",
+   "tags": [
+    "project:juniper",
+    "fact"
+   ],
+   "age_days": 150,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t39",
+   "kind": "target",
+   "title": "Summit nightly backup to B2",
+   "content": "Summit's Postgres dump is uploaded to Backblaze B2 at 03:00 UTC with restic; retention keeps 30 dailies.",
+   "tags": [
+    "project:summit",
+    "fact"
+   ],
+   "age_days": 160,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t40",
+   "kind": "target",
+   "title": "Ledger invoice PDF fonts",
+   "content": "WeasyPrint rendered invoice PDFs with fallback fonts until Inter was installed in the container image.",
+   "tags": [
+    "project:ledger",
+    "fact"
+   ],
+   "age_days": 170,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t41",
+   "kind": "target",
+   "title": "Hook blocks commands that print secrets",
+   "content": "The PreToolUse Bash hook rejects env, printenv and cat of .env files. Check a variable by length and prefix only.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 26,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t42",
+   "kind": "target",
+   "title": "Embedding backfill runs in the background",
+   "content": "memory_semantic.backfill_memory_embeddings embeds notes saved while the model was unavailable; it runs in bounded batches after startup.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 34,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t43",
+   "kind": "target",
+   "title": "sqlite-vec missing on the Mac hub",
+   "content": "The Homebrew Python on the Mac was built without loadable extension support, so sqlite-vec never loaded and search used the UDF scan.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 47,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t44",
+   "kind": "target",
+   "title": "Session packet memory injection cap",
+   "content": "Automatic memory injection into session packets is capped at five items and a token budget; explicit memory_search is not capped that way.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 31,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t45",
+   "kind": "target",
+   "title": "Quartz export job timezone bug",
+   "content": "The Quartz nightly export used local time and skipped an hour at the DST change; it now schedules in UTC.",
+   "tags": [
+    "project:quartz",
+    "fact"
+   ],
+   "age_days": 175,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t46",
+   "kind": "target",
+   "title": "Beacon map tiles from Protomaps",
+   "content": "Beacon serves vector map tiles from a single Protomaps PMTiles file on R2 instead of a tile server.",
+   "tags": [
+    "project:beacon",
+    "decision"
+   ],
+   "age_days": 145,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t47",
+   "kind": "target",
+   "title": "MCP inspector for local debugging",
+   "content": "uv run mcp dev src/unified_agent/server.py opens the interactive MCP inspector against a local stdio server.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 210,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t48",
+   "kind": "target",
+   "title": "Branch fix/webui-csp-nonce",
+   "content": "fix/webui-csp-nonce adds a per-request nonce to the control center's Content-Security-Policy so inline scripts stop being blocked.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 19,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t49",
+   "kind": "target",
+   "title": "Task #1777 hub disk alert",
+   "content": "Task #1777 adds a system_doctor warning when the hub volume is above 90 percent full.",
+   "tags": [
+    "project:unified-agent",
+    "task:1777"
+   ],
+   "age_days": 14,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "t50",
+   "kind": "target",
+   "title": "Desktop_Agent4 workspace root",
+   "content": "Desktop_Agent4 is rooted at ~/agent-workspace, so hub fs_write cannot reach other checkouts; it uses its own editor tools there.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 63,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "s01old",
+   "kind": "target",
+   "title": "Hub listens on port 8080",
+   "content": "The unified-agent hub HTTP transport listens on port 8080.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 300,
+   "access_count": 120,
+   "recalled": 150,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": "s01new"
+  },
+  {
+   "id": "s01new",
+   "kind": "target",
+   "title": "Hub listens on port 8765",
+   "content": "The unified-agent hub HTTP transport moved to port 8765 at http://100.64.0.10:8765/mcp.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 90,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "s02old",
+   "kind": "target",
+   "title": "Review cron merges green PRs",
+   "content": "The review cron merges a pull request automatically once CI is green.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 260,
+   "access_count": 80,
+   "recalled": 90,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": "s02new"
+  },
+  {
+   "id": "s02new",
+   "kind": "target",
+   "title": "Reviewer validates and holds",
+   "content": "reviewer.py validates and holds pull requests; it never merges. Merges are batched by a hub-connected agent.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 70,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "s03old",
+   "kind": "target",
+   "title": "Embedding model is all-MiniLM-L6-v2",
+   "content": "memory embeddings use sentence-transformers all-MiniLM-L6-v2.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 330,
+   "access_count": 60,
+   "recalled": 70,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": "s03new"
+  },
+  {
+   "id": "s03new",
+   "kind": "target",
+   "title": "Embedding model is bge-small-en-v1.5",
+   "content": "memory embeddings now use BAAI/bge-small-en-v1.5 through fastembed (384 dimensions).",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 120,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "s04old",
+   "kind": "target",
+   "title": "Desktop keeps a local memory database",
+   "content": "The Linux desktop desktop runs its own memory.db and syncs to the hub nightly.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 280,
+   "access_count": 50,
+   "recalled": 60,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": "s04new"
+  },
+  {
+   "id": "s04new",
+   "kind": "target",
+   "title": "Desktop never runs a hub",
+   "content": "The Linux desktop desktop is a client only: NO_LOCAL_MEMORY_DB makes storage.connect refuse to create a memory database there.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 95,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r01old",
+   "kind": "target",
+   "title": "Quarterly focus: vault ingest",
+   "content": "This quarter's engineering focus is the vault ingest pipeline and Wiki lint.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 300,
+   "access_count": 90,
+   "recalled": 110,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r01new",
+   "kind": "target",
+   "title": "Quarterly focus: memory retrieval quality",
+   "content": "This quarter's engineering focus is memory retrieval quality and evaluation.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 3,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r02old",
+   "kind": "target",
+   "title": "Desktop Python version 3.12",
+   "content": "The desktop venvs are built with Python 3.12.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 240,
+   "access_count": 70,
+   "recalled": 80,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r02new",
+   "kind": "target",
+   "title": "Desktop moved to Python 3.13",
+   "content": "The desktop venvs are now built with Python 3.13 after the mise upgrade.",
+   "tags": [
+    "project:unified-agent",
+    "fact"
+   ],
+   "age_days": 5,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r03old",
+   "kind": "target",
+   "title": "On-call rotation (old)",
+   "content": "On-call rotation: Operator covers weekday alerts and nobody covers nights.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 400,
+   "access_count": 40,
+   "recalled": 45,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r03new",
+   "kind": "target",
+   "title": "On-call rotation: Hermes handles nights",
+   "content": "On-call rotation: server_agent5 triages overnight alerts and pages Operator only for red-tier incidents.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 10,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r04old",
+   "kind": "target",
+   "title": "Release checklist v1",
+   "content": "Release checklist: bump version, tag, write changelog by hand.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 365,
+   "access_count": 55,
+   "recalled": 65,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "r04new",
+   "kind": "target",
+   "title": "Release checklist v2",
+   "content": "Release checklist: assemble changelog.d fragments, bump version, tag, deploy the hub, close evidence.",
+   "tags": [
+    "project:unified-agent",
+    "decision"
+   ],
+   "age_days": 7,
+   "access_count": 0,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "p01",
+   "kind": "popular",
+   "title": "Session start checklist",
+   "content": "At session start run profile_status, then task_list for your queue, then memory_search for the project. Check broadcasts. Claim a task before editing anything.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 200,
+   "access_count": 400,
+   "recalled": 600,
+   "upvoted": 1,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p02",
+   "kind": "popular",
+   "title": "Fleet rules summary",
+   "content": "Never print secrets. Verify before you assert. Targeted tests only. Test first. Branch, commit as your label, open a PR, do not merge without review.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 210,
+   "access_count": 437,
+   "recalled": 641,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p03",
+   "kind": "popular",
+   "title": "Memory note conventions",
+   "content": "Pass author on every memory_save and tag it with project plus pref, fact or decision. Prefer append over overwrite for another author's note.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 220,
+   "access_count": 474,
+   "recalled": 682,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p04",
+   "kind": "popular",
+   "title": "How to ship a change",
+   "content": "Create branch task/<id>-slug, commit with a Conventional Commits subject naming the task, push, open a PR against main and annotate waiting-for review.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 230,
+   "access_count": 511,
+   "recalled": 723,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p05",
+   "kind": "popular",
+   "title": "Hub topology overview",
+   "content": "The Mac hub runs the only hub and holds the only memory.db. Every other machine connects as a client over Tailscale.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 240,
+   "access_count": 548,
+   "recalled": 764,
+   "upvoted": 1,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p06",
+   "kind": "popular",
+   "title": "Where docs live",
+   "content": "Reference docs start at docs/README.md. The tool catalog and tools reference describe every tool, its parameters and limits.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 250,
+   "access_count": 585,
+   "recalled": 805,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p07",
+   "kind": "popular",
+   "title": "Testing guidance",
+   "content": "Run uv run pytest on the test files you touched. Never run the full suite on the desktop; CI runs it. Lint with ruff check and ruff format.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 260,
+   "access_count": 622,
+   "recalled": 846,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p08",
+   "kind": "popular",
+   "title": "Vault vs repo",
+   "content": "If it wants a diff it goes in a repo; if it wants a reader it goes in the vault. The Obsidian vault syncs through Obsidian Sync.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 270,
+   "access_count": 659,
+   "recalled": 887,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p09",
+   "kind": "popular",
+   "title": "Worktree basics",
+   "content": "Claimed tasks get a worktree under .worktrees/task-<id>. Work there, not in the main checkout, and remove the worktree after merge.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 280,
+   "access_count": 696,
+   "recalled": 928,
+   "upvoted": 1,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p10",
+   "kind": "popular",
+   "title": "Agent identity labels",
+   "content": "Agents identify as Machine_Harness labels such as Desktop_Agent1 or Laptop_Agent2 and commit with that label as the author.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 290,
+   "access_count": 733,
+   "recalled": 969,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p11",
+   "kind": "popular",
+   "title": "Daily standup template",
+   "content": "Yesterday, today, blockers. Link the task ids and PRs you touched and any decision notes you saved.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 300,
+   "access_count": 770,
+   "recalled": 1010,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "p12",
+   "kind": "popular",
+   "title": "Debugging checklist",
+   "content": "Reproduce first, read the logs, check the config and environment, bisect recent changes, then write a failing test before the fix.",
+   "tags": [
+    "project:unified-agent",
+    "pref"
+   ],
+   "age_days": 310,
+   "access_count": 807,
+   "recalled": 1051,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.7,
+   "superseded_by": null
+  },
+  {
+   "id": "f001",
+   "kind": "filler",
+   "title": "Quartz standup notes",
+   "content": "Quartz standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 258,
+   "access_count": 26,
+   "recalled": 10,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f002",
+   "kind": "filler",
+   "title": "Quartz color palette update",
+   "content": "Quartz adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 72,
+   "access_count": 18,
+   "recalled": 60,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f003",
+   "kind": "filler",
+   "title": "Quartz dependency bumps",
+   "content": "Bumped minor versions of the Quartz frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 189,
+   "access_count": 35,
+   "recalled": 44,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f004",
+   "kind": "filler",
+   "title": "Quartz retro takeaways",
+   "content": "Quartz retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 76,
+   "access_count": 31,
+   "recalled": 52,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f005",
+   "kind": "filler",
+   "title": "Quartz onboarding doc",
+   "content": "New contributors to Quartz should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 165,
+   "access_count": 23,
+   "recalled": 40,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f006",
+   "kind": "filler",
+   "title": "Quartz logo refresh",
+   "content": "The Quartz logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 331,
+   "access_count": 16,
+   "recalled": 47,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f007",
+   "kind": "filler",
+   "title": "Quartz meeting with design",
+   "content": "Walked through the Quartz empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 290,
+   "access_count": 8,
+   "recalled": 51,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f008",
+   "kind": "filler",
+   "title": "Quartz i18n strings",
+   "content": "Quartz moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 232,
+   "access_count": 15,
+   "recalled": 21,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f009",
+   "kind": "filler",
+   "title": "Quartz analytics events",
+   "content": "Quartz tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 156,
+   "access_count": 13,
+   "recalled": 20,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f010",
+   "kind": "filler",
+   "title": "Quartz copy edits",
+   "content": "Tightened the Quartz landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:quartz"
+   ],
+   "age_days": 148,
+   "access_count": 23,
+   "recalled": 7,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f011",
+   "kind": "filler",
+   "title": "Beacon standup notes",
+   "content": "Beacon standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 309,
+   "access_count": 16,
+   "recalled": 40,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f012",
+   "kind": "filler",
+   "title": "Beacon color palette update",
+   "content": "Beacon adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 124,
+   "access_count": 12,
+   "recalled": 31,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f013",
+   "kind": "filler",
+   "title": "Beacon dependency bumps",
+   "content": "Bumped minor versions of the Beacon frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 246,
+   "access_count": 13,
+   "recalled": 33,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f014",
+   "kind": "filler",
+   "title": "Beacon retro takeaways",
+   "content": "Beacon retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 5,
+   "access_count": 23,
+   "recalled": 30,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f015",
+   "kind": "filler",
+   "title": "Beacon onboarding doc",
+   "content": "New contributors to Beacon should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 196,
+   "access_count": 29,
+   "recalled": 2,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f016",
+   "kind": "filler",
+   "title": "Beacon logo refresh",
+   "content": "The Beacon logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 203,
+   "access_count": 3,
+   "recalled": 41,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f017",
+   "kind": "filler",
+   "title": "Beacon meeting with design",
+   "content": "Walked through the Beacon empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 101,
+   "access_count": 24,
+   "recalled": 20,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f018",
+   "kind": "filler",
+   "title": "Beacon i18n strings",
+   "content": "Beacon moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 59,
+   "access_count": 1,
+   "recalled": 51,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f019",
+   "kind": "filler",
+   "title": "Beacon analytics events",
+   "content": "Beacon tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 51,
+   "access_count": 39,
+   "recalled": 60,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f020",
+   "kind": "filler",
+   "title": "Beacon copy edits",
+   "content": "Tightened the Beacon landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:beacon"
+   ],
+   "age_days": 134,
+   "access_count": 32,
+   "recalled": 43,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f021",
+   "kind": "filler",
+   "title": "Atlas standup notes",
+   "content": "Atlas standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 146,
+   "access_count": 7,
+   "recalled": 17,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f022",
+   "kind": "filler",
+   "title": "Atlas color palette update",
+   "content": "Atlas adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 240,
+   "access_count": 22,
+   "recalled": 17,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f023",
+   "kind": "filler",
+   "title": "Atlas dependency bumps",
+   "content": "Bumped minor versions of the Atlas frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 253,
+   "access_count": 30,
+   "recalled": 11,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f024",
+   "kind": "filler",
+   "title": "Atlas retro takeaways",
+   "content": "Atlas retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 58,
+   "access_count": 3,
+   "recalled": 18,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f025",
+   "kind": "filler",
+   "title": "Atlas onboarding doc",
+   "content": "New contributors to Atlas should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 45,
+   "access_count": 32,
+   "recalled": 8,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f026",
+   "kind": "filler",
+   "title": "Atlas logo refresh",
+   "content": "The Atlas logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 288,
+   "access_count": 30,
+   "recalled": 35,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f027",
+   "kind": "filler",
+   "title": "Atlas meeting with design",
+   "content": "Walked through the Atlas empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 205,
+   "access_count": 15,
+   "recalled": 45,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f028",
+   "kind": "filler",
+   "title": "Atlas i18n strings",
+   "content": "Atlas moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 323,
+   "access_count": 6,
+   "recalled": 3,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f029",
+   "kind": "filler",
+   "title": "Atlas analytics events",
+   "content": "Atlas tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 126,
+   "access_count": 22,
+   "recalled": 20,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f030",
+   "kind": "filler",
+   "title": "Atlas copy edits",
+   "content": "Tightened the Atlas landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:atlas"
+   ],
+   "age_days": 343,
+   "access_count": 38,
+   "recalled": 30,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f031",
+   "kind": "filler",
+   "title": "Harbor standup notes",
+   "content": "Harbor standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 87,
+   "access_count": 31,
+   "recalled": 40,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f032",
+   "kind": "filler",
+   "title": "Harbor color palette update",
+   "content": "Harbor adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 91,
+   "access_count": 17,
+   "recalled": 20,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f033",
+   "kind": "filler",
+   "title": "Harbor dependency bumps",
+   "content": "Bumped minor versions of the Harbor frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 129,
+   "access_count": 17,
+   "recalled": 39,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f034",
+   "kind": "filler",
+   "title": "Harbor retro takeaways",
+   "content": "Harbor retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 149,
+   "access_count": 37,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f035",
+   "kind": "filler",
+   "title": "Harbor onboarding doc",
+   "content": "New contributors to Harbor should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 313,
+   "access_count": 36,
+   "recalled": 38,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f036",
+   "kind": "filler",
+   "title": "Harbor logo refresh",
+   "content": "The Harbor logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 34,
+   "access_count": 15,
+   "recalled": 25,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f037",
+   "kind": "filler",
+   "title": "Harbor meeting with design",
+   "content": "Walked through the Harbor empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 210,
+   "access_count": 3,
+   "recalled": 42,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f038",
+   "kind": "filler",
+   "title": "Harbor i18n strings",
+   "content": "Harbor moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 14,
+   "access_count": 4,
+   "recalled": 60,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f039",
+   "kind": "filler",
+   "title": "Harbor analytics events",
+   "content": "Harbor tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 286,
+   "access_count": 39,
+   "recalled": 49,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f040",
+   "kind": "filler",
+   "title": "Harbor copy edits",
+   "content": "Tightened the Harbor landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:harbor"
+   ],
+   "age_days": 296,
+   "access_count": 16,
+   "recalled": 48,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f041",
+   "kind": "filler",
+   "title": "Ledger standup notes",
+   "content": "Ledger standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 258,
+   "access_count": 30,
+   "recalled": 43,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f042",
+   "kind": "filler",
+   "title": "Ledger color palette update",
+   "content": "Ledger adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 191,
+   "access_count": 0,
+   "recalled": 59,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f043",
+   "kind": "filler",
+   "title": "Ledger dependency bumps",
+   "content": "Bumped minor versions of the Ledger frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 116,
+   "access_count": 3,
+   "recalled": 51,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f044",
+   "kind": "filler",
+   "title": "Ledger retro takeaways",
+   "content": "Ledger retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 251,
+   "access_count": 3,
+   "recalled": 33,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f045",
+   "kind": "filler",
+   "title": "Ledger onboarding doc",
+   "content": "New contributors to Ledger should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 119,
+   "access_count": 12,
+   "recalled": 15,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f046",
+   "kind": "filler",
+   "title": "Ledger logo refresh",
+   "content": "The Ledger logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 34,
+   "access_count": 23,
+   "recalled": 51,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f047",
+   "kind": "filler",
+   "title": "Ledger meeting with design",
+   "content": "Walked through the Ledger empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 344,
+   "access_count": 33,
+   "recalled": 17,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f048",
+   "kind": "filler",
+   "title": "Ledger i18n strings",
+   "content": "Ledger moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 111,
+   "access_count": 35,
+   "recalled": 27,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f049",
+   "kind": "filler",
+   "title": "Ledger analytics events",
+   "content": "Ledger tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 215,
+   "access_count": 24,
+   "recalled": 21,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f050",
+   "kind": "filler",
+   "title": "Ledger copy edits",
+   "content": "Tightened the Ledger landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:ledger"
+   ],
+   "age_days": 75,
+   "access_count": 8,
+   "recalled": 52,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f051",
+   "kind": "filler",
+   "title": "Orbit standup notes",
+   "content": "Orbit standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 167,
+   "access_count": 3,
+   "recalled": 14,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f052",
+   "kind": "filler",
+   "title": "Orbit color palette update",
+   "content": "Orbit adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 226,
+   "access_count": 22,
+   "recalled": 31,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f053",
+   "kind": "filler",
+   "title": "Orbit dependency bumps",
+   "content": "Bumped minor versions of the Orbit frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 220,
+   "access_count": 18,
+   "recalled": 1,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f054",
+   "kind": "filler",
+   "title": "Orbit retro takeaways",
+   "content": "Orbit retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 324,
+   "access_count": 16,
+   "recalled": 37,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f055",
+   "kind": "filler",
+   "title": "Orbit onboarding doc",
+   "content": "New contributors to Orbit should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 320,
+   "access_count": 7,
+   "recalled": 26,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f056",
+   "kind": "filler",
+   "title": "Orbit logo refresh",
+   "content": "The Orbit logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 23,
+   "access_count": 4,
+   "recalled": 0,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f057",
+   "kind": "filler",
+   "title": "Orbit meeting with design",
+   "content": "Walked through the Orbit empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 106,
+   "access_count": 0,
+   "recalled": 28,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f058",
+   "kind": "filler",
+   "title": "Orbit i18n strings",
+   "content": "Orbit moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 227,
+   "access_count": 13,
+   "recalled": 11,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f059",
+   "kind": "filler",
+   "title": "Orbit analytics events",
+   "content": "Orbit tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 186,
+   "access_count": 30,
+   "recalled": 54,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f060",
+   "kind": "filler",
+   "title": "Orbit copy edits",
+   "content": "Tightened the Orbit landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:orbit"
+   ],
+   "age_days": 1,
+   "access_count": 19,
+   "recalled": 22,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f061",
+   "kind": "filler",
+   "title": "Prism standup notes",
+   "content": "Prism standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 9,
+   "access_count": 33,
+   "recalled": 23,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f062",
+   "kind": "filler",
+   "title": "Prism color palette update",
+   "content": "Prism adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 276,
+   "access_count": 4,
+   "recalled": 20,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f063",
+   "kind": "filler",
+   "title": "Prism dependency bumps",
+   "content": "Bumped minor versions of the Prism frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 36,
+   "access_count": 35,
+   "recalled": 29,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f064",
+   "kind": "filler",
+   "title": "Prism retro takeaways",
+   "content": "Prism retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 173,
+   "access_count": 6,
+   "recalled": 35,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f065",
+   "kind": "filler",
+   "title": "Prism onboarding doc",
+   "content": "New contributors to Prism should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 15,
+   "access_count": 13,
+   "recalled": 51,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f066",
+   "kind": "filler",
+   "title": "Prism logo refresh",
+   "content": "The Prism logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 105,
+   "access_count": 37,
+   "recalled": 34,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f067",
+   "kind": "filler",
+   "title": "Prism meeting with design",
+   "content": "Walked through the Prism empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 314,
+   "access_count": 13,
+   "recalled": 2,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f068",
+   "kind": "filler",
+   "title": "Prism i18n strings",
+   "content": "Prism moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 174,
+   "access_count": 40,
+   "recalled": 11,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f069",
+   "kind": "filler",
+   "title": "Prism analytics events",
+   "content": "Prism tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 191,
+   "access_count": 24,
+   "recalled": 1,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f070",
+   "kind": "filler",
+   "title": "Prism copy edits",
+   "content": "Tightened the Prism landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:prism"
+   ],
+   "age_days": 263,
+   "access_count": 29,
+   "recalled": 17,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f071",
+   "kind": "filler",
+   "title": "Summit standup notes",
+   "content": "Summit standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 235,
+   "access_count": 13,
+   "recalled": 26,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f072",
+   "kind": "filler",
+   "title": "Summit color palette update",
+   "content": "Summit adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 2,
+   "access_count": 17,
+   "recalled": 8,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f073",
+   "kind": "filler",
+   "title": "Summit dependency bumps",
+   "content": "Bumped minor versions of the Summit frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 129,
+   "access_count": 26,
+   "recalled": 36,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f074",
+   "kind": "filler",
+   "title": "Summit retro takeaways",
+   "content": "Summit retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 256,
+   "access_count": 32,
+   "recalled": 17,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f075",
+   "kind": "filler",
+   "title": "Summit onboarding doc",
+   "content": "New contributors to Summit should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 16,
+   "access_count": 40,
+   "recalled": 24,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f076",
+   "kind": "filler",
+   "title": "Summit logo refresh",
+   "content": "The Summit logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 342,
+   "access_count": 30,
+   "recalled": 12,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f077",
+   "kind": "filler",
+   "title": "Summit meeting with design",
+   "content": "Walked through the Summit empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 305,
+   "access_count": 22,
+   "recalled": 9,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f078",
+   "kind": "filler",
+   "title": "Summit i18n strings",
+   "content": "Summit moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 150,
+   "access_count": 3,
+   "recalled": 6,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f079",
+   "kind": "filler",
+   "title": "Summit analytics events",
+   "content": "Summit tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 74,
+   "access_count": 13,
+   "recalled": 9,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f080",
+   "kind": "filler",
+   "title": "Summit copy edits",
+   "content": "Tightened the Summit landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:summit"
+   ],
+   "age_days": 278,
+   "access_count": 27,
+   "recalled": 50,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f081",
+   "kind": "filler",
+   "title": "Juniper standup notes",
+   "content": "Juniper standup: reviewed the sprint board, two stories moved to done, no blockers raised.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 21,
+   "access_count": 2,
+   "recalled": 23,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f082",
+   "kind": "filler",
+   "title": "Juniper color palette update",
+   "content": "Juniper adopted a new accent color and darker sidebar; design tokens regenerated from Figma.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 253,
+   "access_count": 16,
+   "recalled": 46,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f083",
+   "kind": "filler",
+   "title": "Juniper dependency bumps",
+   "content": "Bumped minor versions of the Juniper frontend dependencies; snapshot tests updated.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 37,
+   "access_count": 18,
+   "recalled": 3,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f084",
+   "kind": "filler",
+   "title": "Juniper retro takeaways",
+   "content": "Juniper retro: estimate smaller, demo earlier, write the acceptance criteria before starting.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 13,
+   "access_count": 38,
+   "recalled": 28,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f085",
+   "kind": "filler",
+   "title": "Juniper onboarding doc",
+   "content": "New contributors to Juniper should read the architecture overview and run the seed script first.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 109,
+   "access_count": 34,
+   "recalled": 59,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f086",
+   "kind": "filler",
+   "title": "Juniper logo refresh",
+   "content": "The Juniper logo was redrawn as an SVG with a simpler mark for small favicons.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 203,
+   "access_count": 24,
+   "recalled": 24,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f087",
+   "kind": "filler",
+   "title": "Juniper meeting with design",
+   "content": "Walked through the Juniper empty states and loading skeletons with design; follow-ups filed.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 138,
+   "access_count": 12,
+   "recalled": 52,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f088",
+   "kind": "filler",
+   "title": "Juniper i18n strings",
+   "content": "Juniper moved user-facing strings into ICU message files; German and French translations pending.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 82,
+   "access_count": 37,
+   "recalled": 5,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f089",
+   "kind": "filler",
+   "title": "Juniper analytics events",
+   "content": "Juniper tracks signup_started and signup_completed events; the funnel dashboard reads them weekly.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 190,
+   "access_count": 0,
+   "recalled": 57,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  },
+  {
+   "id": "f090",
+   "kind": "filler",
+   "title": "Juniper copy edits",
+   "content": "Tightened the Juniper landing page copy and fixed two typos in the pricing table.",
+   "tags": [
+    "project:juniper"
+   ],
+   "age_days": 121,
+   "access_count": 11,
+   "recalled": 59,
+   "upvoted": 0,
+   "feedback_helpful": 0,
+   "feedback_not_helpful": 0,
+   "salience": 0.5,
+   "superseded_by": null
+  }
+ ],
+ "queries": [
+  {
+   "id": "q01",
+   "category": "paraphrase",
+   "query": "why did the database file keep getting bigger",
+   "relevant": [
+    "t01"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q02",
+   "category": "paraphrase",
+   "query": "laptop can't reach the server after the OS upgrade",
+   "relevant": [
+    "t02"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q03",
+   "category": "paraphrase",
+   "query": "dispatches are never picked up in the morning",
+   "relevant": [
+    "t09"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q04",
+   "category": "paraphrase",
+   "query": "why didn't CI run on my pull request",
+   "relevant": [
+    "t13"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q05",
+   "category": "paraphrase",
+   "query": "dashboard keeps asking me to log in on my phone",
+   "relevant": [
+    "t21"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q06",
+   "category": "paraphrase",
+   "query": "who is allowed to turn on human sign-off for tools",
+   "relevant": [
+    "t11"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q07",
+   "category": "paraphrase",
+   "query": "make the container smaller",
+   "relevant": [
+    "t34"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q08",
+   "category": "paraphrase",
+   "query": "lost my work after restoring stashed changes",
+   "relevant": [
+    "t29"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q09",
+   "category": "paraphrase",
+   "query": "new tool missing after the server was redeployed",
+   "relevant": [
+    "t26"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q10",
+   "category": "paraphrase",
+   "query": "running out of database connections under load",
+   "relevant": [
+    "t33"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q11",
+   "category": "identifier",
+   "query": "task #1234",
+   "relevant": [
+    "t06",
+    "t07"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q12",
+   "category": "identifier",
+   "query": "task/1702-vault-sync",
+   "relevant": [
+    "t08"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q13",
+   "category": "identifier",
+   "query": "#1588",
+   "relevant": [
+    "t24"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q14",
+   "category": "identifier",
+   "query": "Laptop_Agent2 token",
+   "relevant": [
+    "t23"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q15",
+   "category": "identifier",
+   "query": "UA_APPROVAL_TOOLS",
+   "relevant": [
+    "t11"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q16",
+   "category": "identifier",
+   "query": "fix/webui-csp-nonce",
+   "relevant": [
+    "t48"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q17",
+   "category": "identifier",
+   "query": "task 1777",
+   "relevant": [
+    "t49"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q18",
+   "category": "identifier",
+   "query": "deploy/systemd/ua-review.timer",
+   "relevant": [
+    "t28"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q19",
+   "category": "multiword",
+   "query": "codex token not reaching the mcp server process",
+   "relevant": [
+    "t03"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q20",
+   "category": "multiword",
+   "query": "embedding tests skipped on hotel wifi network",
+   "relevant": [
+    "t04"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q21",
+   "category": "multiword",
+   "query": "flaky sync tests when running pytest in parallel workers",
+   "relevant": [
+    "t12"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q22",
+   "category": "multiword",
+   "query": "ci cache restored the wrong python virtualenv",
+   "relevant": [
+    "t14"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q23",
+   "category": "multiword",
+   "query": "rotate payment webhook signing key safely",
+   "relevant": [
+    "t22"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q24",
+   "category": "multiword",
+   "query": "which vault folders are agents allowed to write",
+   "relevant": [
+    "t30"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q25",
+   "category": "multiword",
+   "query": "cursor rules file not being applied anymore",
+   "relevant": [
+    "t16"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q26",
+   "category": "multiword",
+   "query": "similarity threshold too low for bge embeddings",
+   "relevant": [
+    "t19"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q27",
+   "category": "multiword",
+   "query": "ios push notification credentials for orbit",
+   "relevant": [
+    "t32"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q28",
+   "category": "multiword",
+   "query": "invoice pdf has the wrong font",
+   "relevant": [
+    "t40"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q29",
+   "category": "short",
+   "query": "ruff",
+   "relevant": [
+    "t05",
+    "t18"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q30",
+   "category": "short",
+   "query": "journald",
+   "relevant": [
+    "t15"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q31",
+   "category": "short",
+   "query": "antigravity",
+   "relevant": [
+    "t17",
+    "t18"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q32",
+   "category": "short",
+   "query": "thumbnails",
+   "relevant": [
+    "t31"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q33",
+   "category": "short",
+   "query": "gemini 429",
+   "relevant": [
+    "t27"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q34",
+   "category": "short",
+   "query": "pgbouncer",
+   "relevant": [
+    "t33"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q35",
+   "category": "short",
+   "query": "feature flags",
+   "relevant": [
+    "t38"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q36",
+   "category": "short",
+   "query": "backups",
+   "relevant": [
+    "t39"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q37",
+   "category": "popular",
+   "query": "claim a task lock with doing status",
+   "relevant": [
+    "t35"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q38",
+   "category": "popular",
+   "query": "can agents post broadcast notes",
+   "relevant": [
+    "t36"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q39",
+   "category": "popular",
+   "query": "run_cmd shell pipes",
+   "relevant": [
+    "t37"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q40",
+   "category": "popular",
+   "query": "hook that blocks printing secrets",
+   "relevant": [
+    "t41"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q41",
+   "category": "popular",
+   "query": "session start checklist",
+   "relevant": [
+    "p01"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q42",
+   "category": "popular",
+   "query": "memory injection into the session packet",
+   "relevant": [
+    "t44"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q43",
+   "category": "superseded",
+   "query": "what port does the hub listen on",
+   "relevant": [
+    "s01new"
+   ],
+   "excluded": [
+    "s01old"
+   ]
+  },
+  {
+   "id": "q44",
+   "category": "superseded",
+   "query": "does the reviewer merge pull requests",
+   "relevant": [
+    "s02new"
+   ],
+   "excluded": [
+    "s02old"
+   ]
+  },
+  {
+   "id": "q45",
+   "category": "superseded",
+   "query": "which embedding model does memory use",
+   "relevant": [
+    "s03new"
+   ],
+   "excluded": [
+    "s03old"
+   ]
+  },
+  {
+   "id": "q46",
+   "category": "superseded",
+   "query": "does the desktop keep its own memory database",
+   "relevant": [
+    "s04new"
+   ],
+   "excluded": [
+    "s04old"
+   ]
+  },
+  {
+   "id": "q47",
+   "category": "recency",
+   "query": "current quarterly engineering focus",
+   "relevant": [
+    "r01new"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q48",
+   "category": "recency",
+   "query": "desktop python version",
+   "relevant": [
+    "r02new"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q49",
+   "category": "recency",
+   "query": "on-call rotation",
+   "relevant": [
+    "r03new"
+   ],
+   "excluded": []
+  },
+  {
+   "id": "q50",
+   "category": "recency",
+   "query": "release checklist",
+   "relevant": [
+    "r04new"
+   ],
+   "excluded": []
+  }
+ ]
+}

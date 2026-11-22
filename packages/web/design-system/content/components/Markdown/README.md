@@ -1,0 +1,1 @@
+Markdown renders notes as React elements and never injects HTML: raw tags show as text, links are limited to http(s), mailto and relative URLs, and images render as links. Headings shift down one level by default so a note never adds a second page `h1`.

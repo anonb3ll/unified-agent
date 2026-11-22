@@ -1,0 +1,9 @@
+[Unit]
+Description=Vault sync — pull hub-authoritative Wiki/Logs/00 - Inbox from the Mac hub (task #1288)
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+EnvironmentFile=-%h/.unified_agent/service.env
+ExecStart=%h/dev/unified_agent/.venv/bin/python -m unified_agent.vault_sync

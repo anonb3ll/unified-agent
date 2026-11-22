@@ -1,0 +1,26 @@
+# Docker build context (task #1194)
+.git
+.venv
+.worktrees
+__pycache__
+**/__pycache__
+node_modules
+**/node_modules
+packages/*/dist
+packages/*/tests
+*.db
+*.sqlite
+*.log
+tests
+docs/*
+# Runtime read: /api/capability-catalog serves docs/capability-catalog/catalog.json
+!docs/capability-catalog
+docs/capability-catalog/tests
+conductor
+workspace
+examples
+.github
+.pytest_cache
+.ruff_cache
+hook_pre_push_debug.log
+hook_post_write_debug.log

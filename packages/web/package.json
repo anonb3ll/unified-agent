@@ -1,0 +1,63 @@
+{
+  "name": "@unified-agent/web",
+  "version": "0.1.0",
+  "description": "Unified Agent Control Center — React 19 SPA (Wayfinder modern UI)",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:a11y": "playwright test",
+    "design-system": "node design-system/build.mjs"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@tanstack/react-query": "^5.104.2",
+    "@unified-agent/client": "file:../client",
+    "@unified-agent/protocol": "file:../protocol",
+    "@xyflow/react": "^12.12.1",
+    "lucide-react": "^1.56.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^7.18.5"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/vite": "^4.1.13",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^6.1.2",
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "overrides": {
+    "@excalidraw/excalidraw": {
+      "nanoid": "3.3.18"
+    },
+    "lodash-es": "4.18.0",
+    "sass": "^1.105.1",
+    "katex": "^0.19.0"
+  }
+}

@@ -1,0 +1,9 @@
+[Unit]
+Description=Cluster health digest -> iMessage (health-check.sh | notify.sh)
+
+[Service]
+Type=oneshot
+# Preserve the shell pipe from the crontab entry: health-check.sh's stdout
+# feeds notify.sh's stdin. ExecStart does not run through a shell by default,
+# so wrap it explicitly.
+ExecStart=/bin/sh -c '%h/dev/agent/projects/cluster-health/health-check.sh | %h/dev/agent/projects/imessage-bridge/notify.sh'

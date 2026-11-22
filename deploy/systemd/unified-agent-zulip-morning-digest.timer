@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer for unified-agent Zulip morning work digest
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+Unit=unified-agent-zulip-morning-digest.service
+
+[Install]
+WantedBy=timers.target
+

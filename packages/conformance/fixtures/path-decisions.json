@@ -1,0 +1,36 @@
+{
+  "schema_version": "ua.conformance.v1",
+  "suite": "workspace-path-containment",
+  "cases": [
+    {
+      "id": "workspace-file",
+      "path": "conformance-fixtures/inside.txt",
+      "expected": {
+        "allow": true,
+        "reason": "path-resolved-inside-workspace",
+        "rule": "workspace-containment",
+        "tool": "resolve_in_workspace"
+      }
+    },
+    {
+      "id": "parent-escape",
+      "path": "../outside.txt",
+      "expected": {
+        "allow": false,
+        "reason": "path-escapes-workspace",
+        "rule": "workspace-containment",
+        "tool": "resolve_in_workspace"
+      }
+    },
+    {
+      "id": "symlink-escape",
+      "path": "conformance-fixtures/outside-link/secret.txt",
+      "expected": {
+        "allow": false,
+        "reason": "path-escapes-workspace",
+        "rule": "workspace-containment",
+        "tool": "resolve_in_workspace"
+      }
+    }
+  ]
+}

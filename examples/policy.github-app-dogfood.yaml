@@ -1,0 +1,25 @@
+# Reviewed single-repository Approval Ledger dogfood policy.
+# The worker itself restricts PR polling to anonb3ll/unified-agent -> main.
+version: 2
+enabled: true
+default_action: allow
+rules:
+  # Preserve the three built-in rules that apply when UA_POLICY_FILE is unset.
+  - name: fatigue_intervention_cap
+    type: fatigue_band_cap
+    tool: fatigue_intervention
+    require_episode: true
+    bands: {green: 5, yellow: 3, red: 1}
+  - name: focus_anchor_stabilization
+    type: cooldown
+    tool: set_focus_anchor
+    cooldown_seconds: 45.0
+  - name: realignment_limit
+    type: max_calls_per_episode
+    tool: realignment
+    max_calls: 1
+    require_episode: true
+  - name: github_pr_requires_human
+    type: tool
+    tool: github_app.process_pr_event
+    action: require_approval

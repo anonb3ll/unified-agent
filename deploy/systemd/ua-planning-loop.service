@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly ledger planning loop and decision packet (proposal-only)
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-%h/.unified_agent/service.env
+WorkingDirectory=%h/dev/unified_agent
+ExecStart=%h/dev/unified_agent/.venv/bin/unified-agent-planning-loop

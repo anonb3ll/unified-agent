@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for ua-evidence-export.service (default: once daily)
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

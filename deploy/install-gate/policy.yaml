@@ -1,0 +1,15 @@
+# Install-gate policy (task #1195, A2).
+# Used only by .github/workflows/install-gate.yml on a throwaway hub: it parks
+# exactly one harmless read-only tool in the approval queue so the gate can
+# prove pending -> resolve -> consume over HTTP on a fresh machine.
+
+version: 2
+enabled: true
+default_action: allow
+
+rules:
+  - name: approve_system_doctor
+    description: Install gate requires one human-resolved approval before doctor runs
+    type: tool
+    tool: system_doctor
+    action: require_approval

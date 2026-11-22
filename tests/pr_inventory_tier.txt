@@ -1,0 +1,55 @@
+# PR inventory tier (task #2440, epic #2437 phase K5a).
+#
+# The `gates` job runs these on every pull request, before the merge batch:
+#   uv run pytest $(this list) -q -m "not embeddings"
+# Each entry freezes a central registry that a change anywhere can break without
+# touching the code the test imports: a table without a tenancy class, an import
+# reference missing from tools/export.py, a module missing from layers.toml, an
+# unregistered route or tool. Batch and nightly shards run the same files.
+#
+# One entry per line: a test file or a pytest node id. `#` starts a comment.
+# Every file in affected_tests.ALWAYS_RUN must appear here (whole or by node id);
+# tests/test_ci_workflow_parity.py checks that and that each entry exists.
+# Budget: the whole tier stays under about 90 s on a 4-core desktop, so `gates`
+# grows by at most 3 minutes. Time a candidate file alone before adding it, and
+# never add a test marked `embeddings`. See docs/ci-batch-verify.md#inventory-tier.
+
+# Storage registries (#1479, #1480).
+tests/test_tenant_table_inventory.py
+tests/test_import_rollback_ownership.py
+
+# Module placement (#1471).
+tests/test_layer_check.py
+
+# Tool surface, classification and documented counts.
+tests/test_tool_surface.py
+tests/test_tool_surface_baseline.py
+tests/test_tool_classification.py
+# test_profiles.py's 70 session-behaviour tests (about 25 s) stay in the shards.
+tests/test_profiles.py::test_default_profile_tool_count_is_capped_at_100
+tests/test_profiles.py::test_pruned_tools_stay_reachable_under_an_explicit_profile
+tests/test_profiles.py::test_workflow_alias_mapping_uses_registered_manager_and_curated_step
+tests/test_docs_tool_count.py
+
+# Routes. test_route_scopes.py's behaviour tests (about 100 s) stay in the shards.
+tests/test_webui_route_inventory.py
+tests/test_route_scopes.py::test_every_served_route_has_a_declared_scope
+tests/test_route_scopes.py::test_no_stale_scope_entries
+tests/test_route_scopes.py::test_webui_routes_alone_are_covered
+tests/test_route_scopes.py::test_capability_names_are_registered_tools
+tests/test_route_scopes.py::test_routes_outside_web_routes_are_public_or_own_auth
+tests/test_route_scopes.py::test_mutating_authenticated_routes_are_csrf_guarded
+tests/test_route_scopes.py::test_public_entries_agree_with_the_central_authentication_gate
+tests/test_route_scopes.py::test_allowed_matrix_is_frozen
+
+# Component map and the test-budget tree gate. Both files are in ALWAYS_RUN.
+# The rest of each file is synthetic and stays in the shards (test_test_budget.py
+# alone is about 80 s, past the tier's budget).
+tests/test_component_check.py::test_repo_imports_match_the_component_map
+tests/test_component_check.py::test_repo_baseline_is_sorted_and_has_no_stale_line
+tests/test_component_check.py::test_repo_owners_file_is_fresh
+tests/test_test_budget.py::test_tree_is_within_budget
+tests/test_test_budget.py::test_cli_check_reports_the_live_tree
+
+# CI wiring.
+tests/test_ci_workflow_parity.py

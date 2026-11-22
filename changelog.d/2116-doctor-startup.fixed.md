@@ -1,0 +1,1 @@
+- Allow bounded doctor credential-probe children up to 15 seconds for cold imports on loaded hosts, preserving separate-home credential checks and fail-closed errors.

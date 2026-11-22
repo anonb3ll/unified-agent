@@ -1,0 +1,25 @@
+<!-- @dsCard group="Containers" height=210 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Card — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var App = h('div', {style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}},
+  h(U.Card, {as:'article'},
+    h(U.Card.Header, {bordered:true},
+      h('div', null, h(U.Card.Title, null, 'Task #1131'), h(U.Card.Description, null, 'Live run: workspace approve')),
+      h(U.StatusIndicator, {status:'doing'})),
+    h(U.Card.Body, {className:'text-sm'}, 'Claimed by agent-claude in .worktrees/task-1131.'),
+    h(U.Card.Footer, {bordered:true}, h('span', {className:'font-mono'}, 'main@fe46fee5'), h('span', null, '2 min ago'))),
+  h(U.Card, {interactive:true, 'aria-label':'Open approvals'},
+    h(U.Card.Header, null, h(U.Card.Title, null, 'Pending approvals')),
+    h(U.Card.Body, null, h('p', {className:'m-0 text-2xl font-semibold tabular-nums'}, '3')),
+    h(U.Card.Footer, null, 'Interactive: hover or focus')));
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

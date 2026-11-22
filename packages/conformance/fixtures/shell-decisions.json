@@ -1,0 +1,61 @@
+{
+  "schema_version": "ua.conformance.v1",
+  "suite": "shell-run-cmd-check",
+  "cases": [
+    {
+      "id": "clean-read-only",
+      "command": "echo hi",
+      "cwd": ".",
+      "expected": {
+        "ok": true,
+        "verdict": "ok",
+        "mutates": "no",
+        "finding_codes": []
+      }
+    },
+    {
+      "id": "denied-program",
+      "command": "rm -rf /",
+      "cwd": ".",
+      "expected": {
+        "ok": false,
+        "verdict": "block",
+        "mutates": "maybe",
+        "finding_codes": ["path-escape", "rejected"]
+      }
+    },
+    {
+      "id": "literal-shell-syntax",
+      "command": "grep -r foo . | head -5",
+      "cwd": ".",
+      "expected": {
+        "ok": true,
+        "verdict": "warn",
+        "mutates": "no",
+        "finding_codes": ["shell-syntax"]
+      }
+    },
+    {
+      "id": "argument-path-escape",
+      "command": "cat ../outside.txt",
+      "cwd": ".",
+      "expected": {
+        "ok": true,
+        "verdict": "warn",
+        "mutates": "no",
+        "finding_codes": ["path-escape"]
+      }
+    },
+    {
+      "id": "find-side-effect-bypass",
+      "command": "find . -name junk -delete",
+      "cwd": ".",
+      "expected": {
+        "ok": false,
+        "verdict": "block",
+        "mutates": "yes",
+        "finding_codes": ["allowlist-bypass", "destructive"]
+      }
+    }
+  ]
+}

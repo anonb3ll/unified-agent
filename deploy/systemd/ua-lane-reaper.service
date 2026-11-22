@@ -1,0 +1,10 @@
+[Unit]
+Description=Reap orphaned Codex-lane sandbox/pytest children (UA #1316)
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/unified_agent
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-%h/.unified_agent/service.env
+# Default is dry-run in the module; --kill is required for the timer to act.
+ExecStart=%h/dev/unified_agent/.venv/bin/unified-agent-lane-reaper --kill

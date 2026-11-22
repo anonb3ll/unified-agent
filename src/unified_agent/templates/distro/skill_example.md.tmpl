@@ -1,0 +1,18 @@
+---
+name: hub-session-start
+description: Start a work session against the unified-agent hub by confirming identity, reading broadcasts and the task queue, and claiming one task before changing code. Use at the start of a session in this project or when asked what to work on next.
+---
+
+# Hub session start
+
+1. Call `profile_status()`. If the hub is unreachable or the identity is
+   empty, report that and stop. Do not work unregistered.
+2. Call `memory_search("broadcast", tags=["broadcast"])` and read every
+   current broadcast before choosing work.
+3. Call `task_list(status="doing")`, then `task_list(status="open")`. Prefer
+   high-priority rows, but read past them.
+4. Claim exactly one task: `task_claim(id, agent="<your label>")`. If another
+   agent holds it, choose a different task.
+5. Work in the task's own worktree or branch. When you finish, record the pull
+   request with `task_update(id, evidence_ref="<PR URL>")` and stop. Merging
+   follows the rules in `AGENTS.md`.

@@ -1,0 +1,54 @@
+# RETIRED 2026-09-25 (tasks #1410/#1411) — do not point this at a bucket again
+# without reading deploy/mac-hub/retired/README.md and
+# docs/database-operations.md section 4.
+#
+# Why: combined with the retention settings below (l0-retention-check-interval:
+# 15s), the L0 retention loop re-listed a 250,631-object replica every 15 s. GCS
+# bills the JSON list RESPONSE PAYLOAD, and the account was invoiced the
+# "Download Worldwide Destinations" SKU at ~$65/day — ~$352 over six days
+# (Sep 20-25 2026), against an already-depleted balance. It could never prune
+# because the uploader held storage.objectCreator WITHOUT storage.objects.delete:
+# fix that grant before any re-enable, or the bleed restarts.
+#
+# Starting replication now requires UA_LITESTREAM_ENABLED=1 (run-litestream.sh);
+# the nightly snapshot remains the supported recovery path at 24 h RPO.
+#
+# Litestream continuous WAL replication for the hub's memory.db (task #1197).
+#
+# Litestream expands ${VAR} at parse time; deploy/mac-hub/run-litestream.sh
+# sources ~/.unified_agent/service.env and exports both vars before exec, so
+# this file carries no paths or credentials.
+#
+#   UA_HOME              hub state dir (defaults to ~/.unified_agent)
+#   UA_REPLICA_GCS_URI   replica target, e.g. gs://<bucket>/litestream/memory
+#
+# GCS auth is Application Default Credentials — GOOGLE_APPLICATION_CREDENTIALS
+# in service.env. The replica is a COLD STANDBY: promotion is a documented
+# manual drill only (docs/database-operations.md). The Mac hub is the sole
+# write authority; nothing may ever restore over its live memory.db.
+dbs:
+  - path: ${UA_HOME}/memory.db
+    replica:
+      url: ${UA_REPLICA_GCS_URI}
+      # 30 s reduces L0 object churn while leaving upload and scheduling headroom
+      # inside the documented 60 s recovery-point budget.
+      sync-interval: 30s
+
+# The defaults compact L0 into L1 every 30 s, which creates a large remote
+# listing and retention workload on a busy hub. Five-minute L1 compaction keeps
+# the fine-grained window bounded while L0 retention preserves recent restore
+# points. The remaining levels are explicit so a binary upgrade cannot silently
+# restore the more aggressive defaults.
+levels:
+  - interval: 5m
+  - interval: 1h
+  - interval: 24h
+
+# Keep one day of snapshots and their associated LTX chain. This is the
+# supported v0.5.x retention control; there is no l1-retention field.
+snapshot:
+  interval: 24h
+  retention: 24h
+
+l0-retention: 5m
+l0-retention-check-interval: 15s

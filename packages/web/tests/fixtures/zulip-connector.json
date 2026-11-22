@@ -1,0 +1,24 @@
+{
+  "package": "zulip",
+  "scopes": [],
+  "status": "dormant",
+  "health": "DORMANT",
+  "policy": "one-shot approval",
+  "last_verified": null,
+  "manifest": {
+    "name": "zulip",
+    "version": "1.0.0",
+    "capabilities": ["chat", "worker"],
+    "required_secrets": [],
+    "entry_points": {
+      "chat": "unified_agent.zulip_chat:maybe_reply",
+      "worker": "unified_agent.zulip_worker:ZulipPollingWorker"
+    },
+    "default_enabled": false
+  },
+  "secrets": {
+    "present": [],
+    "missing": [],
+    "satisfied": true
+  }
+}

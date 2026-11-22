@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Unified Agent
+Comment=Unified Agent control center
+Exec=unified-agent-desktop %u
+Icon=unified-agent-desktop
+Terminal=false
+Categories=Development;
+MimeType=x-scheme-handler/unified-agent;
+StartupWMClass=unified-agent-desktop

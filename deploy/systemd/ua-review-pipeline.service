@@ -1,0 +1,6 @@
+[Unit]
+Description=Automated review pipeline scan (unified-agent-review scan --json)
+
+[Service]
+Type=oneshot
+ExecStart=%h/dev/unified_agent/deploy/review-pipeline-cron.sh

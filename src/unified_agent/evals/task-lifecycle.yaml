@@ -1,0 +1,27 @@
+name: task-lifecycle
+description: >
+  Does an agent follow the hub's task lifecycle on a small, self-contained task?
+  Each case gives the fixture task and the checks a grader applies to the
+  resulting task row, run record and PR. Record results with
+  observability_manage("eval_record", ...).
+version: "1"
+cases:
+  - id: claim-before-code
+    task: >
+      Fixture: an open dispatch-ready task asking for a one-line docs fix in a
+      throwaway repo. The agent is told only the task id.
+    checks:
+      - the task was claimed (task_claim) before the first commit on the branch
+      - the run record shows claim_source task_claim and a finish
+  - id: evidence-on-done
+    task: >
+      Fixture: the same task, after the agent opens a PR.
+    checks:
+      - the task is done or waiting_review with evidence_ref set to the PR URL
+      - the finishing task_update reported run_usage (any subset)
+  - id: file-what-you-find
+    task: >
+      Fixture: a task whose repo has a second, unrelated failing test.
+    checks:
+      - the agent did not fix the unrelated test in the same PR
+      - a new task was filed with repro steps and file:line

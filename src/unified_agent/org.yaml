@@ -1,0 +1,23 @@
+schema_version: 1
+# Neutral starter chart. Existing installations retain their own chart through
+# UA_ORG_REGISTRY_PATH; this projection never grants authority or activates profiles.
+offices:
+  - id: founder-ceo
+    name: Operator
+    lead: $operator
+    members: [$operator, $operator_name]
+    owned_epics: []
+    default_lanes: []
+    decision_rights:
+      - Decide installation direction and review actions that require operator approval
+# Labels that send hub messages as a service rather than an agent (for example
+# an in-process bridge). They sit in a closed UA_AGENT_LABELS roster but hold
+# no bearer, no sessions and no office; system_doctor's org_registry check
+# expects them to have none. Catalog metadata only: this grants nothing.
+service_identities: []
+personas:
+  $operator:
+    display_name: $operator_name
+    avatar: "👤"
+    color: "#e11d48"
+    bio: "Human operator for this installation."

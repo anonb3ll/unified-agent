@@ -1,0 +1,15 @@
+<!-- @dsCard group="Content" height=120 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>CodeBlock — preview</title>
+<style>body{margin:0;padding:16px;} .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;} .stack{display:flex;flex-direction:column;gap:12px;max-width:28rem;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var U = window.UnifiedAgent, h = React.createElement;
+var App = h(U.CodeBlock,{label:'Command to run',language:'bash',code:'uv run unified-agent --help'});
+ReactDOM.createRoot(document.getElementById('root')).render(App);
+</script>
+</body>
+</html>

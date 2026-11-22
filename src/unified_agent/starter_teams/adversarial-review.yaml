@@ -1,0 +1,70 @@
+id: adversarial-review
+version: 1
+description: Two independent adversarial reviews with lead synthesis.
+guidance: Confirm identity and read team edges. Use existing task, policy, profile
+  and approval gates; a template grants no authority. Preserve task/artifact references
+  and explicit closure reasons. Human release approvals remain required.
+roles:
+  lead: Create both review tasks for concurrent independent work at the same exact
+    head. Require both result references, synthesize disagreements with evidence and
+    preserve unresolved objections. Majority agreement is not release approval.
+  reviewer_a: Review exact head independently. Probe temporal, identity, authorization
+    and error paths. Record severity, file, line, reproducer and fix before reading
+    the other review.
+  reviewer_b: Review the same exact head independently using a different harness.
+    Seek counterexamples. Report before reading the other review.
+independent_roles:
+- reviewer_a
+- reviewer_b
+steps:
+- name: step-1-lead
+  actor_role: lead
+  objective: Create both review tasks for concurrent independent work at the same
+    exact head. Require both result references, synthesize disagreements with evidence
+    and preserve unresolved objections. Majority agreement is not release approval.
+  tool: task_add
+  args:
+    title: '{{ inputs.objective }}'
+    notes: 'Independent assignment: {{ inputs.objective }}. Follow starter seat guidance;
+      return cited evidence and exact task/artifact references to lead.'
+    lane: $reviewer_a
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - lead
+- name: step-2-lead
+  actor_role: lead
+  objective: Create both review tasks for concurrent independent work at the same
+    exact head. Require both result references, synthesize disagreements with evidence
+    and preserve unresolved objections. Majority agreement is not release approval.
+  tool: task_add
+  args:
+    title: '{{ inputs.objective }}'
+    notes: 'Independent assignment: {{ inputs.objective }}. Follow starter seat guidance;
+      return cited evidence and exact task/artifact references to lead.'
+    lane: $reviewer_b
+  allowed_exits:
+  - handoff
+  - waiting
+  - blocked
+  - failed
+  next_hop:
+    require:
+    - lead
+- name: step-3-lead
+  actor_role: lead
+  objective: Create both review tasks for concurrent independent work at the same
+    exact head. Require both result references, synthesize disagreements with evidence
+    and preserve unresolved objections. Majority agreement is not release approval.
+  tool: task_list
+  args:
+    status: all
+  allowed_exits:
+  - done
+  - waiting
+  - blocked
+  - failed
