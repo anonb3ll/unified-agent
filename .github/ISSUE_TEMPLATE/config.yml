@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/anonb3ll/unified-agent/tree/main/docs
+    about: Installation, architecture, the tool reference, and troubleshooting.
+  - name: Report a security vulnerability
+    url: https://github.com/anonb3ll/unified-agent/security/advisories/new
+    about: Report privately. Do not open a public issue, pull request or discussion.

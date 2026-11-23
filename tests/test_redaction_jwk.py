@@ -1130,3 +1130,40 @@ def test_residue_is_linear():
     assert_cpu_growth(cold(redact), small, large, limit=8.0, samples=2)
     peak = peak_growth(cold(lambda t: private_members(t, coarse=True)), small, large, limit=8)
     assert peak.ratio < 8, f"x4 input took x{peak.ratio:.2f} peak"
+
+
+# A key built at runtime (`${name}:` in a JavaScript template literal, cooked to a
+# YAML block) is the key type or a private member, never both (task #2781). The
+# template quote is assembled so this file opens no template for the audit.
+BT = "`"
+LONE_RUNTIME_KEYS = [
+    "md += " + BT + '- ${p.elapsed}: +${skills.join(", ")} (files: ${p.files})\\n' + BT + ";",
+    "x = " + BT + "${a}: x\\n" + BT + ";",
+    "x = " + BT + "${a}: x\n" + BT + ";",
+    "x = " + BT + "a: 1\\n${b}: x\\n" + BT + ";",
+    json.dumps({"body": {"${1:3000}": "S" + "Aa0_" * 12}}, indent=2),  # editor snippet key
+]
+
+
+@pytest.mark.parametrize("text", LONE_RUNTIME_KEYS)
+def test_a_lone_runtime_built_key_is_not_a_private_member(text):
+    assert private_members(text) == []
+    assert redact(text) == text
+    assert not [f for f in check_secrets("x.ts", text) if "JWK private member" in f.message]
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        "kt" + "y: RS" + "A\\n${a}: {s}\\n",  # a type key beside it
+        "kt" + "y: ${t}\\n${a}: {s}\\n",  # a runtime-built type value
+        "${a}: E" + "C\\n${b}: {s}\\n",  # a second runtime-built key
+        "${a}: RS" + "A\\nd: {s}\\n",  # the runtime key is the type; `d` stays private
+    ],
+)
+def test_a_runtime_built_key_beside_a_type_stays_private(block):
+    secret = "S" + secrets.token_urlsafe(48)
+    text = "x = " + BT + block.replace("{s}", secret) + BT + ";"
+    assert any(secret in text[m.start : m.end] for m in private_members(text))
+    assert secret not in redact(text)
+    assert [f for f in check_secrets("x.ts", text) if "JWK private member" in f.message]

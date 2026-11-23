@@ -44,6 +44,18 @@ All notable changes to unified-agent are documented here. The format follows
   `UA_NODE_SESSION_MCP`.
 ### Fixed
 
+- **A runtime-built key is the JWK type or a private member, not both (#2781).**
+  The YAML block reader counted one interpolated key (`${name}:`, as in a
+  JavaScript template literal of report text) as the mapping's key type and as a
+  private member, so a report line in vendored plugin code (an interpolated
+  key, a colon, a value, then a line break) was masked whole and the steward
+  audit graded it HIGH. Such a key is now
+  private only when another key in its mapping can be the type: a `kty` key, a
+  second interpolated key, or a merge/alias document read conservatively. Typed
+  mappings mask exactly as before. A lone `"${1:3000}": "<value>"` snippet key
+  is no longer reported (#2222's test updated); the member scan already treats a
+  lone `d` with no type the same way.
+
 - **Safe steward audit alert diagnostics (#1891).** Failed notifications record
   an allowlisted error category, notifier exit code, validated run ID and UTC
   send start/finish times. Stderr capture is limited to 4096 bytes while excess

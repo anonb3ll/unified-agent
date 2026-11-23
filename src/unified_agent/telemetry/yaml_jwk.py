@@ -959,12 +959,12 @@ def _type_bits(value: str | None) -> int:
 
 
 class _Mapping:
-    __slots__ = ("column", "bits", "members", "start", "eligible")
+    __slots__ = ("column", "bits", "members", "start", "eligible", "unknown")
 
     def __init__(self, column: int, start: int, eligible: bool = False) -> None:
         self.column = column
         self.start = start
-        self.bits = 0
+        self.bits = self.unknown = 0  # `unknown`: keys built at runtime (`${name}:`)
         self.members: list[tuple[str, int, int]] = []
         # Takes part in YAML merging or aliasing: a merge, tagged, alias or type
         # key at its own level, or the node of an anchor. Only such a mapping is
@@ -1075,12 +1075,14 @@ def _reading(
             # A document using merges or alias keys: any mapping may hold a
             # key's private members, or inherit its type (fail toward masking).
             mapping.bits = 3
+        lone = mapping.unknown == 1 and not mapping.bits  # it can only type itself (#2781)
+        mapping.bits |= 3 if mapping.unknown else 0
         if not mapping.bits:
             return
         for name, start, end in mapping.members:
-            if name in _RSA_ONLY and not mapping.bits & 1:
+            if (name in _RSA_ONLY and not mapping.bits & 1) or (name == _INTERPOLATION and lone):
                 continue
-            out.append((name, start, end))
+            out.append(("*" if name == _INTERPOLATION else name, start, end))
 
     def trimmed(start: int, end: int) -> int:
         while end > start and text[end - 1] in " \t":
@@ -1132,15 +1134,13 @@ def _reading(
             # schema): the key is neither a type nor a private member, both
             # of which are scalars (`oth` a sequence) (#2222).
             name = None
-        elif name == _INTERPOLATION:
-            # An unknown name may be the type (of any kind) or a private member.
-            mapping.bits |= 3
-            name = "*"
+        elif name == _INTERPOLATION:  # the type (of any kind) or a private member, not both
+            mapping.unknown += 1
         extend(position, high)
         if key_line:
             explicit = (column, raw or None, position)
             name = None
-        if name not in _NAMES:
+        if name not in _NAMES and name != _INTERPOLATION:
             # Not a member we act on, but its value still ends at a lower line.
             entries.append(_Entry(column, mapping, ""))
             entries[-1].awaiting = entries[-1].empty = False

@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a capability, an interface change, or an improvement.
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem before the solution. For anything larger than a
+        small change, open this issue before writing the pull request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: The workflow that is awkward today, and who it affects.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: The interface or behaviour you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Deployment shapes, existing tools, or workarounds you ruled out.
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - MCP tools
+        - Control Center (web UI)
+        - CLI or TUI
+        - HTTP/JSON API or SDK
+        - Executors, dispatch or automation
+        - Identity, policy or approvals
+        - Evidence, audit or reporting
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the documentation for this.
+          required: true

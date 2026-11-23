@@ -1301,14 +1301,10 @@ def test_a_snippet_key_with_a_mapping_value_is_not_a_private_member():
     assert (jwk.private_members(text), redact(text), jwk_lines(text)) == ([], text, set())
 
 
-@pytest.mark.parametrize("nested", [False, True])
-def test_a_schema_with_snippet_keys_still_reports_a_private_scalar(nested):
-    s = secret()  # an interpolated key holding a string may still be `d`
+def test_a_schema_with_snippet_keys_still_reports_a_private_scalar():
+    s = secret()  # a lone snippet key holding a string is not (test_redaction_jwk.py)
     value = {TYPE: RSA, "n": public("n"), "d": s}
-    text = (
-        _snippet_schema({"label": "x"}, keys={"${1:key}": value}) if nested else _snippet_schema(s)
-    )
-    protect(text, [s])
+    protect(_snippet_schema({"label": "x"}, keys={"${1:key}": value}), [s])
 
 
 # --- Review r4: glued flow anchors and merges, the flow-type crash -------------------

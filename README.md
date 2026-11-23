@@ -7,7 +7,8 @@ Organize every agent, harness, device, and person behind one hub.
 Automate the work, and keep proof of every human decision.
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)
-![Version 0.3.2](https://img.shields.io/badge/version-0.3.2-1f6feb)
+[![Release](https://img.shields.io/github/v/release/anonb3ll/unified-agent?label=release&color=1f6feb)](https://github.com/anonb3ll/unified-agent/releases)
+[![License](https://img.shields.io/github/license/anonb3ll/unified-agent?color=blue)](LICENSE)
 ![MCP](https://img.shields.io/badge/MCP-2.x-8250df)
 
 [Quickstart](docs/getting-started.md) ·
@@ -87,8 +88,8 @@ Control Center from source needs Node.js 22.22.2 or newer (`packages/web`
 ### 1. Try it locally (about 2 minutes)
 
 ```bash
-# Set UA_REPO_URL to this repository's clone URL.
-git clone "$UA_REPO_URL" unified_agent
+# Clone the public snapshot of this repository.
+git clone https://github.com/anonb3ll/unified-agent.git unified_agent
 cd unified_agent
 uv sync
 uv run mcp dev src/unified_agent/server.py   # opens the MCP Inspector
@@ -301,7 +302,7 @@ The [documentation home](docs/README.md) lists every page.
 
 ## Project status
 
-`unified-agent` is at **0.3.2** and runs a real multi-agent fleet every day.
+`unified-agent` runs a real multi-agent fleet every day.
 Its interfaces are stable enough to build on, but it is pre-1.0, so expect
 some breaking changes between minor versions. The [changelog](CHANGELOG.md)
 records every change. The [architecture decision records](docs/architecture/)
@@ -311,6 +312,8 @@ record which guarantees are enforced today and which are deferred.
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
   [developer guide](docs/developer-guide.md) before you open a pull request.
+- Open bug reports and feature requests in the
+  [issue tracker](https://github.com/anonb3ll/unified-agent/issues).
 - Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ```bash
@@ -319,3 +322,9 @@ uv run pytest -q                           # the Python suite
 uv run ruff check . && uv run ruff format --check .
 uv run unified-agent-audit . --fail-on high  # the security audit CI enforces
 ```
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE) for the terms and [NOTICE](NOTICE)
+for the attribution it requires. Bundled third-party components are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

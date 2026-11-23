@@ -1,0 +1,77 @@
+name: Bug report
+description: Report something that did not behave as the documentation describes.
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Remove tokens, credentials,
+        private hostnames and personal paths before posting. Suspected
+        vulnerabilities go through [SECURITY.md](https://github.com/anonb3ll/unified-agent/blob/main/SECURITY.md),
+        never a public issue.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release tag, or the output of `unified-agent --version`.
+      placeholder: 0.3.2
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is it installed?
+      options:
+        - uv tool install from a source checkout
+        - Development checkout (uv sync)
+        - Docker image
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, and the harness if it matters.
+      placeholder: Linux 6.12, Python 3.14, Claude Code
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened
+      description: The observed behaviour, with the exact command or tool call.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Diagnostic output
+      description: Paste `unified-agent doctor`, with private hostnames and tokens removed.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed tokens, credentials, private hostnames and personal paths.
+          required: true
+        - label: I searched existing issues for the same problem.
+          required: true
