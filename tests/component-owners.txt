@@ -96,14 +96,13 @@ tests/test_check_receipts.py github
 tests/test_check_staged_conflict_markers.py kernel
 tests/test_ci_changes.py unresolved
 tests/test_ci_runner_assets.py kernel
-tests/test_ci_workflow_parity.py unresolved
 tests/test_claim_renewal.py integration:knowledge-jobs+telemetry
+tests/test_cloud_Agent17_chief_of_staff.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
 tests/test_cloud_assistant_profile.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
 tests/test_cloud_bridge.py mcp-adapter
 tests/test_cloud_ci_assets.py github
 tests/test_cloud_ci_classifier.py unresolved
 tests/test_cloud_configuration.py integration:chat-bridges+cloud+control-center
-tests/test_cloud_Agent17_chief_of_staff.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
 tests/test_cloud_hub_client.py kernel
 tests/test_cloud_mirror.py cloud
 tests/test_cloud_mirror_receiver.py cloud
@@ -113,7 +112,6 @@ tests/test_codex_llm_client.py llm
 tests/test_codex_rate_limits.py telemetry
 tests/test_codex_review_fixes_lifecycle.py kernel
 tests/test_command_gate.py integration:dev-tools+skills
-tests/test_commit_identity.py kernel
 tests/test_completion_return.py chat-bridges
 tests/test_completion_return_messages.py chat-bridges
 tests/test_compliance_a11y_remediation_slice.py audit
@@ -147,7 +145,6 @@ tests/test_dependency_bounds.py kernel
 tests/test_deploy_template_placeholders.py kernel
 tests/test_deployment_modes.py mcp-adapter
 tests/test_design_panels.py dispatch
-tests/test_desktop_bootstrap.py knowledge-jobs
 tests/test_device_proof_async.py integration:auth+control-center+node
 tests/test_device_proof_repair.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
 tests/test_devin_backend.py dispatch
@@ -313,7 +310,6 @@ tests/test_langgraph_pilot.py llm
 tests/test_langgraph_receipt_dispatch.py integration:dev-tools+knowledge-jobs+llm
 tests/test_langgraph_workflow.py integration:knowledge-jobs+llm
 tests/test_langgraph_workflow_dispatch.py integration:dev-tools+llm
-tests/test_launchagent_targets.py kernel
 tests/test_layer_check.py kernel
 tests/test_lease_reaper.py kernel
 tests/test_lifecycle_handoff.py mcp-adapter
@@ -326,8 +322,6 @@ tests/test_llm_client_subscription_pool.py llm
 tests/test_llm_proxy.py integration:auth+llm
 tests/test_llm_spend.py llm
 tests/test_local_gate.py unresolved
-tests/test_mac_briefing_entrypoint.py kernel
-tests/test_macbook_pro_migration_scripts.py unresolved
 tests/test_managed_secrets.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
 tests/test_managed_secrets_tenancy.py audit
 tests/test_manager_read_approvals.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
@@ -445,9 +439,7 @@ tests/test_project_registry.py control-center
 tests/test_project_status_rollup.py kernel
 tests/test_provenance_graph.py audit
 tests/test_provision_pilot.py unresolved
-tests/test_public_export_reproducible.py unresolved
 tests/test_public_relay.py integration:audit+auth+chat-bridges+cloud+control-center+dev-tools+dispatch+github+knowledge-jobs+llm+node+retrieval+skills+telemetry
-tests/test_public_release_tools.py unresolved
 tests/test_pytest_attestation.py github
 tests/test_queue_closure.py integration:dispatch+github+knowledge-jobs
 tests/test_queue_hygiene.py integration:chat-bridges+dispatch+knowledge-jobs

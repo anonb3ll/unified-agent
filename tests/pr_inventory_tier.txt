@@ -9,7 +9,9 @@
 #
 # One entry per line: a test file or a pytest node id. `#` starts a comment.
 # Every file in affected_tests.ALWAYS_RUN must appear here (whole or by node id);
-# tests/test_ci_workflow_parity.py checks that and that each entry exists.
+# `tests/test_ci_workflow_parity.py` checks that in the tree that carries both
+# providers (.github and .depot); this public tree has only one, so the checker
+# is not part of it. Every listed entry must exist.
 # Budget: the whole tier stays under about 90 s on a 4-core desktop, so `gates`
 # grows by at most 3 minutes. Time a candidate file alone before adding it, and
 # never add a test marked `embeddings`. See docs/ci-batch-verify.md#inventory-tier.
@@ -52,4 +54,3 @@ tests/test_test_budget.py::test_tree_is_within_budget
 tests/test_test_budget.py::test_cli_check_reports_the_live_tree
 
 # CI wiring.
-tests/test_ci_workflow_parity.py
