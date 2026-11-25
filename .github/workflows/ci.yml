@@ -1,24 +1,22 @@
 name: CI
 
-# DISPATCH-ONLY since task #2533 (2026-11-12): Depot CI owns automatic runs
-# (.depot/workflows/ci.yml) while GitHub-hosted Actions refuses jobs on
-# billing. This copy keeps the same pipeline for `gh workflow run ci.yml`;
-# switching back is a trigger swap between the two copies (see
-# tests/test_ci_workflow_parity.py). The trigger notes below describe the
-# automatic provider's copy.
+# GitHub-hosted Actions is the automatic provider in this repository (public
+# tree, switched 2026-11-25 for the public build home, task #2784). The private
+# repo's copy of this file is dispatch-only because Depot owns its automatic
+# runs there; `.depot/` is not part of this tree, so no parity switch exists
+# here. Public-repository Actions minutes are not billed, so the trigger swap
+# does not reintroduce the cost problem that made the private copy dispatch-only.
 #
-# Batch-only CI (docs/ci-batch-verify.md). GitHub bills every job rounded up
-# to a whole minute:
+# Batch-only CI (docs/ci-batch-verify.md):
 #   - a pull request runs the cheap gates only (lint, smoke, security,
-#     changelog). It does not run the pytest shards;
-#   - merge_group (GitHub merge queue) and a Mergify merge-queue pull request
-#     run the affected tests from scripts/ci_changes.py affected, plus the
-#     JS and desktop jobs the classifier enables;
+#     changelog) plus the commit-identity job. It does not run the pytest shards;
+#   - merge_group (GitHub merge queue) runs the affected tests from
+#     scripts/ci_changes.py affected, plus the JS and desktop jobs the classifier
+#     enables;
 #   - schedule (08:00 UTC) and workflow_dispatch run the full suite;
-#   - there is no push trigger. The already-tested skip in scripts/ci_changes.py
-#     stays for a restored one;
-#   - markdown-only PRs never start a run (the paths filter mirrors
-#     scripts/ci_changes.py is_markdown_doc).
+#   - there is no PR path filter here on purpose: both jobs become required
+#     status checks, and a filtered-out markdown-only PR would leave them
+#     unreported and block forever. The cheap gates cost about a minute.
 #
 # Runner: every job runs on `vars.UA_CI_RUNNER` when that repo variable is
 # set, and on GitHub-hosted `ubuntu-latest` when it is unset. A pull request
@@ -27,6 +25,11 @@ name: CI
 # and this repository is owned by a user account, so its jobs would queue
 # forever with no runner (see task #2291).
 on:
+  pull_request:
+    types: [opened, labeled, synchronize, reopened, ready_for_review]
+  merge_group:
+  schedule:
+    - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       pytest_workers:

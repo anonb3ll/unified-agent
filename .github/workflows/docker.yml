@@ -12,6 +12,17 @@ name: Docker
 # it on the tag (`gh workflow run docker.yml --ref v<version>`); a dispatch on
 # a tag also runs the GHCR publish job below.
 on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - deploy/docker/**
+      - pyproject.toml
+      - uv.lock
+      - packages/*/package.json
+      - packages/*/package-lock.json
+      - .github/workflows/docker.yml
   workflow_dispatch:
 
 # One run per ref (#581, #1787): a newer push to main or a newer dispatch on

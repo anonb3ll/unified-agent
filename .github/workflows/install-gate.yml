@@ -23,6 +23,16 @@ name: Install Gate
 # docs/installation.md is not a trigger: the gate never reads it. Dispatch it on
 # a v* tag before a release (`gh workflow run install-gate.yml --ref v<version>`).
 on:
+  push:
+    branches: [main]
+    paths:
+      - install.sh
+      - .github/workflows/install-gate.yml
+      - deploy/install-gate/**
+      - pyproject.toml
+      - uv.lock
+      - packages/*/package.json
+      - packages/*/package-lock.json
   workflow_dispatch:
 
 # One run per ref (#581, #1787): a newer push to main or a newer dispatch on
