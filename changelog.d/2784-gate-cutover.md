@@ -1,1 +1,0 @@
-- ci: GitHub-hosted Actions is the automatic provider in the public tree (task #2784)
