@@ -37,7 +37,7 @@ RUN npm ci && npm run build
 # 3.14 (matches .python-version): every locked native dep ships a cp314/abi3
 # manylinux wheel (onnxruntime cp314, sqlite-vec py3-manylinux,
 # tree-sitter-language-pack cp310-abi3), so no apt build toolchain is needed.
-FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d AS builder
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS builder
 COPY --from=uvbin /uv /usr/local/bin/uv
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
@@ -47,7 +47,7 @@ COPY src ./src
 RUN uv sync --frozen --no-dev --extra pdf
 
 # --- runtime ---------------------------------------------------------------
-FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d AS runtime
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS runtime
 
 ARG VCS_REF=""
 ARG VERSION=""
