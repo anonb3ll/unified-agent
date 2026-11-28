@@ -5,9 +5,8 @@ Checks authors, committers, and Co-authored-by trailers. The report names a
 commit and the field, and never prints the name or address.
 
 The operator's own address is accepted in the author and committer fields
-(Anthony, 2026-11-27): a merge commit GitHub creates carries the account
-identity, so a landing that goes through a pull request must not be refused for
-it. A Co-authored-by trailer claiming that identity is still a finding, because
+(2026-11-27): a merge commit GitHub creates carries the account identity, so a
+landing that goes through a pull request must not be refused for it. A Co-authored-by trailer claiming that identity is still a finding, because
 a merge never adds one.
 
     check_public_commit_identity.py --base BASE --head HEAD [--root DIR]
@@ -99,9 +98,14 @@ def check_range(
             raise RuntimeError(f"cannot read commit {sha[:12]}")
         name_a, email_a, name_c, email_c, body = (meta.stdout.split("\n", 4) + [""] * 5)[:5]
         for role, name, email in (("author", name_a, email_a), ("committer", name_c, email_c)):
-            if _exempt(name, email) or _operator_identity(email):
+            if _exempt(name, email):
                 continue
+            # The allowance covers the address value, not the whole identity: a
+            # name on the same commit is still checked and still reported.
+            operator_email = _operator_identity(email)
             for field, category in _findings(name, email, patterns):
+                if operator_email and field == "email":
+                    continue
                 offenses.append(f"{sha} {role}-{field} {category}")
         for match in _COAUTHOR.finditer(body):
             co_name, co_email = match.group(1) or "", match.group(2) or ""

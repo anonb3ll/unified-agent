@@ -2,7 +2,7 @@
 
 The public repository may carry the operator's own address in commit metadata:
 a merge commit GitHub creates is authored with the merging account's identity,
-which Anthony accepted on 2026-11-27. That is an author/committer allowance and
+which the operator accepted on 2026-11-27. That is an author/committer allowance and
 nothing more - any other Gmail address, and a Co-authored-by trailer claiming
 the operator identity, stay findings.
 
@@ -13,6 +13,7 @@ GIT_COMMITTER_* values, the same way tests/test_check_commit_identity.py does.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -116,10 +117,32 @@ def test_operator_look_alike_is_still_a_finding(repo: Path) -> None:
     assert _offenses(repo) == [f"{sha} author-email gmail"]
 
 
+def test_operator_address_with_a_longer_tail_is_still_a_finding(repo: Path) -> None:
+    """The allowance is an equality: a startswith test would accept this one."""
+    sha = _commit(repo, "tail", author=("Builder", OPERATOR + ".attacker.example"))
+    assert _offenses(repo) == [f"{sha} author-email gmail"]
+
+
+def test_operator_address_inside_a_longer_local_part_is_still_a_finding(repo: Path) -> None:
+    """A substring test would accept this one, so the match must be whole-value."""
+    sha = _commit(repo, "inner", author=("Builder", "x" + OPERATOR))
+    assert _offenses(repo) == [f"{sha} author-email gmail"]
+
+
 def test_operator_in_a_coauthor_trailer_is_still_a_finding(repo: Path) -> None:
     """A merge never adds a Co-authored-by, so claiming it is not a landing."""
     sha = _commit(repo, "merge", body=f"Co-authored-by: Ant <{OPERATOR}>")
     assert _offenses(repo) == [f"{sha} co-authored-by gmail"]
+
+
+def test_operator_address_does_not_exempt_the_name_field(repo: Path) -> None:
+    """The allowance is the address value, not the whole identity on that commit."""
+    patterns = (
+        ("gmail", re.compile(r"@gmail[.]com\b", re.IGNORECASE)),
+        ("host", re.compile(r"internal-host")),
+    )
+    sha = _commit(repo, "named", author=("internal-host", OPERATOR))
+    assert guard.check_range(repo, "base", sha, patterns) == [f"{sha} author-name host"]
 
 
 def test_main_exits_nonzero_and_prints_no_address(
