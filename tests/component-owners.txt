@@ -92,6 +92,7 @@ tests/test_changelog_assemble.py kernel
 tests/test_check_batch_held_prs.py unresolved
 tests/test_check_commit_identity.py unresolved
 tests/test_check_held_pr_regression_test.py kernel
+tests/test_check_public_commit_identity.py unresolved
 tests/test_check_receipts.py github
 tests/test_check_staged_conflict_markers.py kernel
 tests/test_ci_changes.py unresolved
